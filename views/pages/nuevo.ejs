@@ -1,0 +1,100 @@
+<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
+  <div style="max-width:800px; margin:0 auto; background:#fff; padding:30px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
+    <div style="margin-bottom:25px;">
+      <h1 style="margin:0; font-size:34px; color:#111827;">+ Nuevo proyecto</h1>
+      <p style="margin-top:10px; color:#6b7280; font-size:17px;">
+        Agrega una aplicación en Node, Sails, HTML o una demostración externa para mostrársela a tu cliente.
+      </p>
+    </div>
+
+    <form action="/crear" method="POST">
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Nombre del proyecto
+        </label>
+        <input
+          type="text"
+          name="nombre"
+          required
+          placeholder="Ej: Portal de noticias"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Tipo de proyecto
+        </label>
+        <select
+          name="tipoProyecto"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+          <option value="externo">Demostración externa</option>
+          <option value="node">Aplicación Node.js</option>
+          <option value="sails">Aplicación Sails.js</option>
+          <option value="html">Página HTML</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Tecnología
+        </label>
+        <input
+          type="text"
+          name="tecnologia"
+          placeholder="Ej: Sails.js + PostgreSQL"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          URL de la demostración
+        </label>
+        <input
+          type="url"
+          name="urlDemo"
+          required
+          placeholder="https://midemo.com"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          URL del repositorio
+        </label>
+        <input
+          type="url"
+          name="urlRepositorio"
+          placeholder="https://github.com/usuario/proyecto"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      </div>
+
+      <div style="margin-bottom:22px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Descripción
+        </label>
+        <textarea
+          name="descripcion"
+          rows="5"
+          placeholder="Describe qué hace esta aplicación o demostración..."
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px; resize:vertical;"></textarea>
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button
+          type="submit"
+          style="background:#2563eb; color:#fff; border:none; padding:12px 22px; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer;">
+          Guardar proyecto
+        </button>
+
+        <a
+          href="/"
+          style="display:inline-block; background:#e5e7eb; color:#111827; padding:12px 22px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">
+          Volver
+        </a>
+      </div>
+
+    </form>
+  </div>
+</div>

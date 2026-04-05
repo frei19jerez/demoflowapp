@@ -1,0 +1,109 @@
+<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
+
+  <div style="max-width:1200px; margin:0 auto;">
+
+    <!-- ENCABEZADO -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px; flex-wrap:wrap; gap:15px;">
+      <div>
+        <h1 style="margin:0; font-size:38px; color:#1f2937;">🚀 DemoFlow</h1>
+        <p style="margin:8px 0 0; color:#6b7280; font-size:18px;">
+          Muestra tus apps en vivo a tus clientes antes de venderlas.
+        </p>
+      </div>
+
+      <div>
+        <a href="/nuevo"
+           style="display:inline-block; background:#2563eb; color:#fff; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          + Nuevo proyecto
+        </a>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div style="background:linear-gradient(135deg,#2563eb,#1d4ed8); color:#fff; border-radius:18px; padding:40px; margin-bottom:35px;">
+      <h2 style="margin-top:0; font-size:30px;">Comparte demos en vivo con tus clientes</h2>
+      <p style="font-size:18px; line-height:1.6; max-width:800px;">
+        DemoFlow te permite guardar proyectos, mostrar enlaces en vivo, presentar páginas HTML,
+        apps en Sails, Node o cualquier tecnología, y dejar que el cliente vea el borrador antes de comprar.
+      </p>
+      <a href="/nuevo"
+         style="display:inline-block; margin-top:15px; background:#fff; color:#1d4ed8; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+        Crear mi primer demo
+      </a>
+    </div>
+
+    <!-- LISTADO -->
+    <h2 style="margin-bottom:20px; color:#111827;">Proyectos en demo</h2>
+
+    <% if (proyectos && proyectos.length > 0) { %>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:25px;">
+
+        <% proyectos.forEach(function(p) { %>
+          <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
+            <div style="background:#e5e7eb;">
+              <iframe
+                src="<%= p.urlDemo %>"
+                style="width:100%; height:220px; border:none;"
+                loading="lazy">
+              </iframe>
+            </div>
+
+            <div style="padding:20px;">
+              <h3 style="margin-top:0; margin-bottom:10px; color:#111827;">
+                <%= p.nombre %>
+              </h3>
+
+              <p style="margin:0 0 10px; color:#374151;">
+                <strong>Cliente:</strong> <%= p.cliente %>
+              </p>
+
+              <p style="margin:0 0 10px; color:#374151;">
+                <strong>Tecnología:</strong> <%= p.tecnologia || '-' %>
+              </p>
+
+              <p style="margin:0 0 15px; color:#6b7280; line-height:1.5;">
+                <%= p.descripcion || 'Sin descripción.' %>
+              </p>
+
+              <p style="margin:0 0 18px;">
+                <span style="display:inline-block; background:#dbeafe; color:#1d4ed8; padding:6px 10px; border-radius:999px; font-size:14px; font-weight:bold;">
+                  <%= p.estado %>
+                </span>
+              </p>
+
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a href="/proyecto/<%= p.id %>"
+                   style="background:#2563eb; color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
+                  Ver detalle
+                </a>
+
+                <a href="<%= p.urlDemo %>"
+                   target="_blank"
+                   style="background:#f3f4f6; color:#111827; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
+                  Ver en vivo
+                </a>
+              </div>
+            </div>
+
+          </div>
+        <% }) %>
+
+      </div>
+    <% } else { %>
+
+      <div style="background:#fff; border-radius:16px; padding:40px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.06);">
+        <h3 style="margin-top:0; color:#111827;">Todavía no hay proyectos</h3>
+        <p style="color:#6b7280; font-size:17px;">
+          Empieza creando tu primer demo para mostrárselo a un cliente.
+        </p>
+        <a href="/nuevo"
+           style="display:inline-block; margin-top:15px; background:#2563eb; color:#fff; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          Crear proyecto
+        </a>
+      </div>
+
+    <% } %>
+
+  </div>
+</div>
