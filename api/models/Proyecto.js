@@ -14,9 +14,10 @@ module.exports = {
       required: true
     },
 
+    // 🔥 CORREGIDO AQUÍ
     slug: {
       type: 'string',
-      allowNull: true,
+      required: true,
       unique: true
     },
 
@@ -60,9 +61,8 @@ module.exports = {
       defaultsTo: 'borrador'
     },
 
-    // 🔥 AQUÍ ESTABA EL PROBLEMA
     precioPropuesto: {
-      type: 'string', // ← cambiado de number a string
+      type: 'string',
       columnName: 'precio_propuesto',
       defaultsTo: '0'
     },
@@ -89,7 +89,6 @@ module.exports = {
       allowNull: true
     },
 
-    // 🔥 IMPORTANTE PARA POSTGRES
     createdAt: {
       type: 'ref',
       columnType: 'timestamp',
