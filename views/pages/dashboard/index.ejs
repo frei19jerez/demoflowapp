@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | DemoFlow</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <nav class="navbar navbar-expand-lg bg-white border-bottom">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/dashboard">🚀 DemoFlow</a>
+      <div class="ms-auto d-flex align-items-center gap-3">
+        <span class="text-muted">Hola, <%= usuario.nombre %></span>
+        <a href="/logout" class="btn btn-outline-danger btn-sm">Salir</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="h3 mb-1">Mi panel</h1>
+        <p class="text-muted mb-0">Aquí verás tus proyectos y demos.</p>
+      </div>
+      <a href="/proyecto/nuevo" class="btn btn-primary">+ Nuevo proyecto</a>
+    </div>
+
+    <% if (proyectos && proyectos.length > 0) { %>
+      <div class="row">
+        <% proyectos.forEach(function(proyecto){ %>
+          <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 h-100">
+              <div class="card-body">
+                <h5><%= proyecto.nombre %></h5>
+                <p class="text-muted"><%= proyecto.descripcion || 'Sin descripción' %></p>
+                <p class="mb-1"><strong>Estado:</strong> <%= proyecto.estado %></p>
+                <a href="/demo/<%= proyecto.slug %>" class="btn btn-outline-primary btn-sm mt-2">Ver demo</a>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="alert alert-info">
+        Aún no tienes proyectos creados.
+      </div>
+    <% } %>
+  </div>
+
+</body>
+</html>

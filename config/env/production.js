@@ -3,8 +3,8 @@ module.exports = {
   sockets: {
     onlyAllowOrigins: [
       'https://demoflowapp.onrender.com',
-      'https://demoflow.com',
-      'https://www.demoflow.com'
+      'https://demoflowapp.com',
+      'https://www.demoflowapp.com'
     ]
   },
 
