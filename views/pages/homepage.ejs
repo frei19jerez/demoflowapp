@@ -12,7 +12,7 @@
       </div>
 
       <div>
-        <a href="/nuevo"
+        <a href="/proyecto/nuevo"
            style="display:inline-block; background:#2563eb; color:#fff; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
           + Nuevo proyecto
         </a>
@@ -26,7 +26,7 @@
         DemoFlow te permite guardar proyectos, mostrar enlaces en vivo, presentar páginas HTML,
         apps en Sails, Node o cualquier tecnología, y dejar que el cliente vea el borrador antes de comprar.
       </p>
-      <a href="/nuevo"
+      <a href="/proyecto/nuevo"
          style="display:inline-block; margin-top:15px; background:#fff; color:#1d4ed8; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
         Crear mi primer demo
       </a>
@@ -42,11 +42,17 @@
           <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
 
             <div style="background:#e5e7eb;">
-              <iframe
-                src="<%= p.urlDemo %>"
-                style="width:100%; height:220px; border:none;"
-                loading="lazy">
-              </iframe>
+              <% if (p.urlDemo) { %>
+                <iframe
+                  src="<%= p.urlDemo %>"
+                  style="width:100%; height:220px; border:none;"
+                  loading="lazy">
+                </iframe>
+              <% } else { %>
+                <div style="height:220px; display:flex; align-items:center; justify-content:center; color:#6b7280; font-size:16px;">
+                  Sin vista previa disponible
+                </div>
+              <% } %>
             </div>
 
             <div style="padding:20px;">
@@ -55,7 +61,7 @@
               </h3>
 
               <p style="margin:0 0 10px; color:#374151;">
-                <strong>Cliente:</strong> <%= p.cliente %>
+                <strong>Cliente:</strong> <%= p.clienteId || '-' %>
               </p>
 
               <p style="margin:0 0 10px; color:#374151;">
@@ -68,7 +74,7 @@
 
               <p style="margin:0 0 18px;">
                 <span style="display:inline-block; background:#dbeafe; color:#1d4ed8; padding:6px 10px; border-radius:999px; font-size:14px; font-weight:bold;">
-                  <%= p.estado %>
+                  <%= p.estado || 'borrador' %>
                 </span>
               </p>
 
@@ -78,11 +84,13 @@
                   Ver detalle
                 </a>
 
-                <a href="<%= p.urlDemo %>"
-                   target="_blank"
-                   style="background:#f3f4f6; color:#111827; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
-                  Ver en vivo
-                </a>
+                <% if (p.urlDemo) { %>
+                  <a href="<%= p.urlDemo %>"
+                     target="_blank"
+                     style="background:#f3f4f6; color:#111827; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
+                    Ver en vivo
+                  </a>
+                <% } %>
               </div>
             </div>
 
@@ -97,7 +105,7 @@
         <p style="color:#6b7280; font-size:17px;">
           Empieza creando tu primer demo para mostrárselo a un cliente.
         </p>
-        <a href="/nuevo"
+        <a href="/proyecto/nuevo"
            style="display:inline-block; margin-top:15px; background:#2563eb; color:#fff; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
           Crear proyecto
         </a>

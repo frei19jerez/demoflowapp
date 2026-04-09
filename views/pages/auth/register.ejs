@@ -12,31 +12,71 @@
     <div class="row justify-content-center">
       <div class="col-md-6">
 
-        <div class="card shadow border-0">
-          <div class="card-body p-4">
+        <div class="card shadow border-0 rounded-4">
+          <div class="card-body p-4 p-md-5">
             <h1 class="h3 mb-3 text-center">Crear cuenta</h1>
-            <p class="text-muted text-center">Regístrate para empezar a mostrar tus demos.</p>
+            <p class="text-muted text-center mb-4">
+              Regístrate para empezar a mostrar tus demos.
+            </p>
 
-            <form action="/register" method="POST">
+            <form action="/register" method="POST" onsubmit="return validarPasswords()">
               <div class="mb-3">
                 <label class="form-label">Nombre</label>
-                <input type="text" name="nombre" class="form-control" required>
+                <input
+                  type="text"
+                  name="nombre"
+                  class="form-control form-control-lg"
+                  placeholder="Tu nombre"
+                  required
+                >
               </div>
 
               <div class="mb-3">
                 <label class="form-label">Correo</label>
-                <input type="email" name="email" class="form-control" required>
+                <input
+                  type="email"
+                  name="email"
+                  class="form-control form-control-lg"
+                  placeholder="tunombre@correo.com"
+                  required
+                >
               </div>
 
               <div class="mb-3">
                 <label class="form-label">Contraseña</label>
-                <input type="password" name="password" class="form-control" required>
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  class="form-control form-control-lg"
+                  placeholder="Crea una contraseña"
+                  required
+                  minlength="6"
+                >
               </div>
 
-              <button type="submit" class="btn btn-primary w-100">Registrarme</button>
+              <div class="mb-3">
+                <label class="form-label">Confirmar contraseña</label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  id="confirmPassword"
+                  class="form-control form-control-lg"
+                  placeholder="Escribe de nuevo la contraseña"
+                  required
+                  minlength="6"
+                >
+                <div id="passwordError" class="text-danger small mt-2 d-none">
+                  Las contraseñas no coinciden.
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-lg w-100">
+                Registrarme
+              </button>
             </form>
 
-            <div class="text-center mt-3">
+            <div class="text-center mt-4">
               <a href="/login">Ya tengo cuenta</a>
             </div>
           </div>
@@ -45,6 +85,22 @@
       </div>
     </div>
   </div>
+
+  <script>
+    function validarPasswords() {
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      const error = document.getElementById('passwordError');
+
+      if (password !== confirmPassword) {
+        error.classList.remove('d-none');
+        return false;
+      }
+
+      error.classList.add('d-none');
+      return true;
+    }
+  </script>
 
 </body>
 </html>

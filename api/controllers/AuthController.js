@@ -19,9 +19,14 @@ module.exports = {
       const nombre = req.body.nombre ? req.body.nombre.trim() : '';
       const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
       const password = req.body.password ? req.body.password.trim() : '';
+      const confirmPassword = req.body.confirmPassword ? req.body.confirmPassword.trim() : '';
 
-      if (!nombre || !email || !password) {
+      if (!nombre || !email || !password || !confirmPassword) {
         return res.badRequest('Todos los campos son obligatorios.');
+      }
+
+      if (password !== confirmPassword) {
+        return res.badRequest('Las contraseñas no coinciden.');
       }
 
       const existe = await Usuario.findOne({ email });
@@ -90,6 +95,7 @@ module.exports = {
       if (err) {
         return res.serverError('No se pudo cerrar sesión.');
       }
+
       return res.redirect('/login');
     });
   }
