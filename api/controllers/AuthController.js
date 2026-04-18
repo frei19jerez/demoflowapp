@@ -35,13 +35,11 @@ module.exports = {
         return res.badRequest('Ese correo ya está registrado.');
       }
 
-      const passwordHash = await bcrypt.hash(password, 10);
-
       const nuevoUsuario = await Usuario.create({
         nombre,
         email,
-        password: passwordHash,
-        plan: 'gratis',
+        password, // el modelo lo encripta solo con beforeCreate
+        rol: 'programador',
         activo: true
       }).fetch();
 
