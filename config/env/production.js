@@ -10,6 +10,10 @@ module.exports = {
     }
   },
 
+  models: {
+    migrate: 'alter'
+  },
+
   sockets: {
     onlyAllowOrigins: [
       'https://demoflowapp.onrender.com',
