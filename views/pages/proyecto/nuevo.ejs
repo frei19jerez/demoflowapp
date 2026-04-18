@@ -1,3 +1,4 @@
+```ejs
 <div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
   <div style="max-width:800px; margin:0 auto; background:#fff; padding:30px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
 
@@ -8,7 +9,7 @@
       </p>
     </div>
 
-    <form action="/proyecto/crear" method="POST">
+    <form action="/proyecto/crear" method="POST" enctype="multipart/form-data">
 
       <div style="margin-bottom:18px;">
         <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
@@ -24,10 +25,27 @@
 
       <div style="margin-bottom:18px;">
         <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Slug / nombre corto
+        </label>
+        <input
+          type="text"
+          name="slug"
+          required
+          placeholder="Ej: portal-noticias"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+        <small style="color:#6b7280;">
+          Se usará para la ruta del demo, por ejemplo: <strong>/demo/portal-noticias</strong>
+        </small>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
           Tipo de proyecto
         </label>
         <select
           name="tipoProyecto"
+          id="tipoProyecto"
+          onchange="cambiarAyudaDemo()"
           style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
           <option value="externo">Demostración externa</option>
           <option value="node">Aplicación Node.js</option>
@@ -49,14 +67,17 @@
 
       <div style="margin-bottom:18px;">
         <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
-          URL de la demostración
+          URL o ruta de la demostración
         </label>
         <input
-          type="url"
+          type="text"
           name="urlDemo"
-          required
-          placeholder="https://midemo.com"
+          id="urlDemo"
+          placeholder="https://midemo.com o /demos/miapp/index.html"
           style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+        <small id="ayudaDemo" style="color:#6b7280;">
+          Si es externa: <strong>https://midemo.com</strong>
+        </small>
       </div>
 
       <div style="margin-bottom:18px;">
@@ -68,6 +89,35 @@
           name="urlRepositorio"
           placeholder="https://github.com/usuario/proyecto"
           style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Carpeta demo (opcional)
+        </label>
+        <input
+          type="text"
+          name="carpetaDemo"
+          placeholder="Ej: caminolimpio"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+        <small style="color:#6b7280;">
+          Si alojas el demo dentro de DemoFlow, la carpeta puede ser algo como:
+          <strong>assets/demos/caminolimpio/</strong>
+        </small>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">
+          Subir archivo demo (.zip o .html)
+        </label>
+        <input
+          type="file"
+          name="archivoDemo"
+          accept=".zip,.html,.htm"
+          style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px; background:#fff;">
+        <small style="color:#6b7280;">
+          Puedes subir una demo HTML o un archivo ZIP del proyecto.
+        </small>
       </div>
 
       <div style="margin-bottom:22px;">
@@ -98,3 +148,24 @@
     </form>
   </div>
 </div>
+
+<script>
+  function cambiarAyudaDemo() {
+    const tipo = document.getElementById('tipoProyecto').value;
+    const input = document.getElementById('urlDemo');
+    const ayuda = document.getElementById('ayudaDemo');
+
+    if (tipo === 'externo') {
+      input.placeholder = 'https://midemo.com';
+      input.required = true;
+      ayuda.innerHTML = 'Si es externa: <strong>https://midemo.com</strong>';
+    } else {
+      input.placeholder = '/demos/miapp/index.html o /demo/miapp';
+      input.required = false;
+      ayuda.innerHTML = 'Si se aloja dentro de DemoFlow: <strong>/demos/miapp/index.html</strong> o <strong>/demo/miapp</strong>';
+    }
+  }
+
+  cambiarAyudaDemo();
+</script>
+```

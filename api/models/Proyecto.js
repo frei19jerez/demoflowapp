@@ -11,14 +11,15 @@ module.exports = {
 
     nombre: {
       type: 'string',
-      required: true
+      required: true,
+      maxLength: 150
     },
 
-    // 🔥 CORREGIDO AQUÍ
     slug: {
       type: 'string',
       required: true,
-      unique: true
+      unique: true,
+      maxLength: 180
     },
 
     descripcion: {
@@ -35,7 +36,8 @@ module.exports = {
 
     tecnologia: {
       type: 'string',
-      allowNull: true
+      allowNull: true,
+      maxLength: 120
     },
 
     urlDemo: {
@@ -58,6 +60,7 @@ module.exports = {
 
     estado: {
       type: 'string',
+      isIn: ['borrador', 'activo', 'vendido', 'pausado'],
       defaultsTo: 'borrador'
     },
 
@@ -77,16 +80,14 @@ module.exports = {
       defaultsTo: true
     },
 
-    usuarioId: {
-      type: 'number',
-      columnName: 'usuario_id',
-      allowNull: true
+    usuario: {
+      model: 'usuario',
+      columnName: 'usuario_id'
     },
 
-    clienteId: {
-      type: 'number',
-      columnName: 'cliente_id',
-      allowNull: true
+    cliente: {
+      model: 'cliente',
+      columnName: 'cliente_id'
     },
 
     createdAt: {
