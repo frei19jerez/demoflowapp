@@ -6,9 +6,15 @@ module.exports = {
 
   index: async function (req, res) {
     try {
-      const proyectos = await Proyecto.find({
-        activo: true
-      }).sort('id DESC');
+      let proyectos = [];
+
+      try {
+        proyectos = await Proyecto.find().sort('id DESC');
+      } catch (e) {
+        console.log('================ ERROR CONSULTANDO PROYECTOS ================');
+        console.error(e.stack || e);
+        console.log('============================================================');
+      }
 
       return res.view('pages/homepage', {
         titulo: 'Inicio',
@@ -127,21 +133,22 @@ module.exports = {
         carpetaDemoFinal
       );
 
-      let archivoSubido = null;
-
       const archivos = await new Promise((resolve, reject) => {
-        req.file('archivoDemo').upload({
-          maxBytes: 50000000
-        }, function (err, uploadedFiles) {
-          if (err) {
-            return reject(err);
+        req.file('archivoDemo').upload(
+          {
+            maxBytes: 50000000
+          },
+          function (err, uploadedFiles) {
+            if (err) {
+              return reject(err);
+            }
+            return resolve(uploadedFiles || []);
           }
-          return resolve(uploadedFiles || []);
-        });
+        );
       });
 
       if (archivos.length > 0) {
-        archivoSubido = archivos[0];
+        const archivoSubido = archivos[0];
 
         if (!fs.existsSync(carpetaDestino)) {
           fs.mkdirSync(carpetaDestino, { recursive: true });
@@ -159,6 +166,7 @@ module.exports = {
           if (tipoProyecto !== 'externo') {
             urlDemoIngresada = `/demos/${carpetaDemoFinal}/index.html`;
           }
+
         } else if (extension === '.html' || extension === '.htm') {
           const destinoHtml = path.join(carpetaDestino, 'index.html');
           fs.copyFileSync(archivoSubido.fd, destinoHtml);
