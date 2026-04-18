@@ -1,5 +1,15 @@
 module.exports = {
 
+  datastores: {
+    default: {
+      adapter: 'sails-postgresql',
+      url: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    }
+  },
+
   sockets: {
     onlyAllowOrigins: [
       'https://demoflowapp.onrender.com',
