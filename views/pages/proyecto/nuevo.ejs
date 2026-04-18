@@ -150,22 +150,22 @@
 </div>
 
 <script>
-  function cambiarAyudaDemo() {
-    const tipo = document.getElementById('tipoProyecto').value;
-    const input = document.getElementById('urlDemo');
-    const ayuda = document.getElementById('ayudaDemo');
+function cambiarAyudaDemo() {
+  const tipo = document.getElementById('tipoProyecto').value;
+  const input = document.getElementById('urlDemo');
+  const ayuda = document.getElementById('ayudaDemo');
 
-    if (tipo === 'externo') {
-      input.placeholder = 'https://midemo.com';
-      input.required = true;
-      ayuda.innerHTML = 'Si es externa: <strong>https://midemo.com</strong>';
-    } else {
-      input.placeholder = '/demos/miapp/index.html o /demo/miapp';
-      input.required = false;
-      ayuda.innerHTML = 'Si se aloja dentro de DemoFlow: <strong>/demos/miapp/index.html</strong> o <strong>/demo/miapp</strong>';
-    }
+  if (tipo === 'externo') {
+    input.placeholder = 'https://midemo.com';
+    input.required = true;
+    ayuda.innerHTML = 'Si es externa: <strong>https://midemo.com</strong>';
+  } else {
+    input.placeholder = '/demos/miapp/index.html o /demo/miapp';
+    input.required = false;
+    ayuda.innerHTML = 'Si se aloja dentro de DemoFlow: <strong>/demos/miapp/index.html</strong> o <strong>/demo/miapp</strong>';
   }
+}
 
-  cambiarAyudaDemo();
+cambiarAyudaDemo();
 </script>
 ```
