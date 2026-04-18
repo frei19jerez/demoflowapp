@@ -35,10 +35,12 @@ module.exports = {
         return res.badRequest('Ese correo ya está registrado.');
       }
 
+      const passwordHash = await bcrypt.hash(password, 10);
+
       const nuevoUsuario = await Usuario.create({
         nombre,
         email,
-        password,
+        password: passwordHash,
         plan: 'gratis',
         activo: true
       }).fetch();
@@ -48,8 +50,11 @@ module.exports = {
       req.session.userEmail = nuevoUsuario.email;
 
       return res.redirect('/dashboard');
+
     } catch (err) {
-      sails.log.error('Error en registro:', err);
+      sails.log.error('================ ERROR EN REGISTRO ================');
+      sails.log.error(err);
+      sails.log.error('===================================================');
       return res.serverError('Error al registrar usuario.');
     }
   },
@@ -73,7 +78,14 @@ module.exports = {
         return res.forbidden('Tu cuenta está desactivada.');
       }
 
-      const ok = await bcrypt.compare(password, usuario.password);
+      let ok = false;
+
+      try {
+        ok = await bcrypt.compare(password, usuario.password);
+      } catch (e) {
+        sails.log.error('Error comparando contraseña:', e);
+        return res.serverError('Error validando contraseña.');
+      }
 
       if (!ok) {
         return res.badRequest('Contraseña incorrecta.');
@@ -84,8 +96,11 @@ module.exports = {
       req.session.userEmail = usuario.email;
 
       return res.redirect('/dashboard');
+
     } catch (err) {
-      sails.log.error('Error en login:', err);
+      sails.log.error('================ ERROR EN LOGIN ================');
+      sails.log.error(err);
+      sails.log.error('================================================');
       return res.serverError('Error al iniciar sesión.');
     }
   },
