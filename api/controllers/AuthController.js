@@ -2,19 +2,41 @@ const bcrypt = require('bcryptjs');
 
 module.exports = {
 
-  registerPage: async function(req, res) {
-    return res.view('pages/auth/register', {
-      titulo: 'Registro'
-    });
+  registerPage: function (req, res) {
+    try {
+      if (req.session && req.session.userId) {
+        return res.redirect('/dashboard');
+      }
+
+      return res.view('pages/auth/register', {
+        titulo: 'Registro'
+      });
+    } catch (err) {
+      sails.log.error('=========== ERROR CARGANDO REGISTER PAGE ===========');
+      sails.log.error(err);
+      sails.log.error('====================================================');
+      return res.serverError('Error cargando la página de registro.');
+    }
   },
 
-  loginPage: async function(req, res) {
-    return res.view('pages/auth/login', {
-      titulo: 'Iniciar sesión'
-    });
+  loginPage: function (req, res) {
+    try {
+      if (req.session && req.session.userId) {
+        return res.redirect('/dashboard');
+      }
+
+      return res.view('pages/auth/login', {
+        titulo: 'Iniciar sesión'
+      });
+    } catch (err) {
+      sails.log.error('============= ERROR CARGANDO LOGIN PAGE =============');
+      sails.log.error(err);
+      sails.log.error('=====================================================');
+      return res.serverError('Error cargando la página de inicio de sesión.');
+    }
   },
 
-  register: async function(req, res) {
+  register: async function (req, res) {
     try {
       const nombre = req.body.nombre ? req.body.nombre.trim() : '';
       const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
@@ -38,7 +60,7 @@ module.exports = {
       const nuevoUsuario = await Usuario.create({
         nombre,
         email,
-        password, // el modelo lo encripta solo con beforeCreate
+        password,
         rol: 'programador',
         activo: true
       }).fetch();
@@ -57,7 +79,7 @@ module.exports = {
     }
   },
 
-  login: async function(req, res) {
+  login: async function (req, res) {
     try {
       const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
       const password = req.body.password ? req.body.password.trim() : '';
@@ -76,14 +98,12 @@ module.exports = {
         return res.forbidden('Tu cuenta está desactivada.');
       }
 
-      let ok = false;
-
-      try {
-        ok = await bcrypt.compare(password, usuario.password);
-      } catch (e) {
-        sails.log.error('Error comparando contraseña:', e);
-        return res.serverError('Error validando contraseña.');
+      if (!usuario.password) {
+        sails.log.error('El usuario no tiene contraseña guardada:', usuario.email);
+        return res.serverError('La cuenta no tiene una contraseña válida.');
       }
+
+      const ok = await bcrypt.compare(password, usuario.password);
 
       if (!ok) {
         return res.badRequest('Contraseña incorrecta.');
@@ -96,16 +116,23 @@ module.exports = {
       return res.redirect('/dashboard');
 
     } catch (err) {
-      sails.log.error('================ ERROR EN LOGIN ================');
+      sails.log.error('================ ERROR EN LOGIN ===================');
       sails.log.error(err);
-      sails.log.error('================================================');
+      sails.log.error('===================================================');
       return res.serverError('Error al iniciar sesión.');
     }
   },
 
-  logout: async function(req, res) {
-    req.session.destroy(function(err) {
+  logout: function (req, res) {
+    if (!req.session) {
+      return res.redirect('/login');
+    }
+
+    req.session.destroy(function (err) {
       if (err) {
+        sails.log.error('================ ERROR EN LOGOUT ==================');
+        sails.log.error(err);
+        sails.log.error('===================================================');
         return res.serverError('No se pudo cerrar sesión.');
       }
 
