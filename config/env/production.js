@@ -11,7 +11,7 @@ module.exports = {
   },
 
   models: {
-    migrate: 'safe'
+    migrate: 'alter'
   },
 
   sockets: {
