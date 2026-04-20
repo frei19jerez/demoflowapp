@@ -18,7 +18,7 @@ module.exports = {
 
   session: {
     cookie: {
-      secure: true
+      secure: process.env.NODE_ENV === 'production'
     }
   }
 
