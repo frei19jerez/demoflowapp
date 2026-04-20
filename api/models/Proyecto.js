@@ -58,6 +58,13 @@ module.exports = {
       allowNull: true
     },
 
+    carpetaDemo: {
+      type: 'string',
+      columnName: 'carpeta_demo',
+      allowNull: true,
+      maxLength: 180
+    },
+
     estado: {
       type: 'string',
       isIn: ['borrador', 'activo', 'vendido', 'pausado'],
@@ -93,14 +100,14 @@ module.exports = {
     createdAt: {
       type: 'ref',
       columnType: 'timestamp',
-      autoCreatedAt: false,
+      autoCreatedAt: true,
       columnName: 'created_at'
     },
 
     updatedAt: {
       type: 'ref',
       columnType: 'timestamp',
-      autoUpdatedAt: false,
+      autoUpdatedAt: true,
       columnName: 'updated_at'
     }
 

@@ -40,9 +40,17 @@ module.exports = {
         return res.redirect('/login');
       }
 
-      const proyectos = await Proyecto.find({
-        usuario: req.session.userId
-      }).sort('id DESC');
+      let proyectos = [];
+
+      try {
+        proyectos = await Proyecto.find({
+          usuario: req.session.userId
+        }).sort('id DESC');
+      } catch (e) {
+        console.log('================ ERROR CONSULTANDO PROYECTOS DASHBOARD ================');
+        console.error(e.stack || e);
+        console.log('======================================================================');
+      }
 
       return res.view('pages/dashboard/index', {
         titulo: 'Dashboard',
@@ -196,7 +204,6 @@ module.exports = {
         urlDemo: urlDemoFinal,
         urlRepositorio,
         tipoProyecto,
-        carpetaDemo: carpetaDemoFinal,
         estado: 'borrador',
         destacado: false,
         activo: true,
@@ -216,8 +223,15 @@ module.exports = {
   ver: async function (req, res) {
     try {
       const id = req.params.id;
+      let proyecto = null;
 
-      const proyecto = await Proyecto.findOne({ id });
+      try {
+        proyecto = await Proyecto.findOne({ id });
+      } catch (e) {
+        console.log('================ ERROR CONSULTANDO PROYECTO ================');
+        console.error(e.stack || e);
+        console.log('============================================================');
+      }
 
       if (!proyecto) {
         return res.notFound('Proyecto no encontrado.');

@@ -1,4 +1,5 @@
 const bcrypt = require('bcryptjs');
+const _ = require('@sailshq/lodash');
 
 module.exports = {
   tableName: 'usuarios',
@@ -27,7 +28,7 @@ module.exports = {
 
     password: {
       type: 'string',
-      allowNull: true,
+      required: true,
       columnType: 'varchar(255)'
     },
 

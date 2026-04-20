@@ -54,14 +54,14 @@ module.exports = {
     createdAt: {
       type: 'ref',
       columnType: 'timestamp',
-      autoCreatedAt: false,
+      autoCreatedAt: true,
       columnName: 'created_at'
     },
 
     updatedAt: {
       type: 'ref',
       columnType: 'timestamp',
-      autoUpdatedAt: false,
+      autoUpdatedAt: true,
       columnName: 'updated_at'
     }
 
