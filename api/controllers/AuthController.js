@@ -38,10 +38,27 @@ module.exports = {
 
   register: async function (req, res) {
     try {
-      const nombre = req.body.nombre ? req.body.nombre.trim() : '';
-      const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
-      const password = req.body.password ? req.body.password.trim() : '';
-      const confirmPassword = req.body.confirmPassword ? req.body.confirmPassword.trim() : '';
+      const nombre = (req.body.nombre || req.body.name || '').trim();
+
+      const email = (
+        req.body.email ||
+        req.body.correo ||
+        ''
+      ).trim().toLowerCase();
+
+      const password = (
+        req.body.password ||
+        req.body.contrasena ||
+        ''
+      ).trim();
+
+      const confirmPassword = (
+        req.body.confirmPassword ||
+        req.body.confirmarPassword ||
+        req.body.confirm_password ||
+        req.body.repetirPassword ||
+        ''
+      ).trim();
 
       if (!nombre || !email || !password || !confirmPassword) {
         return res.badRequest('Todos los campos son obligatorios.');
@@ -69,11 +86,22 @@ module.exports = {
       req.session.userName = nuevoUsuario.nombre;
       req.session.userEmail = nuevoUsuario.email;
 
-      return res.redirect('/dashboard');
+      return req.session.save(function (err) {
+        if (err) {
+          sails.log.error('=========== ERROR GUARDANDO SESION EN REGISTRO ===========');
+          sails.log.error(err);
+          sails.log.error('==========================================================');
+          return res.serverError('Usuario creado, pero no se pudo guardar la sesión.');
+        }
+
+        return res.redirect('/dashboard');
+      });
 
     } catch (err) {
       sails.log.error('================ ERROR EN REGISTRO ================');
       sails.log.error(err);
+      sails.log.error('BODY RECIBIDO EN REGISTER:');
+      sails.log.error(req.body);
       sails.log.error('===================================================');
       return res.serverError('Error al registrar usuario.');
     }
@@ -81,8 +109,17 @@ module.exports = {
 
   login: async function (req, res) {
     try {
-      const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
-      const password = req.body.password ? req.body.password.trim() : '';
+      const email = (
+        req.body.email ||
+        req.body.correo ||
+        ''
+      ).trim().toLowerCase();
+
+      const password = (
+        req.body.password ||
+        req.body.contrasena ||
+        ''
+      ).trim();
 
       if (!email || !password) {
         return res.badRequest('Correo y contraseña son obligatorios.');
@@ -113,11 +150,22 @@ module.exports = {
       req.session.userName = usuario.nombre;
       req.session.userEmail = usuario.email;
 
-      return res.redirect('/dashboard');
+      return req.session.save(function (err) {
+        if (err) {
+          sails.log.error('============= ERROR GUARDANDO SESION EN LOGIN =============');
+          sails.log.error(err);
+          sails.log.error('===========================================================');
+          return res.serverError('No se pudo guardar la sesión.');
+        }
+
+        return res.redirect('/dashboard');
+      });
 
     } catch (err) {
       sails.log.error('================ ERROR EN LOGIN ===================');
       sails.log.error(err);
+      sails.log.error('BODY RECIBIDO EN LOGIN:');
+      sails.log.error(req.body);
       sails.log.error('===================================================');
       return res.serverError('Error al iniciar sesión.');
     }
