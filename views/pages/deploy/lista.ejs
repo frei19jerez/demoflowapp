@@ -1,0 +1,106 @@
+<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
+
+  <div style="max-width:1100px; margin:0 auto; background:#fff; padding:30px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
+    <h1 style="margin-top:0; color:#111827;">🚀 Deploys</h1>
+
+    <p style="color:#6b7280; font-size:17px;">
+      Lista de proyectos subidos, publicados o pendientes de despliegue.
+    </p>
+
+    <% if (proyectos && proyectos.length > 0) { %>
+
+      <div style="overflow-x:auto; margin-top:25px;">
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              <th style="padding:12px; text-align:left;">Proyecto</th>
+              <th style="padding:12px; text-align:left;">Tipo</th>
+              <th style="padding:12px; text-align:left;">Deploy</th>
+              <th style="padding:12px; text-align:left;">Estado</th>
+              <th style="padding:12px; text-align:left;">Puerto</th>
+              <th style="padding:12px; text-align:left;">Acciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% proyectos.forEach(function(proyecto) { %>
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <td style="padding:12px;">
+                  <strong><%= proyecto.nombre %></strong><br>
+                  <small style="color:#6b7280;"><%= proyecto.slug || '-' %></small>
+                </td>
+
+                <td style="padding:12px;"><%= proyecto.tipoProyecto || '-' %></td>
+                <td style="padding:12px;"><%= proyecto.deployType || '-' %></td>
+
+                <td style="padding:12px;">
+                  <% if (proyecto.estadoDeploy === 'activo') { %>
+                    <span style="background:#dcfce7; color:#166534; padding:6px 10px; border-radius:999px; font-weight:bold;">
+                      Activo
+                    </span>
+                  <% } else if (proyecto.estadoDeploy === 'subido') { %>
+                    <span style="background:#dbeafe; color:#1d4ed8; padding:6px 10px; border-radius:999px; font-weight:bold;">
+                      Subido
+                    </span>
+                  <% } else { %>
+                    <span style="background:#fef3c7; color:#92400e; padding:6px 10px; border-radius:999px; font-weight:bold;">
+                      <%= proyecto.estadoDeploy || 'Pendiente' %>
+                    </span>
+                  <% } %>
+                </td>
+
+                <td style="padding:12px;"><%= proyecto.puerto || '-' %></td>
+
+                <td style="padding:12px; display:flex; gap:8px; flex-wrap:wrap;">
+
+                  <a href="/deploy/estado/<%= proyecto.id %>"
+                     style="background:#2563eb; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                    Estado
+                  </a>
+
+                  <% if (proyecto.urlDemo) { %>
+                    <a href="<%= proyecto.urlDemo %>" target="_blank"
+                       style="background:#16a34a; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                      Ver
+                    </a>
+                  <% } %>
+
+                  <% if (proyecto.urlRepositorio) { %>
+                    <a href="<%= proyecto.urlRepositorio %>" target="_blank"
+                       style="background:#111827; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:bold;">
+                      Git
+                    </a>
+                  <% } %>
+
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+    <% } else { %>
+
+      <div style="margin-top:25px; padding:25px; border:1px dashed #d1d5db; border-radius:14px; text-align:center;">
+        <h3 style="margin-top:0;">Todavía no hay deploys</h3>
+        <p style="color:#6b7280;">Cuando subas proyectos, aparecerán aquí.</p>
+
+        <a href="/proyecto/nuevo"
+           style="display:inline-block; margin-top:10px; background:#2563eb; color:white; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          + Nuevo proyecto
+        </a>
+      </div>
+
+    <% } %>
+
+    <div style="margin-top:25px;">
+      <a href="/dashboard"
+         style="background:#e5e7eb; color:#111827; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+        Volver al dashboard
+      </a>
+    </div>
+
+  </div>
+
+</div>

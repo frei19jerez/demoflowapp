@@ -11,6 +11,7 @@ module.exports = {
       return res.view('pages/auth/register', {
         titulo: 'Registro'
       });
+
     } catch (err) {
       sails.log.error('=========== ERROR CARGANDO REGISTER PAGE ===========');
       sails.log.error(err);
@@ -28,6 +29,7 @@ module.exports = {
       return res.view('pages/auth/login', {
         titulo: 'Iniciar sesión'
       });
+
     } catch (err) {
       sails.log.error('============= ERROR CARGANDO LOGIN PAGE =============');
       sails.log.error(err);
@@ -60,8 +62,13 @@ module.exports = {
         ''
       ).trim();
 
+      // ✅ Validaciones
       if (!nombre || !email || !password || !confirmPassword) {
         return res.badRequest('Todos los campos son obligatorios.');
+      }
+
+      if (password.length < 6) {
+        return res.badRequest('La contraseña debe tener mínimo 6 caracteres.');
       }
 
       if (password !== confirmPassword) {
@@ -74,14 +81,20 @@ module.exports = {
         return res.badRequest('Ese correo ya está registrado.');
       }
 
+      // 🔐 Encriptar contraseña
+      const hash = await bcrypt.hash(password, 10);
+
       const nuevoUsuario = await Usuario.create({
         nombre,
         email,
-        password,
+        password: hash,
         rol: 'programador',
         activo: true
       }).fetch();
 
+      sails.log.info('USUARIO CREADO OK:', nuevoUsuario.email);
+
+      // 🔑 Crear sesión
       req.session.userId = nuevoUsuario.id;
       req.session.userName = nuevoUsuario.nombre;
       req.session.userEmail = nuevoUsuario.email;
@@ -136,8 +149,8 @@ module.exports = {
       }
 
       if (!usuario.password) {
-        sails.log.error('El usuario no tiene contraseña guardada:', usuario.email);
-        return res.serverError('La cuenta no tiene una contraseña válida.');
+        sails.log.error('El usuario no tiene contraseña:', usuario.email);
+        return res.serverError('La cuenta no tiene contraseña válida.');
       }
 
       const ok = await bcrypt.compare(password, usuario.password);
@@ -146,6 +159,9 @@ module.exports = {
         return res.badRequest('Contraseña incorrecta.');
       }
 
+      sails.log.info('LOGIN OK:', usuario.email);
+
+      // 🔑 Crear sesión
       req.session.userId = usuario.id;
       req.session.userName = usuario.nombre;
       req.session.userEmail = usuario.email;

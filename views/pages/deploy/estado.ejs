@@ -1,0 +1,88 @@
+<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
+
+  <div style="max-width:1000px; margin:0 auto; background:#fff; padding:30px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
+    <h1 style="margin-top:0; color:#111827;">
+      🚀 Estado del deploy
+    </h1>
+
+    <p style="color:#6b7280; font-size:17px;">
+      Aquí puedes revisar el estado del proyecto, sus rutas, comando de inicio y logs del despliegue.
+    </p>
+
+    <% if (proyecto) { %>
+
+      <div style="margin-top:25px; padding:20px; border:1px solid #e5e7eb; border-radius:14px; background:#f9fafb;">
+
+        <h2 style="margin-top:0; color:#111827;">
+          <%= proyecto.nombre %>
+        </h2>
+
+        <p><strong>Slug:</strong> <%= proyecto.slug || '-' %></p>
+        <p><strong>Tipo:</strong> <%= proyecto.tipoProyecto || '-' %></p>
+        <p><strong>Deploy:</strong> <%= proyecto.deployType || '-' %></p>
+        <p><strong>Estado:</strong> <%= proyecto.estadoDeploy || '-' %></p>
+        <p><strong>Puerto:</strong> <%= proyecto.puerto || '-' %></p>
+        <p><strong>Comando:</strong> <%= proyecto.comandoInicio || '-' %></p>
+        <p><strong>Archivo entrada:</strong> <%= proyecto.archivoEntrada || '-' %></p>
+
+        <% if (proyecto.urlDemo) { %>
+          <p>
+            <strong>URL demo:</strong>
+            <a href="<%= proyecto.urlDemo %>" target="_blank" style="color:#2563eb;">
+              <%= proyecto.urlDemo %>
+            </a>
+          </p>
+        <% } %>
+
+        <% if (proyecto.urlRepositorio) { %>
+          <p>
+            <strong>Repositorio:</strong>
+            <a href="<%= proyecto.urlRepositorio %>" target="_blank" style="color:#2563eb;">
+              <%= proyecto.urlRepositorio %>
+            </a>
+          </p>
+        <% } %>
+
+      </div>
+
+      <div style="margin-top:25px;">
+
+        <h3 style="color:#111827;">📋 Logs</h3>
+
+        <pre style="background:#020617; color:#22c55e; padding:18px; border-radius:14px; overflow:auto; min-height:180px; white-space:pre-wrap;"><%= proyecto.logDeploy || 'Sin logs disponibles.' %></pre>
+
+      </div>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:25px;">
+
+        <% if (proyecto.urlDemo) { %>
+          <a href="<%= proyecto.urlDemo %>" target="_blank"
+             style="background:#2563eb; color:white; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+            Ver en vivo
+          </a>
+        <% } %>
+
+        <a href="/dashboard"
+           style="background:#e5e7eb; color:#111827; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          Volver al dashboard
+        </a>
+
+      </div>
+
+    <% } else { %>
+
+      <div style="margin-top:25px; padding:20px; background:#fef2f2; border:1px solid #fecaca; border-radius:14px; color:#991b1b;">
+        No se encontró información del proyecto.
+      </div>
+
+      <a href="/dashboard"
+         style="display:inline-block; margin-top:20px; background:#2563eb; color:white; padding:12px 20px; border-radius:10px; text-decoration:none; font-weight:bold;">
+        Volver al dashboard
+      </a>
+
+    <% } %>
+
+  </div>
+
+</div>

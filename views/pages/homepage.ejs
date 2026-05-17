@@ -39,7 +39,7 @@
       <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:25px;">
 
         <% proyectos.forEach(function(p) { %>
-          <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+          <div style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(0,0,0,0.08); display:flex; flex-direction:column;">
 
             <div style="background:#e5e7eb;">
               <% if (p.urlDemo) { %>
@@ -55,7 +55,7 @@
               <% } %>
             </div>
 
-            <div style="padding:20px;">
+            <div style="padding:20px; display:flex; flex-direction:column; height:100%;">
               <h3 style="margin-top:0; margin-bottom:10px; color:#111827;">
                 <%= p.nombre %>
               </h3>
@@ -78,19 +78,19 @@
                 </span>
               </p>
 
-              <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <a href="/proyecto/<%= p.id %>"
-                   style="background:#2563eb; color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
-                  Ver detalle
-                </a>
-
+              <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:auto;">
                 <% if (p.urlDemo) { %>
                   <a href="<%= p.urlDemo %>"
                      target="_blank"
-                     style="background:#f3f4f6; color:#111827; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
+                     style="background:#2563eb; color:#fff; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
                     Ver en vivo
                   </a>
                 <% } %>
+
+                <a href="/proyecto/<%= p.id %>"
+                   style="background:#f3f4f6; color:#111827; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
+                  Ver detalle
+                </a>
               </div>
             </div>
 

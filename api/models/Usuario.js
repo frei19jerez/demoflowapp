@@ -60,11 +60,11 @@ module.exports = {
 
   },
 
-  customToJSON: function() {
+  customToJSON: function () {
     return _.omit(this, ['password']);
   },
 
-  beforeCreate: async function(valuesToSet, proceed) {
+  beforeCreate: async function (valuesToSet, proceed) {
     try {
       if (valuesToSet.password) {
         const hash = await bcrypt.hash(valuesToSet.password, 10);

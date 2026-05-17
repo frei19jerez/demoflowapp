@@ -24,38 +24,42 @@ module.exports = {
 
     descripcion: {
       type: 'string',
-      allowNull: true
+      allowNull: true,
+      columnType: 'text'
     },
 
     tipoProyecto: {
       type: 'string',
       columnName: 'tipo_proyecto',
-      isIn: ['node', 'sails', 'html', 'externo'],
+      isIn: ['externo', 'html', 'node', 'sails', 'git'],
       defaultsTo: 'externo'
     },
 
     tecnologia: {
       type: 'string',
       allowNull: true,
-      maxLength: 120
+      maxLength: 150
     },
 
     urlDemo: {
       type: 'string',
       columnName: 'url_demo',
-      required: true
+      allowNull: true,
+      columnType: 'text'
     },
 
     urlRepositorio: {
       type: 'string',
       columnName: 'url_repositorio',
-      allowNull: true
+      allowNull: true,
+      columnType: 'text'
     },
 
-    archivoHtmlZip: {
+    archivoZipOriginal: {
       type: 'string',
-      columnName: 'archivo_html_zip',
-      allowNull: true
+      columnName: 'archivo_zip_original',
+      allowNull: true,
+      columnType: 'text'
     },
 
     carpetaDemo: {
@@ -65,16 +69,66 @@ module.exports = {
       maxLength: 180
     },
 
-    estado: {
+    carpetaRuntime: {
       type: 'string',
-      isIn: ['borrador', 'activo', 'vendido', 'pausado'],
-      defaultsTo: 'borrador'
+      columnName: 'carpeta_runtime',
+      allowNull: true,
+      columnType: 'text'
     },
 
+    comandoInicio: {
+      type: 'string',
+      columnName: 'comando_inicio',
+      allowNull: true,
+      columnType: 'text'
+    },
+
+    archivoEntrada: {
+      type: 'string',
+      columnName: 'archivo_entrada',
+      allowNull: true,
+      maxLength: 180
+    },
+
+    puerto: {
+      type: 'number',
+      allowNull: true
+    },
+
+    deployType: {
+      type: 'string',
+      columnName: 'deploy_type',
+      isIn: ['static', 'dynamic', 'external'],
+      defaultsTo: 'external'
+    },
+
+    estadoDeploy: {
+      type: 'string',
+      columnName: 'estado_deploy',
+      isIn: [
+        'pendiente',
+        'procesando',
+        'subido',
+        'instalando',
+        'activo',
+        'fallido',
+        'detenido'
+      ],
+      defaultsTo: 'pendiente'
+    },
+
+    logDeploy: {
+      type: 'string',
+      columnName: 'log_deploy',
+      allowNull: true,
+      columnType: 'text'
+    },
+
+    // ✅ PostgreSQL numeric suele regresar como texto: '0.00'
     precioPropuesto: {
       type: 'string',
       columnName: 'precio_propuesto',
-      defaultsTo: '0'
+      defaultsTo: '0.00'
     },
 
     destacado: {

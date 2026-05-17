@@ -1,6 +1,5 @@
 /**
  * DemoController
- *
  * Maneja la apertura de demos dentro de DemoFlowApp
  */
 
@@ -11,7 +10,6 @@ module.exports = {
 
   /**
    * /demo/:slug
-   * Busca el proyecto por slug y redirige a su demo
    */
   ver: async function (req, res) {
     try {
@@ -30,28 +28,82 @@ module.exports = {
         return res.notFound('No se encontró la demo');
       }
 
-      const rutaInterna = `/demos/${slug}/index.html`;
+      const carpeta = proyecto.carpetaDemo || proyecto.slug;
+      const rutaInterna = `/demos/${carpeta}/index.html`;
 
-      // Si existe urlDemo guardada en base de datos
-      if (proyecto.urlDemo && proyecto.urlDemo.trim() !== '') {
-        const destino = proyecto.urlDemo.trim();
+      const rutaFisica = path.resolve(
+        sails.config.appPath,
+        'assets',
+        'demos',
+        carpeta,
+        'index.html'
+      );
 
-        // Evitar bucle si alguien guardó /demo/slug
-        if (destino === `/demo/${slug}`) {
+      const tipo = proyecto.tipoProyecto || 'externo';
+
+      // =========================
+      // 🟢 1. HTML (ZIP)
+      // =========================
+      if (tipo === 'html') {
+        if (fs.existsSync(rutaFisica)) {
           return res.redirect(rutaInterna);
         }
 
-        // Si es URL externa
-        if (destino.startsWith('http://') || destino.startsWith('https://')) {
-          return res.redirect(destino);
+        if (proyecto.urlDemo) {
+          return res.redirect(proyecto.urlDemo);
         }
 
-        // Si ya es ruta interna válida
+        return res.notFound('No se encontró index.html del demo.');
+      }
+
+      // =========================
+      // 🔵 2. NODE / SAILS
+      // =========================
+      if (tipo === 'node' || tipo === 'sails') {
+
+        // 👉 si tiene puerto levantado
+        if (proyecto.puerto) {
+          return res.redirect(`http://localhost:${proyecto.puerto}`);
+        }
+
+        // 👉 si tiene URL manual (Render, etc)
+        if (proyecto.urlDemo) {
+          return res.redirect(proyecto.urlDemo);
+        }
+
+        // 👉 fallback elegante
+        return res.redirect(`/proyecto/${proyecto.id}?estado=pendiente`);
+      }
+
+      // =========================
+      // 🟡 3. EXTERNO / GIT
+      // =========================
+      if (proyecto.urlDemo) {
+
+        const destino = proyecto.urlDemo.trim();
+
+        // evitar bucles
+        if (
+          destino === `/demo/${slug}` ||
+          destino === `/demo/${carpeta}`
+        ) {
+          if (fs.existsSync(rutaFisica)) {
+            return res.redirect(rutaInterna);
+          }
+          return res.redirect(`/proyecto/${proyecto.id}`);
+        }
+
         return res.redirect(destino);
       }
 
-      // Si no hay urlDemo, intenta abrir la ruta interna por defecto
-      return res.redirect(rutaInterna);
+      // =========================
+      // 🔴 4. FALLBACK
+      // =========================
+      if (fs.existsSync(rutaFisica)) {
+        return res.redirect(rutaInterna);
+      }
+
+      return res.redirect(`/proyecto/${proyecto.id}`);
 
     } catch (error) {
       sails.log.error('================ ERROR DEMO VER ================');
@@ -63,7 +115,6 @@ module.exports = {
 
   /**
    * /demo-check/:slug
-   * Verifica si una carpeta demo existe físicamente
    */
   check: async function (req, res) {
     try {
@@ -76,11 +127,22 @@ module.exports = {
         });
       }
 
+      const proyecto = await Proyecto.findOne({ slug });
+
+      if (!proyecto) {
+        return res.json({
+          ok: false,
+          mensaje: 'Proyecto no encontrado'
+        });
+      }
+
+      const carpeta = proyecto.carpetaDemo || proyecto.slug;
+
       const rutaFisica = path.resolve(
         sails.config.appPath,
         'assets',
         'demos',
-        slug,
+        carpeta,
         'index.html'
       );
 
@@ -88,10 +150,13 @@ module.exports = {
 
       return res.json({
         ok: true,
-        slug: slug,
-        existe: existe,
-        ruta: `/demos/${slug}/index.html`,
-        rutaFisica: rutaFisica
+        nombre: proyecto.nombre,
+        tipo: proyecto.tipoProyecto,
+        carpeta,
+        existe,
+        urlDemo: proyecto.urlDemo,
+        puerto: proyecto.puerto,
+        ruta: `/demos/${carpeta}/index.html`
       });
 
     } catch (error) {
