@@ -1,7 +1,8 @@
 module.exports.models = {
 
-  // 🔐 No toca tablas ni en local ni en producción
-  migrate: 'safe',
+  datastore: 'default',
+
+  migrate: 'alter',
 
   dataEncryptionKeys: {
     default: 'yJ330eVxY8OFPL5t+xMt1QJw+uwQWlox7Zzs6zN2S1o='
