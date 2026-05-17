@@ -1,5 +1,29 @@
 const bcrypt = require('bcryptjs');
 
+function limpiarTexto(valor) {
+  return String(valor || '').trim();
+}
+
+function limpiarEmail(valor) {
+  return String(valor || '').trim().toLowerCase();
+}
+
+function validarEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function analizarPasswordIA(password) {
+  if (!password || password.length < 6) {
+    return 'La contraseña debe tener mínimo 6 caracteres.';
+  }
+
+  if (password === '123456' || password === '123123' || password === 'password') {
+    return 'Por seguridad, usa una contraseña más fuerte.';
+  }
+
+  return null;
+}
+
 module.exports = {
 
   registerPage: function (req, res) {
@@ -40,35 +64,27 @@ module.exports = {
 
   register: async function (req, res) {
     try {
-      const nombre = (req.body.nombre || req.body.name || '').trim();
-
-      const email = (
-        req.body.email ||
-        req.body.correo ||
-        ''
-      ).trim().toLowerCase();
-
-      const password = (
-        req.body.password ||
-        req.body.contrasena ||
-        ''
-      ).trim();
-
-      const confirmPassword = (
+      const nombre = limpiarTexto(req.body.nombre || req.body.name);
+      const email = limpiarEmail(req.body.email || req.body.correo);
+      const password = limpiarTexto(req.body.password || req.body.contrasena);
+      const confirmPassword = limpiarTexto(
         req.body.confirmPassword ||
         req.body.confirmarPassword ||
         req.body.confirm_password ||
-        req.body.repetirPassword ||
-        ''
-      ).trim();
+        req.body.repetirPassword
+      );
 
-      // ✅ Validaciones
       if (!nombre || !email || !password || !confirmPassword) {
         return res.badRequest('Todos los campos son obligatorios.');
       }
 
-      if (password.length < 6) {
-        return res.badRequest('La contraseña debe tener mínimo 6 caracteres.');
+      if (!validarEmail(email)) {
+        return res.badRequest('El correo no tiene un formato válido.');
+      }
+
+      const errorPassword = analizarPasswordIA(password);
+      if (errorPassword) {
+        return res.badRequest(errorPassword);
       }
 
       if (password !== confirmPassword) {
@@ -81,20 +97,16 @@ module.exports = {
         return res.badRequest('Ese correo ya está registrado.');
       }
 
-      // 🔐 Encriptar contraseña
-      const hash = await bcrypt.hash(password, 10);
-
       const nuevoUsuario = await Usuario.create({
         nombre,
         email,
-        password: hash,
+        password,
         rol: 'programador',
         activo: true
       }).fetch();
 
-      sails.log.info('USUARIO CREADO OK:', nuevoUsuario.email);
+      sails.log.info('🤖 IA AUTH: USUARIO CREADO OK:', nuevoUsuario.email);
 
-      // 🔑 Crear sesión
       req.session.userId = nuevoUsuario.id;
       req.session.userName = nuevoUsuario.nombre;
       req.session.userEmail = nuevoUsuario.email;
@@ -122,20 +134,15 @@ module.exports = {
 
   login: async function (req, res) {
     try {
-      const email = (
-        req.body.email ||
-        req.body.correo ||
-        ''
-      ).trim().toLowerCase();
-
-      const password = (
-        req.body.password ||
-        req.body.contrasena ||
-        ''
-      ).trim();
+      const email = limpiarEmail(req.body.email || req.body.correo);
+      const password = limpiarTexto(req.body.password || req.body.contrasena);
 
       if (!email || !password) {
         return res.badRequest('Correo y contraseña son obligatorios.');
+      }
+
+      if (!validarEmail(email)) {
+        return res.badRequest('El correo no tiene un formato válido.');
       }
 
       const usuario = await Usuario.findOne({ email });
@@ -159,9 +166,8 @@ module.exports = {
         return res.badRequest('Contraseña incorrecta.');
       }
 
-      sails.log.info('LOGIN OK:', usuario.email);
+      sails.log.info('🤖 IA AUTH: LOGIN OK:', usuario.email);
 
-      // 🔑 Crear sesión
       req.session.userId = usuario.id;
       req.session.userName = usuario.nombre;
       req.session.userEmail = usuario.email;
