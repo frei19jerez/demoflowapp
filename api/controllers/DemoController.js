@@ -1,10 +1,62 @@
 /**
  * DemoController
- * Maneja la apertura de demos dentro de DemoFlowApp
+ * 🚀 DemoFlow IA
+ * Maneja apertura inteligente de demos HTML, Node.js, Sails y externos
  */
 
 const path = require('path');
 const fs = require('fs');
+
+function existe(ruta) {
+  try {
+    return fs.existsSync(ruta);
+  } catch (e) {
+    return false;
+  }
+}
+
+function limpiarSlug(valor) {
+  return String(valor || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-_]/g, '');
+}
+
+function detectarIndexAutomatico(carpetaBase) {
+
+  if (!existe(carpetaBase)) {
+    return null;
+  }
+
+  const indexDirecto = path.join(carpetaBase, 'index.html');
+
+  if (existe(indexDirecto)) {
+    return indexDirecto;
+  }
+
+  const items = fs.readdirSync(carpetaBase, {
+    withFileTypes: true
+  });
+
+  for (const item of items) {
+
+    if (!item.isDirectory()) {
+      continue;
+    }
+
+    const posible = path.join(
+      carpetaBase,
+      item.name,
+      'index.html'
+    );
+
+    if (existe(posible)) {
+      return posible;
+    }
+  }
+
+  return null;
+}
 
 module.exports = {
 
@@ -12,15 +64,17 @@ module.exports = {
    * /demo/:slug
    */
   ver: async function (req, res) {
+
     try {
-      const slug = req.params.slug;
+
+      const slug = limpiarSlug(req.params.slug);
 
       if (!slug) {
         return res.badRequest('Slug no recibido');
       }
 
       const proyecto = await Proyecto.findOne({
-        slug: slug,
+        slug,
         activo: true
       });
 
@@ -29,87 +83,153 @@ module.exports = {
       }
 
       const carpeta = proyecto.carpetaDemo || proyecto.slug;
-      const rutaInterna = `/demos/${carpeta}/index.html`;
 
-      const rutaFisica = path.resolve(
+      const carpetaBase = path.resolve(
         sails.config.appPath,
         'assets',
         'demos',
-        carpeta,
-        'index.html'
+        carpeta
       );
+
+      const indexDetectado = detectarIndexAutomatico(carpetaBase);
+
+      let rutaInterna = `/demos/${carpeta}/index.html`;
+
+      // 🤖 IA detecta subcarpeta automática
+      if (indexDetectado) {
+
+        const relativa = path.relative(
+          path.resolve(
+            sails.config.appPath,
+            'assets'
+          ),
+          indexDetectado
+        );
+
+        rutaInterna = '/' + relativa.replace(/\\/g, '/');
+      }
 
       const tipo = proyecto.tipoProyecto || 'externo';
 
-      // =========================
-      // 🟢 1. HTML (ZIP)
-      // =========================
+      sails.log.info('🤖 DEMOFLOW IA');
+      sails.log.info('Proyecto:', proyecto.nombre);
+      sails.log.info('Tipo:', tipo);
+      sails.log.info('Ruta detectada:', rutaInterna);
+
+      // ==================================================
+      // 🟢 HTML
+      // ==================================================
+
       if (tipo === 'html') {
-        if (fs.existsSync(rutaFisica)) {
+
+        if (indexDetectado) {
+
+          sails.log.info('✅ HTML detectado correctamente');
+
           return res.redirect(rutaInterna);
         }
 
         if (proyecto.urlDemo) {
+
+          sails.log.warn('⚠ HTML sin index local, usando URL');
+
           return res.redirect(proyecto.urlDemo);
         }
 
-        return res.notFound('No se encontró index.html del demo.');
+        sails.log.error('❌ No existe index.html');
+
+        return res.notFound(
+          'No se encontró index.html del proyecto HTML.'
+        );
       }
 
-      // =========================
-      // 🔵 2. NODE / SAILS
-      // =========================
-      if (tipo === 'node' || tipo === 'sails') {
+      // ==================================================
+      // 🔵 NODE / SAILS
+      // ==================================================
 
-        // 👉 si tiene puerto levantado
+      if (
+        tipo === 'node' ||
+        tipo === 'sails'
+      ) {
+
+        // 🧠 IA detecta runtime activo
+
         if (proyecto.puerto) {
-          return res.redirect(`http://localhost:${proyecto.puerto}`);
+
+          const urlLocal = `http://localhost:${proyecto.puerto}`;
+
+          sails.log.info('🚀 Runtime detectado:', urlLocal);
+
+          return res.redirect(urlLocal);
         }
 
-        // 👉 si tiene URL manual (Render, etc)
+        // 🌎 URL manual
+
         if (proyecto.urlDemo) {
+
+          sails.log.info('🌎 URL externa runtime:', proyecto.urlDemo);
+
           return res.redirect(proyecto.urlDemo);
         }
 
-        // 👉 fallback elegante
-        return res.redirect(`/proyecto/${proyecto.id}?estado=pendiente`);
+        sails.log.warn('⚠ Proyecto backend pendiente');
+
+        return res.redirect(
+          `/proyecto/${proyecto.id}?estado=pendiente`
+        );
       }
 
-      // =========================
-      // 🟡 3. EXTERNO / GIT
-      // =========================
+      // ==================================================
+      // 🟡 EXTERNOS
+      // ==================================================
+
       if (proyecto.urlDemo) {
 
         const destino = proyecto.urlDemo.trim();
 
-        // evitar bucles
         if (
           destino === `/demo/${slug}` ||
           destino === `/demo/${carpeta}`
         ) {
-          if (fs.existsSync(rutaFisica)) {
+
+          sails.log.warn('⚠ Evitando bucle de redirección');
+
+          if (indexDetectado) {
             return res.redirect(rutaInterna);
           }
+
           return res.redirect(`/proyecto/${proyecto.id}`);
         }
+
+        sails.log.info('🌎 Redirección externa:', destino);
 
         return res.redirect(destino);
       }
 
-      // =========================
-      // 🔴 4. FALLBACK
-      // =========================
-      if (fs.existsSync(rutaFisica)) {
+      // ==================================================
+      // 🔴 FALLBACK IA
+      // ==================================================
+
+      if (indexDetectado) {
+
+        sails.log.info('🤖 Fallback IA HTML');
+
         return res.redirect(rutaInterna);
       }
+
+      sails.log.warn('⚠ Sin demo válida');
 
       return res.redirect(`/proyecto/${proyecto.id}`);
 
     } catch (error) {
+
       sails.log.error('================ ERROR DEMO VER ================');
       sails.log.error(error);
       sails.log.error('================================================');
-      return res.serverError('Ocurrió un error cargando la demo');
+
+      return res.serverError(
+        'Ocurrió un error cargando la demo'
+      );
     }
   },
 
@@ -117,19 +237,25 @@ module.exports = {
    * /demo-check/:slug
    */
   check: async function (req, res) {
+
     try {
-      const slug = req.params.slug;
+
+      const slug = limpiarSlug(req.params.slug);
 
       if (!slug) {
+
         return res.badRequest({
           ok: false,
           mensaje: 'Slug requerido'
         });
       }
 
-      const proyecto = await Proyecto.findOne({ slug });
+      const proyecto = await Proyecto.findOne({
+        slug
+      });
 
       if (!proyecto) {
+
         return res.json({
           ok: false,
           mensaje: 'Proyecto no encontrado'
@@ -138,31 +264,63 @@ module.exports = {
 
       const carpeta = proyecto.carpetaDemo || proyecto.slug;
 
-      const rutaFisica = path.resolve(
+      const carpetaBase = path.resolve(
         sails.config.appPath,
         'assets',
         'demos',
-        carpeta,
-        'index.html'
+        carpeta
       );
 
-      const existe = fs.existsSync(rutaFisica);
+      const indexDetectado = detectarIndexAutomatico(carpetaBase);
+
+      let rutaFinal = null;
+
+      if (indexDetectado) {
+
+        rutaFinal =
+          '/' +
+          path.relative(
+            path.resolve(
+              sails.config.appPath,
+              'assets'
+            ),
+            indexDetectado
+          ).replace(/\\/g, '/');
+      }
 
       return res.json({
+
         ok: true,
+
+        ia: {
+          demoDetectada: !!indexDetectado,
+          tecnologia: proyecto.tipoProyecto,
+          runtimeActivo: !!proyecto.puerto
+        },
+
         nombre: proyecto.nombre,
+
         tipo: proyecto.tipoProyecto,
+
         carpeta,
-        existe,
+
+        existe: !!indexDetectado,
+
         urlDemo: proyecto.urlDemo,
+
         puerto: proyecto.puerto,
-        ruta: `/demos/${carpeta}/index.html`
+
+        ruta: rutaFinal ||
+
+          `/demos/${carpeta}/index.html`
       });
 
     } catch (error) {
+
       sails.log.error('================ ERROR DEMO CHECK ================');
       sails.log.error(error);
       sails.log.error('==================================================');
+
       return res.serverError({
         ok: false,
         mensaje: 'Error verificando demo'

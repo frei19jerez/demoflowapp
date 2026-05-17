@@ -10,6 +10,7 @@
     "@sailshq/socket.io-redis": "^6.1.2",
     "adm-zip": "^0.5.17",
     "bcryptjs": "^3.0.3",
+    "flash": "^1.1.0",
     "grunt": "1.0.4",
     "pg": "^8.20.0",
     "sails": "^1.5.17",

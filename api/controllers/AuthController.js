@@ -17,11 +17,28 @@ function analizarPasswordIA(password) {
     return 'La contraseña debe tener mínimo 6 caracteres.';
   }
 
-  if (password === '123456' || password === '123123' || password === 'password') {
+  if (
+    password === '123456' ||
+    password === '123123' ||
+    password.toLowerCase() === 'password'
+  ) {
     return 'Por seguridad, usa una contraseña más fuerte.';
   }
 
   return null;
+}
+
+function guardarFlash(req, tipo, mensaje) {
+  req.session.flash = {
+    tipo,
+    mensaje
+  };
+}
+
+function obtenerFlash(req) {
+  const flash = req.session.flash || null;
+  req.session.flash = null;
+  return flash;
 }
 
 module.exports = {
@@ -32,8 +49,11 @@ module.exports = {
         return res.redirect('/dashboard');
       }
 
+      const flash = obtenerFlash(req);
+
       return res.view('pages/auth/register', {
-        titulo: 'Registro'
+        titulo: 'Registro',
+        flash
       });
 
     } catch (err) {
@@ -50,8 +70,11 @@ module.exports = {
         return res.redirect('/dashboard');
       }
 
+      const flash = obtenerFlash(req);
+
       return res.view('pages/auth/login', {
-        titulo: 'Iniciar sesión'
+        titulo: 'Iniciar sesión',
+        flash
       });
 
     } catch (err) {
@@ -75,26 +98,32 @@ module.exports = {
       );
 
       if (!nombre || !email || !password || !confirmPassword) {
-        return res.badRequest('Todos los campos son obligatorios.');
+        guardarFlash(req, 'error', 'Todos los campos son obligatorios.');
+        return res.redirect('/register');
       }
 
       if (!validarEmail(email)) {
-        return res.badRequest('El correo no tiene un formato válido.');
+        guardarFlash(req, 'error', 'El correo no tiene un formato válido.');
+        return res.redirect('/register');
       }
 
       const errorPassword = analizarPasswordIA(password);
+
       if (errorPassword) {
-        return res.badRequest(errorPassword);
+        guardarFlash(req, 'error', errorPassword);
+        return res.redirect('/register');
       }
 
       if (password !== confirmPassword) {
-        return res.badRequest('Las contraseñas no coinciden.');
+        guardarFlash(req, 'error', 'Las contraseñas no coinciden.');
+        return res.redirect('/register');
       }
 
       const existe = await Usuario.findOne({ email });
 
       if (existe) {
-        return res.badRequest('Ese correo ya está registrado.');
+        guardarFlash(req, 'error', 'Ese correo ya está registrado.');
+        return res.redirect('/register');
       }
 
       const nuevoUsuario = await Usuario.create({
@@ -128,7 +157,9 @@ module.exports = {
       sails.log.error('BODY RECIBIDO EN REGISTER:');
       sails.log.error(req.body);
       sails.log.error('===================================================');
-      return res.serverError('Error al registrar usuario.');
+
+      guardarFlash(req, 'error', 'Error al registrar usuario.');
+      return res.redirect('/register');
     }
   },
 
@@ -138,32 +169,38 @@ module.exports = {
       const password = limpiarTexto(req.body.password || req.body.contrasena);
 
       if (!email || !password) {
-        return res.badRequest('Correo y contraseña son obligatorios.');
+        guardarFlash(req, 'error', 'Correo y contraseña son obligatorios.');
+        return res.redirect('/login');
       }
 
       if (!validarEmail(email)) {
-        return res.badRequest('El correo no tiene un formato válido.');
+        guardarFlash(req, 'error', 'El correo no tiene un formato válido.');
+        return res.redirect('/login');
       }
 
       const usuario = await Usuario.findOne({ email });
 
       if (!usuario) {
-        return res.badRequest('Correo no encontrado.');
+        guardarFlash(req, 'error', 'Correo no encontrado.');
+        return res.redirect('/login');
       }
 
       if (!usuario.activo) {
-        return res.forbidden('Tu cuenta está desactivada.');
+        guardarFlash(req, 'error', 'Tu cuenta está desactivada.');
+        return res.redirect('/login');
       }
 
       if (!usuario.password) {
         sails.log.error('El usuario no tiene contraseña:', usuario.email);
-        return res.serverError('La cuenta no tiene contraseña válida.');
+        guardarFlash(req, 'error', 'La cuenta no tiene contraseña válida.');
+        return res.redirect('/login');
       }
 
       const ok = await bcrypt.compare(password, usuario.password);
 
       if (!ok) {
-        return res.badRequest('Contraseña incorrecta.');
+        guardarFlash(req, 'error', 'Contraseña incorrecta.');
+        return res.redirect('/login');
       }
 
       sails.log.info('🤖 IA AUTH: LOGIN OK:', usuario.email);
@@ -189,7 +226,9 @@ module.exports = {
       sails.log.error('BODY RECIBIDO EN LOGIN:');
       sails.log.error(req.body);
       sails.log.error('===================================================');
-      return res.serverError('Error al iniciar sesión.');
+
+      guardarFlash(req, 'error', 'Error al iniciar sesión.');
+      return res.redirect('/login');
     }
   },
 
