@@ -1,7 +1,5 @@
 module.exports.models = {
-
   datastore: 'default',
-
   migrate: 'alter',
 
   dataEncryptionKeys: {
@@ -9,5 +7,4 @@ module.exports.models = {
   },
 
   cascadeOnDestroy: true
-
 };
