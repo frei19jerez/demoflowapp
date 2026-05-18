@@ -37,20 +37,39 @@ function eliminarCarpeta(ruta) {
 }
 
 function copiarCarpeta(origen, destino) {
+
   crearCarpeta(destino);
 
   const items = fs.readdirSync(origen, { withFileTypes: true });
 
   for (const item of items) {
+
     const origenItem = path.join(origen, item.name);
     const destinoItem = path.join(destino, item.name);
 
     if (item.isDirectory()) {
+
+      // 🚫 Ignorar carpetas pesadas
+      if (
+        item.name === 'node_modules' ||
+        item.name === '.git' ||
+        item.name === '.tmp' ||
+        item.name === '.vscode' ||
+        item.name === 'uploads'
+      ) {
+        continue;
+      }
+
       copiarCarpeta(origenItem, destinoItem);
+
     } else {
+
       fs.copyFileSync(origenItem, destinoItem);
+
     }
+
   }
+
 }
 
 function buscarArchivoRecursivo(carpeta, nombreArchivo) {
