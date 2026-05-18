@@ -165,5 +165,47 @@ module.exports = {
       columnName: 'updated_at'
     }
 
-  }
+  },
+
+  carpetaRuntime: {
+  type: 'string',
+  allowNull: true,
+  columnName: 'carpeta_runtime'
+},
+
+comandoInicio: {
+  type: 'string',
+  allowNull: true,
+  columnName: 'comando_inicio'
+},
+
+archivoEntrada: {
+  type: 'string',
+  allowNull: true,
+  columnName: 'archivo_entrada'
+},
+
+puerto: {
+  type: 'number',
+  allowNull: true
+},
+
+deployType: {
+  type: 'string',
+  allowNull: true,
+  columnName: 'deploy_type'
+},
+
+estadoDeploy: {
+  type: 'string',
+  allowNull: true,
+  columnName: 'estado_deploy'
+},
+
+logDeploy: {
+  type: 'string',
+  allowNull: true,
+  columnName: 'log_deploy'
+},
+
 };
