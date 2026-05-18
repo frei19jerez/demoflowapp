@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { exec } = require('child_process');
 const unzipper = require('unzipper');
 
 function generarPuerto() {
@@ -19,12 +20,8 @@ function limpiarTextoRuta(texto) {
 
 function obtenerLimiteSubida(tipoProyecto) {
   if (tipoProyecto === 'html') return 300000000;
-  if (tipoProyecto === 'node' || tipoProyecto === 'sails') return 2000000000;
+  if (tipoProyecto === 'node' || tipoProyecto === 'sails') return 300000000;
   return 500000000;
-}
-
-function existe(ruta) {
-  return fs.existsSync(ruta);
 }
 
 function crearCarpeta(ruta) {
@@ -136,15 +133,11 @@ function limpiarCarpetaExtra(carpetaDestino) {
 
   const indexDirecto = path.join(carpetaDestino, 'index.html');
 
-  if (fs.existsSync(indexDirecto)) {
-    return;
-  }
+  if (fs.existsSync(indexDirecto)) return;
 
   const indexEncontrado = buscarArchivoRecursivo(carpetaDestino, 'index.html');
 
-  if (!indexEncontrado) {
-    return;
-  }
+  if (!indexEncontrado) return;
 
   const carpetaReal = path.dirname(indexEncontrado);
   const carpetaTemporal = carpetaDestino + '_tmp_' + Date.now();
@@ -158,19 +151,66 @@ function limpiarCarpetaExtra(carpetaDestino) {
   eliminarCarpeta(carpetaTemporal);
 }
 
+function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRuntimeFinal) {
+  const carpetaDestinoRuntime = path.resolve(
+    sails.config.appPath,
+    'deploy_runtime',
+    'apps',
+    carpetaRuntimeFinal
+  );
+
+  eliminarCarpeta(carpetaDestinoRuntime);
+  crearCarpeta(carpetaDestinoRuntime);
+
+  const rama = ramaGit && ramaGit.trim() !== '' ? ramaGit.trim() : 'main';
+
+  const comando = `git clone --branch ${rama} "${urlRepositorio}" "${carpetaDestinoRuntime}"`;
+
+  Proyecto.updateOne({ id: proyectoId }).set({
+    estadoDeploy: 'clonando',
+    logDeploy:
+      '🤖 DemoFlow IA inició clonación desde Git.\n' +
+      `Repositorio: ${urlRepositorio}\n` +
+      `Rama: ${rama}\n`
+  }).exec(() => {});
+
+  exec(comando, async function (error, stdout, stderr) {
+    let log = '';
+
+    if (stdout) log += `\n[STDOUT]\n${stdout}`;
+    if (stderr) log += `\n[STDERR]\n${stderr}`;
+
+    if (error) {
+      await Proyecto.updateOne({ id: proyectoId }).set({
+        estadoDeploy: 'fallido',
+        logDeploy:
+          '❌ Error clonando repositorio Git.\n' +
+          log +
+          `\n${error.message}`
+      });
+
+      return;
+    }
+
+    const tipoDetectado = detectarTipoIA(carpetaDestinoRuntime, 'node');
+
+    await Proyecto.updateOne({ id: proyectoId }).set({
+      tipoProyecto: tipoDetectado,
+      estadoDeploy: 'subido',
+      logDeploy:
+        '✅ Repositorio Git clonado correctamente.\n' +
+        `Tipo detectado: ${tipoDetectado}\n` +
+        'Listo para desplegar desde el panel.\n' +
+        log
+    });
+  });
+}
+
 module.exports = {
 
   index: async function (req, res) {
     try {
-      let proyectos = [];
-
-      try {
-        proyectos = await Proyecto.find({ activo: true }).sort('id DESC');
-      } catch (e) {
-        console.log('================ ERROR CONSULTANDO PROYECTOS ================');
-        console.error(e.stack || e);
-        console.log('============================================================');
-      }
+      const proyectos = await Proyecto.find({ activo: true }).sort('id DESC');
 
       return res.view('pages/homepage', {
         titulo: 'Inicio',
@@ -196,17 +236,9 @@ module.exports = {
         return res.redirect('/login');
       }
 
-      let proyectos = [];
-
-      try {
-        proyectos = await Proyecto.find({
-          usuario: req.session.userId
-        }).sort('id DESC');
-      } catch (e) {
-        console.log('================ ERROR CONSULTANDO PROYECTOS DASHBOARD ================');
-        console.error(e.stack || e);
-        console.log('======================================================================');
-      }
+      const proyectos = await Proyecto.find({
+        usuario: req.session.userId
+      }).sort('id DESC');
 
       return res.view('pages/dashboard/index', {
         titulo: 'Dashboard',
@@ -262,6 +294,7 @@ module.exports = {
       const tecnologiaIngresada = req.body.tecnologia ? req.body.tecnologia.trim() : '';
       const tipoProyecto = req.body.tipoProyecto ? req.body.tipoProyecto.trim() : 'html';
       const urlRepositorio = req.body.urlRepositorio ? req.body.urlRepositorio.trim() : '';
+      const ramaGit = req.body.ramaGit ? req.body.ramaGit.trim() : 'main';
       const urlDemoIngresada = req.body.urlDemo ? req.body.urlDemo.trim() : '';
       const carpetaDemoIngresada = req.body.carpetaDemo ? req.body.carpetaDemo.trim() : '';
       const comandoInicio = req.body.comandoInicio ? req.body.comandoInicio.trim() : '';
@@ -320,31 +353,22 @@ module.exports = {
 
         tipoFinal = tipoProyecto === 'externo' ? 'node' : tipoProyecto;
         deployType = tipoFinal === 'html' ? 'static' : 'dynamic';
-        estadoDeploy = 'subido';
+        estadoDeploy = 'registrado';
 
         descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
         tecnologiaFinal = tecnologiaFinal || (
           tipoFinal === 'sails'
-            ? 'Sails.js + Node.js'
+            ? 'Sails.js + Node.js + PostgreSQL'
             : tipoFinal === 'node'
               ? 'Node.js'
               : 'HTML + CSS + JavaScript'
         );
-
-        logDeploy =
-          '🤖 DemoFlow IA registró el repositorio Git.\n' +
-          'Pendiente clonado/despliegue automático.';
 
         if (tipoFinal === 'node' || tipoFinal === 'sails') {
           carpetaRuntimeFinal = slugFinal;
           puertoFinal = generarPuerto();
           comandoInicioFinal = comandoInicio || (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
           archivoEntradaFinal = archivoEntrada || 'app.js';
-
-          logDeploy =
-            `🤖 DemoFlow IA detectó proyecto ${tipoFinal} desde Git.\n` +
-            `Puerto asignado: ${puertoFinal}\n` +
-            `Comando sugerido: ${comandoInicioFinal}`;
         }
 
         if (tipoFinal === 'html') {
@@ -355,6 +379,12 @@ module.exports = {
           urlDemoFinal = urlDemoIngresada;
           estadoDeploy = 'activo';
           logDeploy = 'Repositorio Git registrado con URL en vivo.';
+        } else {
+          logDeploy =
+            '🤖 DemoFlow IA registró el repositorio Git.\n' +
+            `Repositorio: ${urlRepositorio}\n` +
+            `Rama: ${ramaGit || 'main'}\n` +
+            'Clonación iniciará en segundo plano.';
         }
       }
 
@@ -418,7 +448,7 @@ module.exports = {
 
           tecnologiaFinal = tecnologiaFinal || (
             tipoFinal === 'sails'
-              ? 'Sails.js + Node.js'
+              ? 'Sails.js + Node.js + PostgreSQL'
               : tipoFinal === 'node'
                 ? 'Node.js'
                 : 'HTML + CSS + JavaScript'
@@ -475,7 +505,8 @@ module.exports = {
               `🤖 DemoFlow IA detectó proyecto ${tipoFinal}.\n` +
               `✅ Runtime preparado\n` +
               `✅ Puerto asignado: ${puertoFinal}\n` +
-              `✅ Comando sugerido: ${comandoInicioFinal}`;
+              `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+              'Pendiente desplegar desde el panel.';
           }
 
           else {
@@ -512,7 +543,7 @@ module.exports = {
             comandoInicioFinal = comandoInicio || (tipoProyecto === 'sails' ? 'node app.js' : 'npm start');
             archivoEntradaFinal = archivoEntrada || 'app.js';
             descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
-            tecnologiaFinal = tecnologiaFinal || (tipoFinal === 'sails' ? 'Sails.js + Node.js' : 'Node.js');
+            tecnologiaFinal = tecnologiaFinal || (tipoFinal === 'sails' ? 'Sails.js + Node.js + PostgreSQL' : 'Node.js');
             logDeploy = `Proyecto ${tipoProyecto} registrado con URL manual.`;
           }
 
@@ -526,7 +557,7 @@ module.exports = {
         return res.badRequest(`Método de entrada no válido: ${metodoEntrada}`);
       }
 
-      await Proyecto.create({
+      const proyectoCreado = await Proyecto.create({
         nombre,
         slug: slugFinal,
         descripcion: descripcionFinal || null,
@@ -547,7 +578,16 @@ module.exports = {
         destacado: false,
         activo: true,
         usuario: req.session.userId
-      });
+      }).fetch();
+
+      if (metodoEntrada === 'git' && urlRepositorio && !urlDemoFinal) {
+        clonarGitEnSegundoPlano(
+          proyectoCreado.id,
+          urlRepositorio,
+          ramaGit,
+          carpetaRuntimeFinal || slugFinal
+        );
+      }
 
       return res.redirect('/dashboard');
 
