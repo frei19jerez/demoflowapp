@@ -3,15 +3,9 @@ const skipper = require('skipper');
 
 module.exports.http = {
 
-  bodyParser: skipper({
-    strict: true,
-    limit: '500mb'
-  }),
-
   middleware: {
 
     order: [
-      'startRequestTimer',
       'cookieParser',
       'session',
       'bodyParser',
@@ -22,6 +16,11 @@ module.exports.http = {
       'favicon',
       'staticDemos'
     ],
+
+    bodyParser: skipper({
+      strict: true,
+      limit: '500mb'
+    }),
 
     staticDemos: require('serve-static')(
       path.resolve(__dirname, '..', 'assets/demos')
