@@ -1,6 +1,12 @@
 const path = require('path');
+const skipper = require('skipper');
 
 module.exports.http = {
+
+  bodyParser: skipper({
+    strict: true,
+    limit: '500mb'
+  }),
 
   middleware: {
 
