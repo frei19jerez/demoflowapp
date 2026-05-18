@@ -184,6 +184,7 @@ async function levantarProyecto(proyecto) {
   if (!fs.existsSync(rutaProyecto)) {
     await Proyecto.updateOne({ id }).set({
       estadoDeploy: 'fallido',
+      urlDemo: null,
       logDeploy: 'No existe la carpeta runtime del proyecto.'
     });
     return;
@@ -193,6 +194,7 @@ async function levantarProyecto(proyecto) {
 
   await Proyecto.updateOne({ id }).set({
     puerto,
+    urlDemo: null,
     estadoDeploy: 'instalando',
     logDeploy: 'Ejecutando npm install...'
   });
@@ -215,6 +217,7 @@ async function levantarProyecto(proyecto) {
     if (error) {
       await Proyecto.updateOne({ id }).set({
         estadoDeploy: 'fallido',
+        urlDemo: null,
         logDeploy: `Fallo en npm install.\n${log || error.message}`
       });
       return;
@@ -243,7 +246,11 @@ async function levantarProyecto(proyecto) {
 
     procesos[id] = proceso;
 
-    let logRuntime = log + `\n\n[DEMOFLOW]\nIniciando app con: ${comandoInicio}\nPuerto: ${puerto}\n`;
+    let logRuntime =
+      log +
+      `\n\n[DEMOFLOW]\nIniciando app con: ${comandoInicio}\n` +
+      `Puerto interno asignado: ${puerto}\n` +
+      `IMPORTANTE: DemoFlow no redirige a localhost. Para verla pública se necesita proxy runtime o URL externa.\n`;
 
     proceso.stdout.on('data', async function (data) {
       logRuntime += `\n[APP]\n${data.toString()}`;
@@ -263,6 +270,7 @@ async function levantarProyecto(proyecto) {
 
       await Proyecto.updateOne({ id }).set({
         estadoDeploy: 'detenido',
+        urlDemo: null,
         logDeploy: logRuntime
       });
     });
@@ -270,7 +278,7 @@ async function levantarProyecto(proyecto) {
     await Proyecto.updateOne({ id }).set({
       estadoDeploy: 'activo',
       puerto,
-      urlDemo: `http://localhost:${puerto}`,
+      urlDemo: null,
       logDeploy: logRuntime
     });
   });
