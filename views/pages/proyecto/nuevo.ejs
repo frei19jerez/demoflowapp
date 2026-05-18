@@ -216,14 +216,14 @@
     if (input.files && input.files[0]) {
       const archivo = input.files[0];
 
-      if (archivo.size > 500 * 1024 * 1024) {
+      if (archivo.size > 2 * 1024 * 1024 * 1024) {
 
-  alert('El archivo pesa más de 500MB. Sube un ZIP más liviano y sin node_modules.');
+      alert('El archivo pesa más de 2GB.');
 
-  input.value = '';
-  box.style.display = 'none';
+      input.value = '';
+      box.style.display = 'none';
 
-  return;
+      return;
 }
 
       box.style.display = 'block';

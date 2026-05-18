@@ -20,13 +20,11 @@ function limpiarTextoRuta(texto) {
 
 function obtenerLimiteSubida(tipoProyecto) {
 
-  // 🚀 DemoFlow permite subir proyectos más pesados
-  // especialmente ZIP de Sails.js y Node.js
+  // 🚀 DemoFlow subida máxima 2GB
 
-  return 500 * 1024 * 1024;
+  return 2 * 1024 * 1024 * 1024;
 
 }
-
 function crearCarpeta(ruta) {
   if (!fs.existsSync(ruta)) {
     fs.mkdirSync(ruta, { recursive: true });
