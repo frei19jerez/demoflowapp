@@ -98,14 +98,81 @@
       </div>
 
       <div id="cargaBox" style="display:none; margin-bottom:20px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <strong style="color:#111827;">Procesando proyecto...</strong>
-          <span id="cargaTexto" style="color:#6b7280; font-size:14px;">Preparando...</span>
-        </div>
-        <div style="width:100%; height:14px; background:#e5e7eb; border-radius:999px; overflow:hidden;">
-          <div id="barraCarga" style="width:0%; height:100%; background:#2563eb; transition:width .3s ease;"></div>
-        </div>
-      </div>
+
+  <div style="
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+  ">
+
+    <strong style="
+      color:#111827;
+      font-size:15px;
+    ">
+      Procesando proyecto...
+    </strong>
+
+    <span id="cargaTexto" style="
+      color:#2563eb;
+      font-size:14px;
+      font-weight:bold;
+    ">
+      Preparando...
+    </span>
+
+  </div>
+
+  <div style="
+    width:100%;
+    height:14px;
+    background:#e5e7eb;
+    border-radius:999px;
+    overflow:hidden;
+    position:relative;
+    box-shadow:inset 0 2px 6px rgba(0,0,0,.08);
+  ">
+
+    <div
+      id="barraCarga"
+      style="
+        width:0%;
+        height:100%;
+        border-radius:999px;
+        background:linear-gradient(
+          90deg,
+          #2563eb,
+          #60a5fa,
+          #2563eb
+        );
+        background-size:300% 100%;
+        animation:moverBarra 1s linear infinite;
+        transition:width .08s linear;
+        box-shadow:
+          0 0 10px rgba(37,99,235,.5),
+          0 0 20px rgba(96,165,250,.4);
+      ">
+    </div>
+
+  </div>
+
+</div>
+
+<style>
+
+@keyframes moverBarra{
+
+  0%{
+    background-position:0% 0%;
+  }
+
+  100%{
+    background-position:300% 0%;
+  }
+
+}
+
+</style>
 
       <div style="display:flex; gap:12px; flex-wrap:wrap;">
         <button id="btnGuardarProyecto" type="submit" style="background:#2563eb; color:#fff; border:none; padding:12px 22px; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer;">
