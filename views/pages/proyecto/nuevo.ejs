@@ -421,9 +421,58 @@
     this.dataset.editadoManualmente = 'true';
   });
 
-  document.getElementById('formProyecto').addEventListener('submit', function () {
-    iniciarCargaVisual();
-  });
+  document.getElementById('formProyecto').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  iniciarCargaVisual();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  const texto = document.getElementById('cargaTexto');
+  const barra = document.getElementById('barraCarga');
+  const boton = document.getElementById('btnGuardarProyecto');
+
+  try {
+    texto.textContent = 'Enviando proyecto al servidor...';
+    barra.style.width = '95%';
+
+    const respuesta = await fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      credentials: 'same-origin'
+    });
+
+    if (respuesta.redirected) {
+      window.location.href = respuesta.url;
+      return;
+    }
+
+    if (!respuesta.ok) {
+      const errorTexto = await respuesta.text();
+
+      texto.textContent = 'Error al crear proyecto';
+      boton.disabled = false;
+      boton.textContent = 'Guardar proyecto';
+      boton.style.opacity = '1';
+      boton.style.cursor = 'pointer';
+
+      alert('Error del servidor:\n\n' + errorTexto);
+      return;
+    }
+
+    window.location.href = '/dashboard';
+
+  } catch (error) {
+    texto.textContent = 'Error de conexión';
+    boton.disabled = false;
+    boton.textContent = 'Guardar proyecto';
+    boton.style.opacity = '1';
+    boton.style.cursor = 'pointer';
+
+    alert('No se pudo enviar el proyecto:\n\n' + error.message);
+  }
+});
 
   cambiarMetodoEntrada();
 </script>
