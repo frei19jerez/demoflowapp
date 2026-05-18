@@ -19,7 +19,12 @@ function limpiarTextoRuta(texto) {
 }
 
 function obtenerLimiteSubida(tipoProyecto) {
-  return 80 * 1024 * 1024;
+
+  // 🚀 DemoFlow permite subir proyectos más pesados
+  // especialmente ZIP de Sails.js y Node.js
+
+  return 120 * 1024 * 1024;
+
 }
 
 function crearCarpeta(ruta) {
