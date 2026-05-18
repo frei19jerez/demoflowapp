@@ -293,11 +293,14 @@ module.exports = {
       });
 
     } catch (err) {
-      console.log('================ ERROR NUEVO PROYECTO ================');
-      console.error(err.stack || err);
-      console.log('======================================================');
-      return res.serverError('Error al abrir formulario de proyecto');
-    }
+  console.log('================ ERROR CREAR PROYECTO ================');
+  console.error(err.stack || err);
+  console.log('======================================================');
+
+  return res.status(500).send(
+    '<pre>' + (err.stack || err.message || err) + '</pre>'
+  );
+}
   },
 crear: async function (req, res) {
   try {
