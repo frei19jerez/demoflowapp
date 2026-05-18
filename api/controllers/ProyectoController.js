@@ -23,7 +23,7 @@ function obtenerLimiteSubida(tipoProyecto) {
   // 🚀 DemoFlow permite subir proyectos más pesados
   // especialmente ZIP de Sails.js y Node.js
 
-  return 300 * 1024 * 1024;
+  return 500 * 1024 * 1024;
 
 }
 
