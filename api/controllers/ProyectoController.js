@@ -538,7 +538,8 @@ crear: async function (req, res) {
           eliminarCarpeta(carpetaDestinoRuntime);
           crearCarpeta(carpetaDestinoRuntime);
 
-          copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
+          // Temporalmente desactivado para probar si el formulario ya redirige
+           // copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
 
           puertoFinal = generarPuerto();
           comandoInicioFinal = comandoInicio || (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
