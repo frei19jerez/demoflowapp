@@ -296,9 +296,73 @@
     this.dataset.editadoManualmente = 'true';
   });
 
-  document.getElementById('formProyecto').addEventListener('submit', function () {
-    iniciarCargaVisual();
-  });
+  document.getElementById('formProyecto').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  const cargaBox = document.getElementById('cargaBox');
+  const barra = document.getElementById('barraCarga');
+  const texto = document.getElementById('cargaTexto');
+  const boton = document.getElementById('btnGuardarProyecto');
+
+  cargaBox.style.display = 'block';
+  boton.disabled = true;
+  boton.textContent = 'Procesando...';
+  boton.style.opacity = '0.7';
+  boton.style.cursor = 'not-allowed';
+
+  const xhr = new XMLHttpRequest();
+
+  xhr.open('POST', form.action, true);
+
+  xhr.upload.onprogress = function (event) {
+    if (event.lengthComputable) {
+      const porcentaje = Math.round((event.loaded / event.total) * 100);
+
+      barra.style.width = porcentaje + '%';
+      texto.textContent = 'Subiendo archivo... ' + porcentaje + '%';
+    } else {
+      texto.textContent = 'Subiendo archivo...';
+    }
+  };
+
+  xhr.onload = function () {
+    if (xhr.status >= 200 && xhr.status < 400) {
+      texto.textContent = 'Finalizado 100%';
+      barra.style.width = '100%';
+
+      setTimeout(function () {
+        window.location.href = '/dashboard';
+      }, 800);
+
+      return;
+    }
+
+    texto.textContent = 'Error al crear proyecto';
+
+    boton.disabled = false;
+    boton.textContent = 'Guardar proyecto';
+    boton.style.opacity = '1';
+    boton.style.cursor = 'pointer';
+
+    alert('Error del servidor:\n\n' + xhr.responseText);
+  };
+
+  xhr.onerror = function () {
+    texto.textContent = 'Error de conexión';
+
+    boton.disabled = false;
+    boton.textContent = 'Guardar proyecto';
+    boton.style.opacity = '1';
+    boton.style.cursor = 'pointer';
+
+    alert('No se pudo subir el proyecto. Revisa conexión o Render.');
+  };
+
+  xhr.send(formData);
+});
 
   cambiarMetodoEntrada();
 </script>
