@@ -217,14 +217,11 @@
       const archivo = input.files[0];
 
       if (archivo.size > 2 * 1024 * 1024 * 1024) {
-
-      alert('El archivo pesa más de 2GB.');
-
-      input.value = '';
-      box.style.display = 'none';
-
-      return;
-}
+        alert('El archivo pesa más de 2GB.');
+        input.value = '';
+        box.style.display = 'none';
+        return;
+      }
 
       box.style.display = 'block';
       box.textContent = 'Archivo seleccionado: ' + archivo.name;
@@ -247,43 +244,6 @@
     }
   }
 
-  function iniciarCargaVisual() {
-    const cargaBox = document.getElementById('cargaBox');
-    const barra = document.getElementById('barraCarga');
-    const texto = document.getElementById('cargaTexto');
-    const boton = document.getElementById('btnGuardarProyecto');
-
-    cargaBox.style.display = 'block';
-    boton.disabled = true;
-    boton.textContent = 'Procesando...';
-    boton.style.opacity = '0.7';
-    boton.style.cursor = 'not-allowed';
-
-    let progreso = 0;
-    const pasos = [
-      { hasta: 20, texto: 'Validando datos...' },
-      { hasta: 45, texto: 'Subiendo contenido...' },
-      { hasta: 70, texto: 'Procesando proyecto...' },
-      { hasta: 90, texto: 'Finalizando...' }
-    ];
-
-    let indice = 0;
-
-    setInterval(function () {
-      if (indice < pasos.length) {
-        const paso = pasos[indice];
-        texto.textContent = paso.texto;
-
-        if (progreso < paso.hasta) {
-          progreso += 5;
-          barra.style.width = progreso + '%';
-        } else {
-          indice++;
-        }
-      }
-    }, 250);
-  }
-
   document.getElementById('nombre').addEventListener('input', function () {
     const slugInput = document.getElementById('slug');
 
@@ -297,72 +257,100 @@
   });
 
   document.getElementById('formProyecto').addEventListener('submit', function (e) {
-  e.preventDefault();
+    e.preventDefault();
 
-  const form = e.target;
-  const formData = new FormData(form);
+    const form = e.target;
+    const formData = new FormData(form);
 
-  const cargaBox = document.getElementById('cargaBox');
-  const barra = document.getElementById('barraCarga');
-  const texto = document.getElementById('cargaTexto');
-  const boton = document.getElementById('btnGuardarProyecto');
+    const cargaBox = document.getElementById('cargaBox');
+    const barra = document.getElementById('barraCarga');
+    const texto = document.getElementById('cargaTexto');
+    const boton = document.getElementById('btnGuardarProyecto');
 
-  cargaBox.style.display = 'block';
-  boton.disabled = true;
-  boton.textContent = 'Procesando...';
-  boton.style.opacity = '0.7';
-  boton.style.cursor = 'not-allowed';
+    cargaBox.style.display = 'block';
+    barra.style.width = '0%';
+    texto.textContent = 'Preparando subida...';
 
-  const xhr = new XMLHttpRequest();
+    boton.disabled = true;
+    boton.textContent = 'Procesando...';
+    boton.style.opacity = '0.7';
+    boton.style.cursor = 'not-allowed';
 
-  xhr.open('POST', form.action, true);
+    const xhr = new XMLHttpRequest();
+    let procesandoIntervalo = null;
 
-  xhr.upload.onprogress = function (event) {
-    if (event.lengthComputable) {
-      const porcentaje = Math.round((event.loaded / event.total) * 100);
+    xhr.open('POST', form.action, true);
 
-      barra.style.width = porcentaje + '%';
-      texto.textContent = 'Subiendo archivo... ' + porcentaje + '%';
-    } else {
-      texto.textContent = 'Subiendo archivo...';
-    }
-  };
+    xhr.upload.onprogress = function (event) {
+      if (event.lengthComputable) {
+        const porcentaje = Math.round((event.loaded / event.total) * 100);
 
-  xhr.onload = function () {
-    if (xhr.status >= 200 && xhr.status < 400) {
-      texto.textContent = 'Finalizado 100%';
-      barra.style.width = '100%';
+        barra.style.width = porcentaje + '%';
+        texto.textContent = 'Subiendo archivo... ' + porcentaje + '%';
 
-      setTimeout(function () {
-        window.location.href = '/dashboard';
-      }, 800);
+        if (porcentaje >= 100 && !procesandoIntervalo) {
+          texto.textContent = '✅ Subida completada. Procesando ZIP...';
 
-      return;
-    }
+          let paso = 0;
+          const mensajes = [
+            '📦 Extrayendo archivos...',
+            '🧠 Detectando tipo de proyecto...',
+            '⚙️ Preparando runtime...',
+            '🚀 Guardando proyecto...',
+            '✅ Finalizando...'
+          ];
 
-    texto.textContent = 'Error al crear proyecto';
+          procesandoIntervalo = setInterval(function () {
+            texto.textContent = mensajes[paso] || '✅ Finalizando...';
+            paso++;
 
-    boton.disabled = false;
-    boton.textContent = 'Guardar proyecto';
-    boton.style.opacity = '1';
-    boton.style.cursor = 'pointer';
+            if (paso >= mensajes.length) {
+              paso = mensajes.length - 1;
+            }
+          }, 1800);
+        }
+      } else {
+        texto.textContent = 'Subiendo archivo...';
+      }
+    };
 
-    alert('Error del servidor:\n\n' + xhr.responseText);
-  };
+    xhr.onload = function () {
+      if (procesandoIntervalo) clearInterval(procesandoIntervalo);
 
-  xhr.onerror = function () {
-    texto.textContent = 'Error de conexión';
+      if (xhr.status >= 200 && xhr.status < 400) {
+        texto.textContent = '✅ Proyecto creado correctamente';
+        barra.style.width = '100%';
 
-    boton.disabled = false;
-    boton.textContent = 'Guardar proyecto';
-    boton.style.opacity = '1';
-    boton.style.cursor = 'pointer';
+        setTimeout(function () {
+          window.location.href = '/dashboard';
+        }, 800);
 
-    alert('No se pudo subir el proyecto. Revisa conexión o Render.');
-  };
+        return;
+      }
 
-  xhr.send(formData);
-});
+      texto.textContent = 'Error al crear proyecto';
+      boton.disabled = false;
+      boton.textContent = 'Guardar proyecto';
+      boton.style.opacity = '1';
+      boton.style.cursor = 'pointer';
+
+      alert('Error del servidor:\n\n' + xhr.responseText);
+    };
+
+    xhr.onerror = function () {
+      if (procesandoIntervalo) clearInterval(procesandoIntervalo);
+
+      texto.textContent = 'Error de conexión';
+      boton.disabled = false;
+      boton.textContent = 'Guardar proyecto';
+      boton.style.opacity = '1';
+      boton.style.cursor = 'pointer';
+
+      alert('No se pudo subir el proyecto. Revisa conexión o Render.');
+    };
+
+    xhr.send(formData);
+  });
 
   cambiarMetodoEntrada();
 </script>
