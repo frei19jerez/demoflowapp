@@ -51,9 +51,17 @@ module.exports.routes = {
 
   'GET /logout': 'AuthController.logout',
 
-  'GET /runtime/:slug': 'RuntimeController.proxy',
-  'GET /runtime/:slug/*': 'RuntimeController.proxy',
+  'GET /runtime/:slug': {
+  controller: 'RuntimeController',
+  action: 'proxy',
+  skipAssets: true
+},
 
+'GET /runtime/:slug/*': {
+  controller: 'RuntimeController',
+  action: 'proxy',
+  skipAssets: true
+},
   // ===============================
   // DASHBOARD
   // ===============================
