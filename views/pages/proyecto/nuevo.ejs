@@ -216,12 +216,15 @@
     if (input.files && input.files[0]) {
       const archivo = input.files[0];
 
-      if (archivo.size > 80 * 1024 * 1024) {
-        alert('El archivo pesa más de 80MB. Sube un ZIP más liviano y sin node_modules.');
-        input.value = '';
-        box.style.display = 'none';
-        return;
-      }
+      if (archivo.size > 120 * 1024 * 1024) {
+
+  alert('El archivo pesa más de 120MB. Sube un ZIP más liviano y sin node_modules.');
+
+  input.value = '';
+  box.style.display = 'none';
+
+  return;
+}
 
       box.style.display = 'block';
       box.textContent = 'Archivo seleccionado: ' + archivo.name;
