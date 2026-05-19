@@ -258,11 +258,14 @@ async function levantarProyecto(proyecto) {
 
   comandoPm2 =
     `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+    `PORT=${puerto} NODE_ENV=production ` +
     `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
+
 } else {
   comandoPm2 =
     `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-    `"${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
+    `PORT=${puerto} NODE_ENV=production ` +
+    `"${pm2Bin}" start npm --name "${nombrePm2}" -- start`;
 }
 
     logRuntime +=
