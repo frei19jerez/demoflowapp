@@ -1,0 +1,53 @@
+<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
+
+  <div style="max-width:1100px; margin:0 auto;">
+
+    <div style="background:#fff; border-radius:18px; padding:30px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
+      <h1 style="margin-top:0; color:#111827;">
+        📄 Logs del deploy
+      </h1>
+
+      <p style="color:#6b7280; font-size:18px;">
+        Proyecto: <strong><%= proyecto ? proyecto.nombre : 'Sin proyecto' %></strong>
+      </p>
+
+      <div style="display:flex; gap:12px; flex-wrap:wrap; margin:25px 0;">
+        <a href="/proyecto/<%= proyecto.id %>"
+           style="background:#2563eb; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          Volver al proyecto
+        </a>
+
+        <a href="/deploy/<%= proyecto.id %>/desplegar"
+           style="background:#16a34a; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          🚀 Iniciar deploy
+        </a>
+
+        <a href="/deploy/<%= proyecto.id %>/reiniciar"
+           style="background:#f59e0b; color:#111827; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          🔄 Reiniciar
+        </a>
+
+        <a href="/dashboard"
+           style="background:#e5e7eb; color:#111827; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+          Dashboard
+        </a>
+      </div>
+
+      <pre style="
+        background:#020617;
+        color:#d1fae5;
+        padding:25px;
+        border-radius:14px;
+        min-height:420px;
+        overflow:auto;
+        white-space:pre-wrap;
+        font-size:15px;
+        line-height:1.6;
+      "><%= contenidoLog || proyecto.logDeploy || 'Sin logs todavía.' %></pre>
+
+    </div>
+
+  </div>
+
+</div>
