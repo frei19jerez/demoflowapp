@@ -1,0 +1,92 @@
+<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
+
+  <div style="max-width:1000px; margin:0 auto;">
+
+    <div style="background:#fff; border-radius:18px; padding:30px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
+      <h1 style="margin-top:0; color:#111827;">
+        ✏️ Editar proyecto
+      </h1>
+
+      <p style="color:#6b7280; font-size:18px;">
+        Modifica la información del proyecto.
+      </p>
+
+      <form action="/proyecto/<%= proyecto.id %>/actualizar" method="POST">
+
+        <div style="margin-bottom:20px;">
+          <label style="display:block; margin-bottom:8px; font-weight:bold;">
+            Nombre
+          </label>
+
+          <input
+            type="text"
+            name="nombre"
+            value="<%= proyecto.nombre %>"
+            required
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #d1d5db;"
+          >
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <label style="display:block; margin-bottom:8px; font-weight:bold;">
+            Slug
+          </label>
+
+          <input
+            type="text"
+            name="slug"
+            value="<%= proyecto.slug %>"
+            required
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #d1d5db;"
+          >
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <label style="display:block; margin-bottom:8px; font-weight:bold;">
+            Descripción
+          </label>
+
+          <textarea
+            name="descripcion"
+            rows="6"
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #d1d5db;"
+          ><%= proyecto.descripcion || '' %></textarea>
+        </div>
+
+        <div style="margin-bottom:20px;">
+          <label style="display:block; margin-bottom:8px; font-weight:bold;">
+            Tecnología
+          </label>
+
+          <input
+            type="text"
+            name="tecnologia"
+            value="<%= proyecto.tecnologia || '' %>"
+            style="width:100%; padding:14px; border-radius:12px; border:1px solid #d1d5db;"
+          >
+        </div>
+
+        <div style="display:flex; gap:12px; flex-wrap:wrap; margin-top:30px;">
+
+          <button
+            type="submit"
+            style="background:#2563eb; color:#fff; border:none; padding:14px 22px; border-radius:12px; cursor:pointer; font-size:16px; font-weight:bold;"
+          >
+            💾 Guardar cambios
+          </button>
+
+          <a href="/proyecto/<%= proyecto.id %>"
+             style="background:#e5e7eb; color:#111827; padding:14px 22px; border-radius:12px; text-decoration:none; font-weight:bold;">
+            Volver
+          </a>
+
+        </div>
+
+      </form>
+
+    </div>
+
+  </div>
+
+</div>
