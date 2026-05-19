@@ -388,7 +388,7 @@ module.exports = {
 
         tipoFinal = tipoProyecto === 'externo' ? 'node' : tipoProyecto;
         deployType = tipoFinal === 'html' ? 'static' : 'dynamic';
-        estadoDeploy = 'registrado';
+        estadoDeploy = 'subido';
 
         descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
         tecnologiaFinal = tecnologiaFinal || (
@@ -545,35 +545,46 @@ module.exports = {
           }
 
           else if (tipoFinal === 'node' || tipoFinal === 'sails') {
-            carpetaRuntimeFinal = slugFinal;
 
-            const carpetaDestinoRuntime = path.resolve(
-              sails.config.appPath,
-              'deploy_runtime',
-              'apps',
-              carpetaRuntimeFinal
-            );
+  carpetaRuntimeFinal = slugFinal;
 
-            eliminarCarpeta(carpetaDestinoRuntime);
-            crearCarpeta(carpetaDestinoRuntime);
+  const carpetaDestinoRuntime = path.resolve(
+    sails.config.appPath,
+    'deploy_runtime',
+    'apps',
+    carpetaRuntimeFinal
+  );
 
-            copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
+  eliminarCarpeta(carpetaDestinoRuntime);
+  crearCarpeta(carpetaDestinoRuntime);
 
-            puertoFinal = generarPuerto();
-            comandoInicioFinal = comandoInicio || (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
-            archivoEntradaFinal = archivoEntrada || 'app.js';
+  copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
 
-            deployType = 'dynamic';
-            estadoDeploy = 'subido';
-            urlDemoFinal = null;
+  puertoFinal = generarPuerto();
 
-            logDeploy =
-              `🤖 DemoFlow IA detectó proyecto ${tipoFinal}.\n` +
-              `✅ Runtime preparado\n` +
-              `✅ Puerto asignado: ${puertoFinal}\n` +
-              `✅ Comando sugerido: ${comandoInicioFinal}\n` +
-              'Pendiente desplegar desde el panel.';
-          }
+  comandoInicioFinal =
+    comandoInicio ||
+    (tipoFinal === 'sails'
+      ? 'node app.js'
+      : 'npm start');
+
+  archivoEntradaFinal =
+    archivoEntrada || 'app.js';
+
+  deployType = 'dynamic';
+
+  estadoDeploy = 'subido';
+
+  urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+
+  logDeploy =
+    `🤖 DemoFlow IA detectó proyecto ${tipoFinal}.\n` +
+    `✅ Runtime preparado\n` +
+    `✅ Puerto asignado: ${puertoFinal}\n` +
+    `✅ URL runtime: ${urlDemoFinal}\n` +
+    `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+    'Pendiente desplegar desde el panel.';
+}
 
           else {
             eliminarCarpeta(carpetaTemporalIA);
