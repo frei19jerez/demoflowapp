@@ -254,16 +254,16 @@ async function levantarProyecto(proyecto) {
     let comandoPm2;
 
     if (comandoInicio.startsWith('node ')) {
-      const archivo = comandoInicio.replace('node ', '').trim() || 'app.js';
+  const archivo = comandoInicio.replace('node ', '').trim() || 'app.js';
 
-      comandoPm2 =
-        `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-        `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
-    } else {
-      comandoPm2 =
-        `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-        `"${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
-    }
+  comandoPm2 =
+    `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+    `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
+} else {
+  comandoPm2 =
+    `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+    `"${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
+}
 
     logRuntime +=
       '\n✅ npm install terminado.\n' +
