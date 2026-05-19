@@ -280,10 +280,12 @@ async function levantarProyecto(proyecto) {
       {
         cwd: rutaProyecto,
         env: {
-          ...process.env,
-          PORT: String(puerto),
-          NODE_ENV: 'production'
-        }
+  ...process.env,
+  PORT: String(puerto),
+  NODE_ENV: 'production',
+  DATABASE_URL: process.env.DATABASE_URL,
+  PGSSLMODE: 'require'
+}
       },
       async function (pm2Error, pm2Stdout, pm2Stderr) {
         if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
