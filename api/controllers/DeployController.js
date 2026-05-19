@@ -203,29 +203,30 @@ async function levantarProyecto(proyecto) {
   }
 
   const puerto = proyecto.puerto || puertoAleatorio();
-  const urlDemo = `/runtime/${proyecto.slug}`;
+  const runtimeSlug = carpetaRuntime;
+  const urlDemo = `/runtime/${runtimeSlug}`;
+  const nombrePm2 = runtimeSlug;
+
+  const pm2Bin = process.platform === 'win32'
+    ? path.resolve(sails.config.appPath, 'node_modules', '.bin', 'pm2.cmd')
+    : path.resolve(sails.config.appPath, 'node_modules', '.bin', 'pm2');
+
+  let logRuntime =
+    '🚀 DemoFlow Deploy\n' +
+    `📁 Carpeta: ${rutaProyecto}\n` +
+    `🔌 Puerto: ${puerto}\n` +
+    `🌎 URL DemoFlow: ${urlDemo}\n\n`;
 
   await Proyecto.updateOne({ id }).set({
     puerto,
     urlDemo,
     estadoDeploy: 'instalando',
-    logDeploy:
-      '🚀 Iniciando deploy...\n' +
-      `📁 Carpeta: ${rutaProyecto}\n` +
-      `🔌 Puerto: ${puerto}\n` +
-      '📦 Ejecutando npm install...\n'
+    logDeploy: logRuntime + '📦 Ejecutando npm install...\n'
   });
 
   exec('npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
-    let logRuntime =
-      '🚀 DemoFlow Deploy\n' +
-      `📁 Carpeta: ${rutaProyecto}\n` +
-      `🔌 Puerto: ${puerto}\n\n`;
-
     if (stdout) logRuntime += `\n[STDOUT npm install]\n${stdout}`;
     if (stderr) logRuntime += `\n[STDERR npm install]\n${stderr}`;
-
-    fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
     if (error) {
       logRuntime += `\n❌ Fallo npm install:\n${error.message}`;
@@ -241,6 +242,8 @@ async function levantarProyecto(proyecto) {
       return;
     }
 
+    logRuntime += '\n✅ npm install terminado.\n';
+
     const comandoInicio =
       proyecto.comandoInicio && proyecto.comandoInicio.trim() !== ''
         ? proyecto.comandoInicio.trim()
@@ -248,68 +251,59 @@ async function levantarProyecto(proyecto) {
           ? 'node app.js'
           : 'npm start';
 
+    let comandoPm2;
+
+    if (comandoInicio.startsWith('node ')) {
+      const archivo = comandoInicio.replace('node ', '').trim() || 'app.js';
+
+      comandoPm2 =
+        `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+        `PORT=${puerto} NODE_ENV=production "${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
+    } else {
+      comandoPm2 =
+        `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+        `PORT=${puerto} NODE_ENV=production "${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
+    }
+
     logRuntime +=
-      `\n\n✅ npm install terminado.\n` +
-      `🚀 Iniciando app con: ${comandoInicio}\n` +
-      `🌐 URL interna: http://127.0.0.1:${puerto}\n` +
-      `🌎 URL DemoFlow: ${urlDemo}\n`;
+      `🚀 Iniciando con PM2: ${comandoInicio}\n` +
+      `🧠 Nombre PM2: ${nombrePm2}\n`;
 
     fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
-    const partes = comandoInicio.split(' ');
-    const comando = partes[0];
-    const args = partes.slice(1);
+    exec(comandoPm2, { cwd: rutaProyecto }, async function (pm2Error, pm2Stdout, pm2Stderr) {
+      if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
+      if (pm2Stderr) logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
 
-    const proceso = spawn('pm2', [
-  'start',
-  comando,
-  '--name',
-  proyecto.slug,
-  '--',
-  ...args
-], {
-  cwd: rutaProyecto,
-  shell: true,
-  detached: false,
-  env: {
-    ...process.env,
-    PORT: String(puerto),
-    NODE_ENV: 'production'
-  }
-});
+      if (pm2Error) {
+        logRuntime += `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
 
-    procesos[id] = proceso;
+        fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
-    proceso.stdout.on('data', async function (data) {
-      logRuntime += `\n[APP]\n${data.toString()}`;
-      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
-      await Proyecto.updateOne({ id }).set({ logDeploy: logRuntime });
-    });
+        await Proyecto.updateOne({ id }).set({
+          estadoDeploy: 'fallido',
+          logDeploy: logRuntime
+        });
 
-    proceso.stderr.on('data', async function (data) {
-      logRuntime += `\n[ERROR]\n${data.toString()}`;
-      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
-      await Proyecto.updateOne({ id }).set({ logDeploy: logRuntime });
-    });
+        return;
+      }
 
-    proceso.on('exit', async function (code) {
-      logRuntime += `\n[DEMOFLOW]\nProceso detenido. Código: ${code}\n`;
+      logRuntime +=
+        '\n✅ Aplicación iniciada con PM2.\n' +
+        `🌐 Abrir: ${urlDemo}\n`;
+
       fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
       await Proyecto.updateOne({ id }).set({
-        estadoDeploy: 'detenido',
+        estadoDeploy: 'activo',
+        puerto,
+        urlDemo,
         logDeploy: logRuntime
       });
     });
-
-    await Proyecto.updateOne({ id }).set({
-      estadoDeploy: 'activo',
-      puerto,
-      urlDemo,
-      logDeploy: logRuntime
-    });
   });
 }
+
 module.exports = {
   estado: async function (req, res) {
     try {
