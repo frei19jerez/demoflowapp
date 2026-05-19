@@ -42,31 +42,42 @@ module.exports = {
 
         comandoPm2 =
           `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-          `PORT=${inputs.puerto} NODE_ENV=production "${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
+          `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
       } else {
         comandoPm2 =
           `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-          `PORT=${inputs.puerto} NODE_ENV=production "${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
+          `"${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
       }
 
-      exec(comandoPm2, { cwd: inputs.carpeta }, function (error, stdout, stderr) {
-        if (error) {
-          return exits.errorRun({
-            ok: false,
-            mensaje: error.message,
+      exec(
+        comandoPm2,
+        {
+          cwd: inputs.carpeta,
+          env: {
+            ...process.env,
+            PORT: String(inputs.puerto),
+            NODE_ENV: 'production'
+          }
+        },
+        function (error, stdout, stderr) {
+          if (error) {
+            return exits.errorRun({
+              ok: false,
+              mensaje: error.message,
+              stdout,
+              stderr
+            });
+          }
+
+          return exits.success({
+            ok: true,
+            nombre: nombrePm2,
+            puerto: inputs.puerto,
             stdout,
             stderr
           });
         }
-
-        return exits.success({
-          ok: true,
-          nombre: nombrePm2,
-          puerto: inputs.puerto,
-          stdout,
-          stderr
-        });
-      });
+      );
     } catch (error) {
       return exits.errorRun({
         ok: false,
