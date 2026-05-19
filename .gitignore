@@ -1,1 +1,4 @@
 node_modules
+deploy_runtime/apps/
+node_modules/
+.tmp/
