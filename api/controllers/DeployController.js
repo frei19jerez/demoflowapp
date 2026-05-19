@@ -260,16 +260,23 @@ async function levantarProyecto(proyecto) {
     const comando = partes[0];
     const args = partes.slice(1);
 
-    const proceso = spawn(comando, args, {
-      cwd: rutaProyecto,
-      shell: true,
-      detached: false,
-      env: {
-        ...process.env,
-        PORT: String(puerto),
-        NODE_ENV: 'production'
-      }
-    });
+    const proceso = spawn('pm2', [
+  'start',
+  comando,
+  '--name',
+  proyecto.slug,
+  '--',
+  ...args
+], {
+  cwd: rutaProyecto,
+  shell: true,
+  detached: false,
+  env: {
+    ...process.env,
+    PORT: String(puerto),
+    NODE_ENV: 'production'
+  }
+});
 
     procesos[id] = proceso;
 
