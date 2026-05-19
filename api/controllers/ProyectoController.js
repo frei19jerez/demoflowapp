@@ -317,80 +317,222 @@ module.exports = {
   },
 
   crear: async function (req, res) {
-    try {
-      if (!req.session.userId) {
-        return res.redirect('/login');
+  try {
+    if (!req.session.userId) {
+      return res.redirect('/login');
+    }
+
+    const metodoEntrada = req.body.metodoEntrada ? req.body.metodoEntrada.trim() : 'zip';
+
+    const nombre = req.body.nombre ? req.body.nombre.trim() : '';
+    const descripcionIngresada = req.body.descripcion ? req.body.descripcion.trim() : '';
+    const tecnologiaIngresada = req.body.tecnologia ? req.body.tecnologia.trim() : '';
+    const tipoProyecto = req.body.tipoProyecto ? req.body.tipoProyecto.trim() : 'html';
+    const urlRepositorio = req.body.urlRepositorio ? req.body.urlRepositorio.trim() : '';
+    const ramaGit = req.body.ramaGit ? req.body.ramaGit.trim() : 'main';
+    const urlDemoIngresada = req.body.urlDemo ? req.body.urlDemo.trim() : '';
+    const carpetaDemoIngresada = req.body.carpetaDemo ? req.body.carpetaDemo.trim() : '';
+    const comandoInicio = req.body.comandoInicio ? req.body.comandoInicio.trim() : '';
+    const archivoEntrada = req.body.archivoEntrada ? req.body.archivoEntrada.trim() : '';
+
+    if (!nombre) {
+      return res.badRequest('El nombre del proyecto es obligatorio.');
+    }
+
+    let slugBase = limpiarTextoRuta(req.body.slug ? req.body.slug.trim() : nombre);
+
+    if (!slugBase) {
+      return res.badRequest('Slug inválido.');
+    }
+
+    let slugFinal = slugBase;
+    let contador = 2;
+
+    while (await Proyecto.findOne({ slug: slugFinal })) {
+      slugFinal = `${slugBase}-${contador}`;
+      contador++;
+    }
+
+    let urlDemoFinal = null;
+    let archivoZipOriginal = null;
+    let carpetaDemoFinal = null;
+    let carpetaRuntimeFinal = null;
+    let comandoInicioFinal = comandoInicio || null;
+    let archivoEntradaFinal = archivoEntrada || null;
+    let puertoFinal = null;
+    let deployType = 'external';
+    let estadoDeploy = 'pendiente';
+    let logDeploy = '';
+    let tipoFinal = tipoProyecto;
+    let descripcionFinal = descripcionIngresada || null;
+    let tecnologiaFinal = tecnologiaIngresada || null;
+
+    if (metodoEntrada === 'externo') {
+      if (!urlDemoIngresada) {
+        return res.badRequest('La URL externa es obligatoria.');
       }
 
-      const metodoEntrada = req.body.metodoEntrada ? req.body.metodoEntrada.trim() : 'zip';
+      tipoFinal = 'externo';
+      urlDemoFinal = urlDemoIngresada;
+      deployType = 'external';
+      estadoDeploy = 'activo';
+      descripcionFinal = descripcionFinal || generarDescripcionIA('externo', nombre);
+      tecnologiaFinal = tecnologiaFinal || 'Demo externa';
+      logDeploy = 'Proyecto externo registrado correctamente.';
+    }
 
-      const nombre = req.body.nombre ? req.body.nombre.trim() : '';
-      const descripcionIngresada = req.body.descripcion ? req.body.descripcion.trim() : '';
-      const tecnologiaIngresada = req.body.tecnologia ? req.body.tecnologia.trim() : '';
-      const tipoProyecto = req.body.tipoProyecto ? req.body.tipoProyecto.trim() : 'html';
-      const urlRepositorio = req.body.urlRepositorio ? req.body.urlRepositorio.trim() : '';
-      const ramaGit = req.body.ramaGit ? req.body.ramaGit.trim() : 'main';
-      const urlDemoIngresada = req.body.urlDemo ? req.body.urlDemo.trim() : '';
-      const carpetaDemoIngresada = req.body.carpetaDemo ? req.body.carpetaDemo.trim() : '';
-      const comandoInicio = req.body.comandoInicio ? req.body.comandoInicio.trim() : '';
-      const archivoEntrada = req.body.archivoEntrada ? req.body.archivoEntrada.trim() : '';
-
-      if (!nombre) {
-        return res.badRequest('El nombre del proyecto es obligatorio.');
+    else if (metodoEntrada === 'git') {
+      if (!urlRepositorio) {
+        return res.badRequest('La URL del repositorio es obligatoria para importar desde Git.');
       }
 
-      let slugBase = limpiarTextoRuta(req.body.slug ? req.body.slug.trim() : nombre);
+      tipoFinal = tipoProyecto === 'externo' ? 'node' : tipoProyecto;
+      deployType = tipoFinal === 'html' ? 'static' : 'dynamic';
+      estadoDeploy = 'subido';
 
-      if (!slugBase) {
-        return res.badRequest('Slug inválido.');
+      descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
+
+      tecnologiaFinal = tecnologiaFinal || (
+        tipoFinal === 'sails'
+          ? 'Sails.js + Node.js + PostgreSQL'
+          : tipoFinal === 'node'
+            ? 'Node.js'
+            : 'HTML + CSS + JavaScript'
+      );
+
+      if (tipoFinal === 'node' || tipoFinal === 'sails') {
+        carpetaRuntimeFinal = slugFinal;
+        puertoFinal = generarPuerto();
+        comandoInicioFinal = comandoInicio || (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
+        archivoEntradaFinal = archivoEntrada || 'app.js';
+
+        urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+
+        logDeploy =
+          '🤖 DemoFlow registró repositorio Git dinámico.\n' +
+          `Repositorio: ${urlRepositorio}\n` +
+          `Rama: ${ramaGit || 'main'}\n` +
+          `✅ Runtime preparado: ${carpetaRuntimeFinal}\n` +
+          `✅ Puerto asignado: ${puertoFinal}\n` +
+          `✅ URL runtime: ${urlDemoFinal}\n` +
+          `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+          'Clonación iniciará en segundo plano.';
       }
 
-      let slugFinal = slugBase;
-      let contador = 2;
+      else if (tipoFinal === 'html') {
+        carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
 
-      while (await Proyecto.findOne({ slug: slugFinal })) {
-        slugFinal = `${slugBase}-${contador}`;
-        contador++;
+        urlDemoFinal = urlDemoIngresada || `/demos/${carpetaDemoFinal}/index.html`;
+
+        logDeploy =
+          '🤖 DemoFlow registró repositorio Git HTML.\n' +
+          `Repositorio: ${urlRepositorio}\n` +
+          `Rama: ${ramaGit || 'main'}\n` +
+          `📁 Carpeta demo: ${carpetaDemoFinal}\n` +
+          `🌐 URL esperada: ${urlDemoFinal}\n` +
+          'Clonación/publicación iniciará en segundo plano.';
       }
 
-      let urlDemoFinal = null;
-      let archivoZipOriginal = null;
-      let carpetaDemoFinal = null;
-      let carpetaRuntimeFinal = null;
-      let comandoInicioFinal = comandoInicio || null;
-      let archivoEntradaFinal = archivoEntrada || null;
-      let puertoFinal = null;
-      let deployType = 'external';
-      let estadoDeploy = 'pendiente';
-      let logDeploy = '';
-      let tipoFinal = tipoProyecto;
-      let descripcionFinal = descripcionIngresada || null;
-      let tecnologiaFinal = tecnologiaIngresada || null;
+      else {
+        return res.badRequest(`Tipo de proyecto Git no válido: ${tipoFinal}`);
+      }
 
-      if (metodoEntrada === 'externo') {
-        if (!urlDemoIngresada) {
-          return res.badRequest('La URL externa es obligatoria.');
-        }
-
-        tipoFinal = 'externo';
+      if (urlDemoIngresada) {
         urlDemoFinal = urlDemoIngresada;
-        deployType = 'external';
         estadoDeploy = 'activo';
-        descripcionFinal = descripcionFinal || generarDescripcionIA('externo', nombre);
-        tecnologiaFinal = tecnologiaFinal || 'Demo externa';
-        logDeploy = 'Proyecto externo registrado correctamente.';
+        logDeploy = 'Repositorio Git registrado con URL en vivo.';
+      }
+    }
+
+    else if (metodoEntrada === 'zip') {
+      const limiteSubida = obtenerLimiteSubida(tipoProyecto);
+
+      const archivos = await new Promise((resolve, reject) => {
+        req.file('archivoDemo').upload(
+          {
+            maxBytes: limiteSubida
+          },
+          function (err, uploadedFiles) {
+            if (err) return reject(err);
+            return resolve(uploadedFiles || []);
+          }
+        );
+      });
+
+      if (archivos.length === 0 && !urlDemoIngresada) {
+        return res.badRequest('Debes subir un archivo o indicar una URL.');
       }
 
-      else if (metodoEntrada === 'git') {
-        if (!urlRepositorio) {
-          return res.badRequest('La URL del repositorio es obligatoria para importar desde Git.');
+      if (archivos.length > 0) {
+        const archivoSubido = archivos[0];
+        const nombreArchivoOriginal = archivoSubido.filename || 'archivo-demo';
+        const extension = path.extname(nombreArchivoOriginal).toLowerCase();
+
+        archivoZipOriginal = nombreArchivoOriginal;
+
+        const carpetaTemporalIA = path.resolve(
+          sails.config.appPath,
+          '.tmp',
+          'demoflow-ia',
+          `${slugFinal}-${Date.now()}`
+        );
+
+        eliminarCarpeta(carpetaTemporalIA);
+        crearCarpeta(carpetaTemporalIA);
+
+        if (extension === '.zip') {
+          try {
+            await fs
+              .createReadStream(archivoSubido.fd)
+              .pipe(unzipper.Extract({ path: carpetaTemporalIA }))
+              .promise();
+          } catch (errorZip) {
+            eliminarCarpeta(carpetaTemporalIA);
+
+            console.log('================ ERROR ZIP ================');
+            console.error(errorZip.stack || errorZip);
+            console.log('===========================================');
+
+            return res.badRequest(
+              'No se pudo extraer el ZIP. El archivo puede estar corrupto o contener demasiados archivos.'
+            );
+          }
+
+          const carpetasBloqueadas = [
+            'node_modules',
+            '.git',
+            '.vscode',
+            'uploads',
+            '.tmp'
+          ];
+
+          carpetasBloqueadas.forEach((nombreCarpeta) => {
+            const rutaEliminar = path.join(carpetaTemporalIA, nombreCarpeta);
+
+            if (fs.existsSync(rutaEliminar)) {
+              eliminarCarpeta(rutaEliminar);
+            }
+          });
+
+          limpiarCarpetaExtra(carpetaTemporalIA);
         }
 
-        tipoFinal = tipoProyecto === 'externo' ? 'node' : tipoProyecto;
-        deployType = tipoFinal === 'html' ? 'static' : 'dynamic';
-        estadoDeploy = 'subido';
+        else if (extension === '.html' || extension === '.htm') {
+          fs.copyFileSync(
+            archivoSubido.fd,
+            path.join(carpetaTemporalIA, 'index.html')
+          );
+        }
+
+        else {
+          eliminarCarpeta(carpetaTemporalIA);
+          return res.badRequest('Archivo no permitido. Usa .zip, .html o .htm.');
+        }
+
+        tipoFinal = detectarTipoIA(carpetaTemporalIA, tipoProyecto);
 
         descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
+
         tecnologiaFinal = tecnologiaFinal || (
           tipoFinal === 'sails'
             ? 'Sails.js + Node.js + PostgreSQL'
@@ -399,287 +541,162 @@ module.exports = {
               : 'HTML + CSS + JavaScript'
         );
 
-        if (tipoFinal === 'node' || tipoFinal === 'sails') {
-          carpetaRuntimeFinal = slugFinal;
-          puertoFinal = generarPuerto();
-          comandoInicioFinal = comandoInicio || (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
-          archivoEntradaFinal = archivoEntrada || 'app.js';
-        }
-
         if (tipoFinal === 'html') {
+          const indexDetectado = buscarArchivoRecursivo(carpetaTemporalIA, 'index.html');
+
+          if (!indexDetectado) {
+            eliminarCarpeta(carpetaTemporalIA);
+            return res.badRequest('El ZIP no contiene index.html.');
+          }
+
           carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
-        }
 
-        if (urlDemoIngresada) {
-          urlDemoFinal = urlDemoIngresada;
+          publicarHtmlEnRender(carpetaTemporalIA, carpetaDemoFinal);
+
+          urlDemoFinal = `/demos/${carpetaDemoFinal}/index.html`;
+          deployType = 'static';
           estadoDeploy = 'activo';
-          logDeploy = 'Repositorio Git registrado con URL en vivo.';
-        } else {
+
           logDeploy =
-            '🤖 DemoFlow IA registró el repositorio Git.\n' +
-            `Repositorio: ${urlRepositorio}\n` +
-            `Rama: ${ramaGit || 'main'}\n` +
-            'Clonación iniciará en segundo plano.';
-        }
-      }
-
-      else if (metodoEntrada === 'zip') {
-        const limiteSubida = obtenerLimiteSubida(tipoProyecto);
-
-        const archivos = await new Promise((resolve, reject) => {
-          req.file('archivoDemo').upload(
-            {
-              maxBytes: limiteSubida
-            },
-            function (err, uploadedFiles) {
-              if (err) return reject(err);
-              return resolve(uploadedFiles || []);
-            }
-          );
-        });
-
-        if (archivos.length === 0 && !urlDemoIngresada) {
-          return res.badRequest('Debes subir un archivo o indicar una URL.');
+            '🤖 DemoFlow IA publicó el proyecto HTML correctamente.\n' +
+            '✅ index.html detectado\n' +
+            '✅ carpetas organizadas\n' +
+            `✅ URL generada: ${urlDemoFinal}\n` +
+            `📁 Carpeta demo: ${carpetaDemoFinal}`;
         }
 
-        if (archivos.length > 0) {
-          const archivoSubido = archivos[0];
-          const nombreArchivoOriginal = archivoSubido.filename || 'archivo-demo';
-          const extension = path.extname(nombreArchivoOriginal).toLowerCase();
+        else if (tipoFinal === 'node' || tipoFinal === 'sails') {
+          carpetaRuntimeFinal = slugFinal;
 
-          archivoZipOriginal = nombreArchivoOriginal;
-
-          const carpetaTemporalIA = path.resolve(
+          const carpetaDestinoRuntime = path.resolve(
             sails.config.appPath,
-            '.tmp',
-            'demoflow-ia',
-            `${slugFinal}-${Date.now()}`
+            'deploy_runtime',
+            'apps',
+            carpetaRuntimeFinal
           );
 
-          eliminarCarpeta(carpetaTemporalIA);
-          crearCarpeta(carpetaTemporalIA);
+          eliminarCarpeta(carpetaDestinoRuntime);
+          crearCarpeta(carpetaDestinoRuntime);
 
-          if (extension === '.zip') {
-            try {
-              await fs
-                .createReadStream(archivoSubido.fd)
-                .pipe(unzipper.Extract({ path: carpetaTemporalIA }))
-                .promise();
-            } catch (errorZip) {
-              eliminarCarpeta(carpetaTemporalIA);
+          copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
 
-              console.log('================ ERROR ZIP ================');
-              console.error(errorZip.stack || errorZip);
-              console.log('===========================================');
+          puertoFinal = generarPuerto();
 
-              return res.badRequest(
-                'No se pudo extraer el ZIP. El archivo puede estar corrupto o contener demasiados archivos.'
-              );
-            }
+          comandoInicioFinal =
+            comandoInicio ||
+            (tipoFinal === 'sails'
+              ? 'node app.js'
+              : 'npm start');
 
-            const carpetasBloqueadas = [
-              'node_modules',
-              '.git',
-              '.vscode',
-              'uploads',
-              '.tmp'
-            ];
+          archivoEntradaFinal = archivoEntrada || 'app.js';
 
-            carpetasBloqueadas.forEach((nombreCarpeta) => {
-              const rutaEliminar = path.join(carpetaTemporalIA, nombreCarpeta);
+          deployType = 'dynamic';
+          estadoDeploy = 'subido';
+          urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
 
-              if (fs.existsSync(rutaEliminar)) {
-                eliminarCarpeta(rutaEliminar);
-              }
-            });
-
-            limpiarCarpetaExtra(carpetaTemporalIA);
-          }
-
-          else if (extension === '.html' || extension === '.htm') {
-            fs.copyFileSync(
-              archivoSubido.fd,
-              path.join(carpetaTemporalIA, 'index.html')
-            );
-          }
-
-          else {
-            eliminarCarpeta(carpetaTemporalIA);
-            return res.badRequest('Archivo no permitido. Usa .zip, .html o .htm.');
-          }
-
-          tipoFinal = detectarTipoIA(carpetaTemporalIA, tipoProyecto);
-
-          descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
-
-          tecnologiaFinal = tecnologiaFinal || (
-            tipoFinal === 'sails'
-              ? 'Sails.js + Node.js + PostgreSQL'
-              : tipoFinal === 'node'
-                ? 'Node.js'
-                : 'HTML + CSS + JavaScript'
-          );
-
-          if (tipoFinal === 'html') {
-            const indexDetectado = buscarArchivoRecursivo(carpetaTemporalIA, 'index.html');
-
-            if (!indexDetectado) {
-              eliminarCarpeta(carpetaTemporalIA);
-              return res.badRequest('El ZIP no contiene index.html.');
-            }
-
-            carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
-
-            publicarHtmlEnRender(carpetaTemporalIA, carpetaDemoFinal);
-
-            urlDemoFinal = `/demos/${carpetaDemoFinal}/index.html`;
-            deployType = 'static';
-            estadoDeploy = 'activo';
-
-            logDeploy =
-              '🤖 DemoFlow IA publicó el proyecto HTML correctamente.\n' +
-              '✅ index.html detectado\n' +
-              '✅ carpetas organizadas\n' +
-              `✅ URL generada: ${urlDemoFinal}\n` +
-              `📁 Carpeta demo: ${carpetaDemoFinal}`;
-          }
-
-          else if (tipoFinal === 'node' || tipoFinal === 'sails') {
-
-  carpetaRuntimeFinal = slugFinal;
-
-  const carpetaDestinoRuntime = path.resolve(
-    sails.config.appPath,
-    'deploy_runtime',
-    'apps',
-    carpetaRuntimeFinal
-  );
-
-  eliminarCarpeta(carpetaDestinoRuntime);
-  crearCarpeta(carpetaDestinoRuntime);
-
-  copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
-
-  puertoFinal = generarPuerto();
-
-  comandoInicioFinal =
-    comandoInicio ||
-    (tipoFinal === 'sails'
-      ? 'node app.js'
-      : 'npm start');
-
-  archivoEntradaFinal =
-    archivoEntrada || 'app.js';
-
-  deployType = 'dynamic';
-
-  estadoDeploy = 'subido';
-
-  urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
-
-  logDeploy =
-    `🤖 DemoFlow IA detectó proyecto ${tipoFinal}.\n` +
-    `✅ Runtime preparado\n` +
-    `✅ Puerto asignado: ${puertoFinal}\n` +
-    `✅ URL runtime: ${urlDemoFinal}\n` +
-    `✅ Comando sugerido: ${comandoInicioFinal}\n` +
-    'Pendiente desplegar desde el panel.';
-}
-
-          else {
-            eliminarCarpeta(carpetaTemporalIA);
-            return res.badRequest(`Tipo de proyecto no válido: ${tipoFinal}`);
-          }
-
-          eliminarCarpeta(carpetaTemporalIA);
+          logDeploy =
+            `🤖 DemoFlow IA detectó proyecto ${tipoFinal}.\n` +
+            `✅ Runtime preparado\n` +
+            `✅ Puerto asignado: ${puertoFinal}\n` +
+            `✅ URL runtime: ${urlDemoFinal}\n` +
+            `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+            'Pendiente desplegar desde el panel.';
         }
 
         else {
-          if (tipoProyecto === 'html') {
-            carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
-            urlDemoFinal = urlDemoIngresada || `/demos/${carpetaDemoFinal}/index.html`;
-            deployType = 'static';
-            estadoDeploy = 'activo';
-            tipoFinal = 'html';
-            descripcionFinal = descripcionFinal || generarDescripcionIA('html', nombre);
-            tecnologiaFinal = tecnologiaFinal || 'HTML + CSS + JavaScript';
-            logDeploy = 'Proyecto HTML creado con ruta manual.';
-          }
-
-          else if (tipoProyecto === 'node' || tipoProyecto === 'sails') {
-            if (!urlDemoIngresada) {
-              return res.badRequest(`Para proyectos ${tipoProyecto} debes subir un .zip o indicar una URL.`);
-            }
-
-            carpetaRuntimeFinal = slugFinal;
-            puertoFinal = generarPuerto();
-            urlDemoFinal = urlDemoIngresada;
-            deployType = 'dynamic';
-            estadoDeploy = 'activo';
-            tipoFinal = tipoProyecto;
-            comandoInicioFinal = comandoInicio || (tipoProyecto === 'sails' ? 'node app.js' : 'npm start');
-            archivoEntradaFinal = archivoEntrada || 'app.js';
-            descripcionFinal = descripcionFinal || generarDescripcionIA(tipoProyecto, nombre);
-            tecnologiaFinal = tecnologiaFinal || (tipoFinal === 'sails' ? 'Sails.js + Node.js + PostgreSQL' : 'Node.js');
-            logDeploy = `Proyecto ${tipoProyecto} registrado con URL manual.`;
-          }
-
-          else {
-            return res.badRequest('Configuración no válida.');
-          }
+          eliminarCarpeta(carpetaTemporalIA);
+          return res.badRequest(`Tipo de proyecto no válido: ${tipoFinal}`);
         }
+
+        eliminarCarpeta(carpetaTemporalIA);
       }
 
       else {
-        return res.badRequest(`Método de entrada no válido: ${metodoEntrada}`);
+        if (tipoProyecto === 'html') {
+          carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
+          urlDemoFinal = urlDemoIngresada || `/demos/${carpetaDemoFinal}/index.html`;
+          deployType = 'static';
+          estadoDeploy = 'activo';
+          tipoFinal = 'html';
+          descripcionFinal = descripcionFinal || generarDescripcionIA('html', nombre);
+          tecnologiaFinal = tecnologiaFinal || 'HTML + CSS + JavaScript';
+          logDeploy = 'Proyecto HTML creado con ruta manual.';
+        }
+
+        else if (tipoProyecto === 'node' || tipoProyecto === 'sails') {
+          if (!urlDemoIngresada) {
+            return res.badRequest(`Para proyectos ${tipoProyecto} debes subir un .zip o indicar una URL.`);
+          }
+
+          carpetaRuntimeFinal = slugFinal;
+          puertoFinal = generarPuerto();
+          urlDemoFinal = urlDemoIngresada;
+          deployType = 'dynamic';
+          estadoDeploy = 'activo';
+          tipoFinal = tipoProyecto;
+          comandoInicioFinal = comandoInicio || (tipoProyecto === 'sails' ? 'node app.js' : 'npm start');
+          archivoEntradaFinal = archivoEntrada || 'app.js';
+          descripcionFinal = descripcionFinal || generarDescripcionIA(tipoProyecto, nombre);
+          tecnologiaFinal = tecnologiaFinal || (tipoFinal === 'sails' ? 'Sails.js + Node.js + PostgreSQL' : 'Node.js');
+          logDeploy = `Proyecto ${tipoProyecto} registrado con URL manual.`;
+        }
+
+        else {
+          return res.badRequest('Configuración no válida.');
+        }
       }
+    }
 
-      const proyectoCreado = await Proyecto.create({
-        nombre,
-        slug: slugFinal,
-        descripcion: descripcionFinal || null,
-        tecnologia: tecnologiaFinal || null,
-        urlDemo: urlDemoFinal || null,
-        urlRepositorio: urlRepositorio || null,
-        archivoZipOriginal: archivoZipOriginal || null,
-        carpetaDemo: carpetaDemoFinal || null,
-        carpetaRuntime: carpetaRuntimeFinal || null,
-        comandoInicio: comandoInicioFinal || null,
-        archivoEntrada: archivoEntradaFinal || null,
-        puerto: puertoFinal || null,
-        deployType,
-        estadoDeploy,
-        logDeploy,
-        tipoProyecto: tipoFinal,
-        estado: 'borrador',
-        destacado: false,
-        activo: true,
-        usuario: req.session.userId
-      }).fetch();
+    else {
+      return res.badRequest(`Método de entrada no válido: ${metodoEntrada}`);
+    }
 
-      if (metodoEntrada === 'git' && urlRepositorio && !urlDemoFinal) {
-        clonarGitEnSegundoPlano(
-          proyectoCreado.id,
-          urlRepositorio,
-          ramaGit,
-          carpetaRuntimeFinal || slugFinal
-        );
-      }
+    const proyectoCreado = await Proyecto.create({
+      nombre,
+      slug: slugFinal,
+      descripcion: descripcionFinal || null,
+      tecnologia: tecnologiaFinal || null,
+      urlDemo: urlDemoFinal || null,
+      urlRepositorio: urlRepositorio || null,
+      archivoZipOriginal: archivoZipOriginal || null,
+      carpetaDemo: carpetaDemoFinal || null,
+      carpetaRuntime: carpetaRuntimeFinal || null,
+      comandoInicio: comandoInicioFinal || null,
+      archivoEntrada: archivoEntradaFinal || null,
+      puerto: puertoFinal || null,
+      deployType,
+      estadoDeploy,
+      logDeploy,
+      tipoProyecto: tipoFinal,
+      estado: 'borrador',
+      destacado: false,
+      activo: true,
+      usuario: req.session.userId
+    }).fetch();
 
-      return res.redirect('/dashboard');
-
-    } catch (err) {
-      console.log('================ ERROR CREAR PROYECTO ================');
-      console.error(err.stack || err);
-      console.log('======================================================');
-
-      return res.status(500).send(
-        '<pre style="white-space:pre-wrap;font-size:16px;">' +
-        (err.stack || err.message || err) +
-        '</pre>'
+    if (metodoEntrada === 'git' && urlRepositorio && !urlDemoIngresada) {
+      clonarGitEnSegundoPlano(
+        proyectoCreado.id,
+        urlRepositorio,
+        ramaGit,
+        carpetaRuntimeFinal || carpetaDemoFinal || slugFinal
       );
     }
-  },
+
+    return res.redirect('/dashboard');
+
+  } catch (err) {
+    console.log('================ ERROR CREAR PROYECTO ================');
+    console.error(err.stack || err);
+    console.log('======================================================');
+
+    return res.status(500).send(
+      '<pre style="white-space:pre-wrap;font-size:16px;">' +
+      (err.stack || err.message || err) +
+      '</pre>'
+    );
+  }
+},
 
   ver: async function (req, res) {
     try {
