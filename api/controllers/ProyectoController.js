@@ -180,7 +180,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
   Proyecto.updateOne({ id: proyectoId }).set({
     estadoDeploy: 'clonando',
     logDeploy:
-      '🤖 DemoFlow IA inició clonación desde Git.\n' +
+      '🤖 DemoFlow inició clonación desde Git.\n' +
       `Repositorio: ${urlRepositorio}\n` +
       `Rama: ${rama}\n`
   }).exec(() => {});
@@ -205,13 +205,32 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
 
     const tipoDetectado = detectarTipoIA(carpetaDestinoRuntime, 'node');
 
+    const puertoAsignado = generarPuerto();
+
+    const comandoInicio =
+      tipoDetectado === 'sails'
+        ? 'node app.js'
+        : tipoDetectado === 'node'
+          ? 'npm start'
+          : null;
+
     await Proyecto.updateOne({ id: proyectoId }).set({
       tipoProyecto: tipoDetectado,
-      estadoDeploy: 'subido',
+      carpetaRuntime: carpetaRuntimeFinal,
+      puerto: puertoAsignado,
+      deployType: tipoDetectado === 'html' ? 'static' : 'dynamic',
+      estadoDeploy: tipoDetectado === 'html' ? 'activo' : 'subido',
+      urlDemo: tipoDetectado === 'html'
+        ? `/demo/${carpetaRuntimeFinal}`
+        : `/runtime/${carpetaRuntimeFinal}`,
+      comandoInicio,
+      archivoEntrada: tipoDetectado === 'sails' || tipoDetectado === 'node' ? 'app.js' : null,
       logDeploy:
         '✅ Repositorio Git clonado correctamente.\n' +
         `Tipo detectado: ${tipoDetectado}\n` +
-        'Listo para desplegar desde el panel.\n' +
+        `Puerto asignado: ${puertoAsignado}\n` +
+        `URL DemoFlow: /runtime/${carpetaRuntimeFinal}\n` +
+        'Listo para iniciar deploy desde el panel.\n' +
         log
     });
   });

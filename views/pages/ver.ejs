@@ -1,26 +1,52 @@
 <%
+  const esHtml = proyecto.tipoProyecto === 'html';
+  const esDinamico = proyecto.tipoProyecto === 'node' || proyecto.tipoProyecto === 'sails';
+
   const demoUrl = proyecto.urlDemo && proyecto.urlDemo.trim() !== ''
     ? proyecto.urlDemo.trim()
-    : `/demo/${proyecto.slug}`;
+    : esDinamico
+      ? `/runtime/${proyecto.slug}`
+      : `/demo/${proyecto.slug}`;
 %>
 
 <div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
   <div style="max-width:1100px; margin:0 auto;">
 
     <div style="background:#fff; border-radius:18px; padding:30px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+
       <h1 style="margin-top:0; margin-bottom:10px; color:#111827; font-size:36px;">
         <%= proyecto.nombre %>
       </h1>
 
       <div style="display:flex; flex-wrap:wrap; gap:18px; margin-bottom:18px; color:#374151; font-size:16px;">
-        <p style="margin:0;"><strong>Tipo:</strong> <%= proyecto.tipoProyecto || '-' %></p>
-        <p style="margin:0;"><strong>Tecnología:</strong> <%= proyecto.tecnologia || '-' %></p>
-        <p style="margin:0;"><strong>Estado:</strong> <%= proyecto.estado || 'borrador' %></p>
-        <p style="margin:0;"><strong>Deploy:</strong> <%= proyecto.estadoDeploy || 'pendiente' %></p>
+
         <p style="margin:0;">
-          <strong>Precio propuesto:</strong>
-          $<%= Number(proyecto.precioPropuesto || 0).toLocaleString('es-CO') %>
+          <strong>Tipo:</strong>
+          <%= proyecto.tipoProyecto || '-' %>
         </p>
+
+        <p style="margin:0;">
+          <strong>Tecnología:</strong>
+          <%= proyecto.tecnologia || '-' %>
+        </p>
+
+        <p style="margin:0;">
+          <strong>Estado:</strong>
+          <%= proyecto.estado || 'borrador' %>
+        </p>
+
+        <p style="margin:0;">
+          <strong>Deploy:</strong>
+          <%= proyecto.estadoDeploy || 'pendiente' %>
+        </p>
+
+        <% if (proyecto.puerto) { %>
+          <p style="margin:0;">
+            <strong>Puerto:</strong>
+            <%= proyecto.puerto %>
+          </p>
+        <% } %>
+
       </div>
 
       <p style="color:#6b7280; line-height:1.7; font-size:17px; margin-bottom:24px;">
@@ -28,42 +54,226 @@
       </p>
 
       <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:25px;">
-        <% if (demoUrl) { %>
-          <a href="<%= demoUrl %>" target="_blank"
-             style="display:inline-block; background:#2563eb; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
-            Ver en vivo
+
+        <% if (esDinamico && proyecto.estadoDeploy !== 'activo') { %>
+
+          <a href="/deploy/<%= proyecto.id %>/desplegar"
+             style="
+               display:inline-block;
+               background:#16a34a;
+               color:#fff;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
+            🚀 Iniciar deploy
           </a>
+
+        <% } %>
+
+        <% if (demoUrl) { %>
+
+          <a href="<%= demoUrl %>"
+             target="_blank"
+             style="
+               display:inline-block;
+               background:#2563eb;
+               color:#fff;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
+            🌐 Ver en vivo
+          </a>
+
+        <% } %>
+
+        <% if (esDinamico) { %>
+
+          <a href="/deploy/<%= proyecto.id %>/logs"
+             style="
+               display:inline-block;
+               background:#111827;
+               color:#fff;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
+            📄 Ver logs
+          </a>
+
+          <a href="/deploy/<%= proyecto.id %>/reiniciar"
+             style="
+               display:inline-block;
+               background:#f59e0b;
+               color:#111827;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
+            🔄 Reiniciar
+          </a>
+
+          <a href="/deploy/<%= proyecto.id %>/detener"
+             style="
+               display:inline-block;
+               background:#dc2626;
+               color:#fff;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
+            🛑 Detener
+          </a>
+
         <% } %>
 
         <% if (proyecto.urlRepositorio) { %>
-          <a href="<%= proyecto.urlRepositorio %>" target="_blank"
-             style="display:inline-block; background:#111827; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+
+          <a href="<%= proyecto.urlRepositorio %>"
+             target="_blank"
+             style="
+               display:inline-block;
+               background:#0f172a;
+               color:#fff;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
             Ver repositorio
           </a>
+
         <% } %>
 
         <a href="<%= usuario ? '/dashboard' : '/' %>"
-           style="display:inline-block; background:#e5e7eb; color:#111827; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+           style="
+             display:inline-block;
+             background:#e5e7eb;
+             color:#111827;
+             padding:12px 18px;
+             border-radius:10px;
+             text-decoration:none;
+             font-weight:bold;
+           ">
           Volver
         </a>
+
       </div>
 
-      <% if (demoUrl && proyecto.tipoProyecto === 'html') { %>
-        <div style="margin-top:10px; border:1px solid #d1d5db; border-radius:14px; overflow:hidden; background:#f9fafb;">
+      <% if (esHtml && demoUrl) { %>
+
+        <div style="
+          margin-top:10px;
+          border:1px solid #d1d5db;
+          border-radius:14px;
+          overflow:hidden;
+          background:#f9fafb;
+        ">
+
           <iframe
             src="<%= demoUrl %>"
             style="width:100%; height:620px; border:none;"
             loading="lazy">
           </iframe>
+
         </div>
-      <% } else { %>
-        <div style="margin-top:25px; border:1px solid #facc15; background:#fffbeb; border-radius:14px; padding:25px;">
-          <h3 style="margin-top:0; color:#92400e;">Demo dinámica o pendiente</h3>
-          <p style="color:#78350f; margin-bottom:0;">
-            Este proyecto no es HTML estático o todavía no tiene demo lista para previsualizar en iframe.
+
+      <% } else if (esDinamico && proyecto.estadoDeploy === 'activo') { %>
+
+        <div style="
+          margin-top:25px;
+          border:1px solid #22c55e;
+          background:#f0fdf4;
+          border-radius:14px;
+          padding:25px;
+        ">
+
+          <h3 style="margin-top:0; color:#166534;">
+            ✅ Demo dinámica activa
+          </h3>
+
+          <p style="color:#14532d; line-height:1.7;">
+
+            DemoFlow detectó un proyecto dinámico
+            <strong><%= proyecto.tipoProyecto %></strong>
+            y creó automáticamente el runtime.
+
           </p>
+
+          <% if (proyecto.puerto) { %>
+
+            <p style="color:#14532d;">
+              🔌 Puerto interno:
+              <strong><%= proyecto.puerto %></strong>
+            </p>
+
+          <% } %>
+
+          <div style="margin-top:18px;">
+
+            <a href="<%= demoUrl %>"
+               target="_blank"
+               style="
+                 display:inline-block;
+                 background:#16a34a;
+                 color:#fff;
+                 padding:12px 18px;
+                 border-radius:10px;
+                 text-decoration:none;
+                 font-weight:bold;
+               ">
+              🚀 Abrir aplicación en vivo
+            </a>
+
+          </div>
+
         </div>
+
+      <% } else { %>
+
+        <div style="
+          margin-top:25px;
+          border:1px solid #facc15;
+          background:#fffbeb;
+          border-radius:14px;
+          padding:25px;
+        ">
+
+          <h3 style="margin-top:0; color:#92400e;">
+            Demo dinámica pendiente
+          </h3>
+
+          <p style="color:#78350f; margin-bottom:15px; line-height:1.7;">
+
+            Este proyecto
+            <strong><%= proyecto.tipoProyecto %></strong>
+            todavía no ha sido iniciado por DemoFlow.
+
+          </p>
+
+          <a href="/deploy/<%= proyecto.id %>/desplegar"
+             style="
+               display:inline-block;
+               background:#16a34a;
+               color:#fff;
+               padding:12px 18px;
+               border-radius:10px;
+               text-decoration:none;
+               font-weight:bold;
+             ">
+            🚀 Iniciar deploy ahora
+          </a>
+
+        </div>
+
       <% } %>
+
     </div>
 
   </div>

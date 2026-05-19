@@ -181,45 +181,63 @@ async function levantarProyecto(proyecto) {
     carpetaRuntime
   );
 
+  const rutaLogs = path.resolve(sails.config.appPath, 'deploy_runtime', 'logs');
+  if (!fs.existsSync(rutaLogs)) {
+    fs.mkdirSync(rutaLogs, { recursive: true });
+  }
+
+  const archivoLog = path.resolve(rutaLogs, `${carpetaRuntime}.log`);
+
   if (!fs.existsSync(rutaProyecto)) {
+    const msg = '❌ No existe la carpeta runtime del proyecto:\n' + rutaProyecto;
+
+    fs.writeFileSync(archivoLog, msg, 'utf8');
+
     await Proyecto.updateOne({ id }).set({
       estadoDeploy: 'fallido',
       urlDemo: null,
-      logDeploy: 'No existe la carpeta runtime del proyecto.'
+      logDeploy: msg
     });
+
     return;
   }
 
   const puerto = proyecto.puerto || puertoAleatorio();
+  const urlDemo = `/runtime/${proyecto.slug}`;
 
   await Proyecto.updateOne({ id }).set({
     puerto,
-    urlDemo: null,
+    urlDemo,
     estadoDeploy: 'instalando',
-    logDeploy: 'Ejecutando npm install...'
+    logDeploy:
+      '🚀 Iniciando deploy...\n' +
+      `📁 Carpeta: ${rutaProyecto}\n` +
+      `🔌 Puerto: ${puerto}\n` +
+      '📦 Ejecutando npm install...\n'
   });
 
   exec('npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
-    let log = '';
+    let logRuntime =
+      '🚀 DemoFlow Deploy\n' +
+      `📁 Carpeta: ${rutaProyecto}\n` +
+      `🔌 Puerto: ${puerto}\n\n`;
 
-    if (stdout) log += `\n[STDOUT]\n${stdout}`;
-    if (stderr) log += `\n[STDERR]\n${stderr}`;
+    if (stdout) logRuntime += `\n[STDOUT npm install]\n${stdout}`;
+    if (stderr) logRuntime += `\n[STDERR npm install]\n${stderr}`;
 
-    const rutaLogs = path.resolve(sails.config.appPath, 'deploy_runtime', 'logs');
-
-    if (!fs.existsSync(rutaLogs)) {
-      fs.mkdirSync(rutaLogs, { recursive: true });
-    }
-
-    const archivoLog = path.resolve(rutaLogs, `${carpetaRuntime}.log`);
-    fs.writeFileSync(archivoLog, log, 'utf8');
+    fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
     if (error) {
+      logRuntime += `\n❌ Fallo npm install:\n${error.message}`;
+
+      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
       await Proyecto.updateOne({ id }).set({
         estadoDeploy: 'fallido',
         urlDemo: null,
-        logDeploy: `Fallo en npm install.\n${log || error.message}`
+        logDeploy: logRuntime
       });
+
       return;
     }
 
@@ -230,6 +248,14 @@ async function levantarProyecto(proyecto) {
           ? 'node app.js'
           : 'npm start';
 
+    logRuntime +=
+      `\n\n✅ npm install terminado.\n` +
+      `🚀 Iniciando app con: ${comandoInicio}\n` +
+      `🌐 URL interna: http://127.0.0.1:${puerto}\n` +
+      `🌎 URL DemoFlow: ${urlDemo}\n`;
+
+    fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
     const partes = comandoInicio.split(' ');
     const comando = partes[0];
     const args = partes.slice(1);
@@ -237,6 +263,7 @@ async function levantarProyecto(proyecto) {
     const proceso = spawn(comando, args, {
       cwd: rutaProyecto,
       shell: true,
+      detached: false,
       env: {
         ...process.env,
         PORT: String(puerto),
@@ -245,12 +272,6 @@ async function levantarProyecto(proyecto) {
     });
 
     procesos[id] = proceso;
-
-    let logRuntime =
-      log +
-      `\n\n[DEMOFLOW]\nIniciando app con: ${comandoInicio}\n` +
-      `Puerto interno asignado: ${puerto}\n` +
-      `IMPORTANTE: DemoFlow no redirige a localhost. Para verla pública se necesita proxy runtime o URL externa.\n`;
 
     proceso.stdout.on('data', async function (data) {
       logRuntime += `\n[APP]\n${data.toString()}`;
@@ -270,7 +291,6 @@ async function levantarProyecto(proyecto) {
 
       await Proyecto.updateOne({ id }).set({
         estadoDeploy: 'detenido',
-        urlDemo: null,
         logDeploy: logRuntime
       });
     });
@@ -278,12 +298,11 @@ async function levantarProyecto(proyecto) {
     await Proyecto.updateOne({ id }).set({
       estadoDeploy: 'activo',
       puerto,
-      urlDemo: null,
+      urlDemo,
       logDeploy: logRuntime
     });
   });
 }
-
 module.exports = {
   estado: async function (req, res) {
     try {
