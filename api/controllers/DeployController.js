@@ -450,10 +450,16 @@ module.exports = {
 
       const id = proyecto.id;
 
-      if (procesos[id]) {
-        procesos[id].kill();
-        delete procesos[id];
-      }
+      const carpetaRuntime = proyecto.carpetaRuntime || proyecto.slug;
+
+       const pm2Bin = path.resolve(
+       sails.config.appPath,
+        'node_modules',
+       '.bin',
+         process.platform === 'win32' ? 'pm2.cmd' : 'pm2'
+      );
+
+exec(`"${pm2Bin}" delete "${carpetaRuntime}" || true`);
 
       await Proyecto.updateOne({ id }).set({
         estadoDeploy: 'detenido',
@@ -477,10 +483,16 @@ module.exports = {
       const permitido = await validarPermiso(req, proyecto);
       if (!permitido) return res.forbidden('No tienes permiso para reiniciar este proyecto.');
 
-      if (procesos[proyecto.id]) {
-        procesos[proyecto.id].kill();
-        delete procesos[proyecto.id];
-      }
+      const carpetaRuntime = proyecto.carpetaRuntime || proyecto.slug;
+
+      const pm2Bin = path.resolve(
+       sails.config.appPath,
+       'node_modules',
+        '.bin',
+        process.platform === 'win32' ? 'pm2.cmd' : 'pm2'
+      );
+
+exec(`"${pm2Bin}" delete "${carpetaRuntime}" || true`);
 
       if (proyecto.tipoProyecto === 'html') {
         await publicarHtml(proyecto);
