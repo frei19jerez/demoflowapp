@@ -181,85 +181,29 @@ async function levantarProyecto(proyecto) {
     carpetaRuntime
   );
 
-  const rutaLogs = path.resolve(
-    sails.config.appPath,
-    'deploy_runtime',
-    'logs'
-  );
-
+  const rutaLogs = path.resolve(sails.config.appPath, 'deploy_runtime', 'logs');
   if (!fs.existsSync(rutaLogs)) {
     fs.mkdirSync(rutaLogs, { recursive: true });
   }
 
   const archivoLog = path.resolve(rutaLogs, `${carpetaRuntime}.log`);
 
-  let logRuntime = '🚀 DemoFlow Deploy\n';
-
   if (!fs.existsSync(rutaProyecto)) {
-    if (!proyecto.urlRepositorio) {
-      const msg =
-        '❌ No existe la carpeta runtime del proyecto y no hay repositorio Git.\n' +
-        rutaProyecto;
+    const msg = '❌ No existe la carpeta runtime del proyecto:\n' + rutaProyecto;
 
-      fs.writeFileSync(archivoLog, msg, 'utf8');
-
-      await Proyecto.updateOne({ id }).set({
-        estadoDeploy: 'fallido',
-        urlDemo: null,
-        logDeploy: msg
-      });
-
-      return;
-    }
-
-    fs.mkdirSync(path.dirname(rutaProyecto), { recursive: true });
-
-    logRuntime +=
-      `📁 Creando carpeta runtime:\n${rutaProyecto}\n` +
-      `🔗 Clonando repositorio:\n${proyecto.urlRepositorio}\n\n`;
-
-    fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+    fs.writeFileSync(archivoLog, msg, 'utf8');
 
     await Proyecto.updateOne({ id }).set({
-      estadoDeploy: 'clonando',
-      logDeploy: logRuntime
+      estadoDeploy: 'fallido',
+      urlDemo: null,
+      logDeploy: msg
     });
 
-    await new Promise((resolve, reject) => {
-      exec(
-        `git clone "${proyecto.urlRepositorio}" "${rutaProyecto}"`,
-        function (error, stdout, stderr) {
-          if (stdout) logRuntime += `\n[STDOUT git clone]\n${stdout}`;
-          if (stderr) logRuntime += `\n[STDERR git clone]\n${stderr}`;
-
-          fs.writeFileSync(archivoLog, logRuntime, 'utf8');
-
-          if (error) return reject(error);
-          return resolve();
-        }
-      );
-    }).catch(async function (error) {
-      logRuntime += `\n❌ Falló git clone:\n${error.message}`;
-
-      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
-
-      await Proyecto.updateOne({ id }).set({
-        estadoDeploy: 'fallido',
-        urlDemo: null,
-        logDeploy: logRuntime
-      });
-
-      return null;
-    });
-
-    if (!fs.existsSync(rutaProyecto)) {
-      return;
-    }
+    return;
   }
 
   const puerto = proyecto.puerto || puertoAleatorio();
   const urlDemo = `/runtime/${carpetaRuntime}`;
-  const urlCompleta = `https://demoflowapp.com${urlDemo}`;
   const nombrePm2 = carpetaRuntime;
 
   const pm2Bin = path.resolve(
@@ -269,11 +213,11 @@ async function levantarProyecto(proyecto) {
     process.platform === 'win32' ? 'pm2.cmd' : 'pm2'
   );
 
-  logRuntime +=
+  let logRuntime =
+    '🚀 DemoFlow Deploy\n' +
     `📁 Carpeta: ${rutaProyecto}\n` +
     `🔌 Puerto: ${puerto}\n` +
-    `🌎 URL DemoFlow: ${urlDemo}\n` +
-    `🌐 Demo en vivo: ${urlCompleta}\n\n`;
+    `🌎 URL DemoFlow: ${urlDemo}\n\n`;
 
   await Proyecto.updateOne({ id }).set({
     puerto,
@@ -282,7 +226,7 @@ async function levantarProyecto(proyecto) {
     logDeploy: logRuntime + '📦 Ejecutando npm install...\n'
   });
 
-  exec('rm -rf node_modules package-lock.json && npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
+  exec('npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
     if (stdout) logRuntime += `\n[STDOUT npm install]\n${stdout}`;
     if (stderr) logRuntime += `\n[STDERR npm install]\n${stderr}`;
 
@@ -314,13 +258,11 @@ async function levantarProyecto(proyecto) {
 
       comandoPm2 =
         `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-        `PORT=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
         `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
     } else {
       comandoPm2 =
         `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-        `PORT=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
-        `"${pm2Bin}" start npm --name "${nombrePm2}" -- start`;
+        `"${pm2Bin}" start npm --name "${nombrePm2}" -- start --update-env`;
     }
 
     logRuntime +=
@@ -330,36 +272,47 @@ async function levantarProyecto(proyecto) {
 
     fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
-    exec(comandoPm2, { cwd: rutaProyecto }, async function (pm2Error, pm2Stdout, pm2Stderr) {
-      if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
-      if (pm2Stderr) logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
+    exec(
+      comandoPm2,
+      {
+        cwd: rutaProyecto,
+        env: {
+          ...process.env,
+          PORT: String(puerto),
+          NODE_ENV: 'production'
+        }
+      },
+      async function (pm2Error, pm2Stdout, pm2Stderr) {
+        if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
+        if (pm2Stderr) logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
 
-      if (pm2Error) {
-        logRuntime += `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
+        if (pm2Error) {
+          logRuntime += `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
+
+          fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
+          await Proyecto.updateOne({ id }).set({
+            estadoDeploy: 'fallido',
+            logDeploy: logRuntime
+          });
+
+          return;
+        }
+
+        logRuntime +=
+          '\n✅ Aplicación iniciada con PM2.\n' +
+          `🌐 Abrir: ${urlDemo}\n`;
 
         fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
         await Proyecto.updateOne({ id }).set({
-          estadoDeploy: 'fallido',
+          estadoDeploy: 'activo',
+          puerto,
+          urlDemo,
           logDeploy: logRuntime
         });
-
-        return;
       }
-
-      logRuntime +=
-        '\n✅ Aplicación iniciada con PM2.\n' +
-        `🌐 Demo en vivo:\n${urlCompleta}\n`;
-
-      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
-
-      await Proyecto.updateOne({ id }).set({
-        estadoDeploy: 'activo',
-        puerto,
-        urlDemo,
-        logDeploy: logRuntime
-      });
-    });
+    );
   });
 }
 module.exports = {
