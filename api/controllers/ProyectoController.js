@@ -738,77 +738,108 @@ module.exports = {
   },
 
   eliminar: async function (req, res) {
-    try {
-      if (!req.session.userId) {
-        return res.redirect('/login');
-      }
+  try {
+    if (!req.session.userId) {
+      return res.redirect('/login');
+    }
 
-      const id = req.params.id;
-      const proyecto = await Proyecto.findOne({ id });
+    const id = req.params.id;
 
-      if (!proyecto) {
-        return res.notFound('Proyecto no encontrado.');
-      }
+    const proyecto = await Proyecto.findOne({ id });
 
-      const usuarioLogueado = await Usuario.findOne({ id: req.session.userId });
+    if (!proyecto) {
+      return res.notFound('Proyecto no encontrado.');
+    }
 
-      if (!usuarioLogueado) {
-        return res.forbidden('Usuario no autorizado.');
-      }
+    const usuarioLogueado = await Usuario.findOne({ id: req.session.userId });
 
-      const propietarioId = (typeof proyecto.usuario === 'object' && proyecto.usuario !== null)
+    if (!usuarioLogueado) {
+      return res.forbidden('Usuario no autorizado.');
+    }
+
+    const propietarioId =
+      typeof proyecto.usuario === 'object' && proyecto.usuario !== null
         ? proyecto.usuario.id
         : proyecto.usuario;
 
-      const esDueno = Number(propietarioId) === Number(req.session.userId);
-      const esAdmin = usuarioLogueado.rol === 'admin';
+    const esDueno = Number(propietarioId) === Number(req.session.userId);
+    const esAdmin = usuarioLogueado.rol === 'admin';
 
-      if (!esDueno && !esAdmin) {
-        return res.forbidden('No tienes permiso para eliminar este proyecto.');
-      }
-
-      if (proyecto.carpetaDemo) {
-        const carpetaAssets = path.resolve(
-          sails.config.appPath,
-          'assets',
-          'demos',
-          proyecto.carpetaDemo
-        );
-
-        const carpetaTmp = path.resolve(
-          sails.config.appPath,
-          '.tmp',
-          'public',
-          'demos',
-          proyecto.carpetaDemo
-        );
-
-        eliminarCarpeta(carpetaAssets);
-        eliminarCarpeta(carpetaTmp);
-      }
-
-      if (proyecto.carpetaRuntime) {
-        const carpetaRuntime = path.resolve(
-          sails.config.appPath,
-          'deploy_runtime',
-          'apps',
-          proyecto.carpetaRuntime
-        );
-
-        eliminarCarpeta(carpetaRuntime);
-      }
-
-      await Proyecto.destroyOne({ id });
-
-      return res.redirect('/dashboard');
-
-    } catch (err) {
-      console.log('================ ERROR ELIMINAR PROYECTO ================');
-      console.error(err.stack || err);
-      console.log('=========================================================');
-      return res.serverError('Error al eliminar proyecto.');
+    if (!esDueno && !esAdmin) {
+      return res.forbidden('No tienes permiso para eliminar este proyecto.');
     }
-  },
+
+    // Detener PM2 si es runtime dinámico
+    const nombrePm2 = proyecto.carpetaRuntime || proyecto.slug;
+
+    if (nombrePm2) {
+      try {
+        const { exec } = require('child_process');
+
+        await new Promise((resolve) => {
+          exec(`pm2 delete "${nombrePm2}" || true`, function () {
+            return resolve();
+          });
+        });
+      } catch (e) {
+        sails.log.warn('No se pudo detener PM2:', e.message);
+      }
+    }
+
+    // Eliminar registros runtime relacionados
+    try {
+      await ProyectoRuntime.destroy({
+        proyecto: proyecto.id
+      });
+    } catch (e) {
+      sails.log.warn('No se pudo eliminar ProyectoRuntime:', e.message);
+    }
+
+    // Eliminar demo HTML
+    if (proyecto.carpetaDemo) {
+      const carpetaAssets = path.resolve(
+        sails.config.appPath,
+        'assets',
+        'demos',
+        proyecto.carpetaDemo
+      );
+
+      const carpetaTmp = path.resolve(
+        sails.config.appPath,
+        '.tmp',
+        'public',
+        'demos',
+        proyecto.carpetaDemo
+      );
+
+      eliminarCarpeta(carpetaAssets);
+      eliminarCarpeta(carpetaTmp);
+    }
+
+    // Eliminar runtime dinámico
+    if (proyecto.carpetaRuntime) {
+      const carpetaRuntime = path.resolve(
+        sails.config.appPath,
+        'deploy_runtime',
+        'apps',
+        proyecto.carpetaRuntime
+      );
+
+      eliminarCarpeta(carpetaRuntime);
+    }
+
+    await Proyecto.destroyOne({ id: proyecto.id });
+
+    return res.redirect('/dashboard');
+
+  } catch (err) {
+    console.log('================ ERROR ELIMINAR PROYECTO ================');
+    console.error(err.stack || err);
+    console.log('=========================================================');
+
+    return res.serverError('Error al eliminar proyecto.');
+  }
+},
 
   listaDeploys: async function (req, res) {
     try {
