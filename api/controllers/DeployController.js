@@ -369,36 +369,98 @@ async function levantarProyecto(proyecto) {
 
       exec(
 
-        comandoPm2,
+  comandoPm2,
 
-        {
-          cwd: rutaProyecto
-        },
+  {
+    cwd: rutaProyecto
+  },
 
-        async function (
-          pm2Error,
-          pm2Stdout,
-          pm2Stderr
-        ) {
+  async function (
+    pm2Error,
+    pm2Stdout,
+    pm2Stderr
+  ) {
 
-          if (pm2Stdout) {
+    if (pm2Stdout) {
+      logRuntime +=
+        `\n[STDOUT PM2]\n${pm2Stdout}`;
+    }
+
+    if (pm2Stderr) {
+      logRuntime +=
+        `\n[STDERR PM2]\n${pm2Stderr}`;
+    }
+
+    // =========================
+    // ERROR PM2
+    // =========================
+
+    if (pm2Error) {
+
+      logRuntime +=
+        `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
+
+      fs.writeFileSync(
+        archivoLog,
+        logRuntime,
+        'utf8'
+      );
+
+      await Proyecto.updateOne({ id }).set({
+        estadoDeploy: 'fallido',
+        logDeploy: logRuntime
+      });
+
+      return;
+    }
+
+    // =========================
+    // PM2 OK
+    // =========================
+
+    logRuntime +=
+      '\n✅ Aplicación iniciada con PM2.\n' +
+      `🌐 Demo en vivo:\n${urlCompleta}\n` +
+      '\n⏳ Verificando puerto interno...\n';
+
+    fs.writeFileSync(
+      archivoLog,
+      logRuntime,
+      'utf8'
+    );
+
+    await Proyecto.updateOne({ id }).set({
+      estadoDeploy: 'verificando',
+      puerto,
+      urlDemo,
+      logDeploy: logRuntime
+    });
+
+    // =========================
+    // VERIFICAR PUERTO
+    // =========================
+
+    setTimeout(function () {
+
+      exec(
+        `curl -I http://127.0.0.1:${puerto}`,
+        async function (curlError, curlStdout, curlStderr) {
+
+          if (curlStdout) {
             logRuntime +=
-              `\n[STDOUT PM2]\n${pm2Stdout}`;
+              `\n[STDOUT curl]\n${curlStdout}`;
           }
 
-          if (pm2Stderr) {
+          if (curlStderr) {
             logRuntime +=
-              `\n[STDERR PM2]\n${pm2Stderr}`;
+              `\n[STDERR curl]\n${curlStderr}`;
           }
 
-          // =========================
-          // ERROR PM2
-          // =========================
-
-          if (pm2Error) {
+          if (curlError) {
 
             logRuntime +=
-              `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
+              '\n❌ El puerto interno no respondió.\n' +
+              `🔌 Puerto probado: ${puerto}\n`;
 
             fs.writeFileSync(
               archivoLog,
@@ -414,13 +476,9 @@ async function levantarProyecto(proyecto) {
             return;
           }
 
-          // =========================
-          // OK
-          // =========================
-
           logRuntime +=
-            '\n✅ Aplicación iniciada con PM2.\n' +
-            `🌐 Demo en vivo:\n${urlCompleta}\n`;
+            '\n✅ Puerto interno respondiendo correctamente.\n' +
+            `🌐 Demo lista:\n${urlCompleta}\n`;
 
           fs.writeFileSync(
             archivoLog,
@@ -436,8 +494,13 @@ async function levantarProyecto(proyecto) {
           });
 
         }
-
       );
+
+    }, 8000);
+
+  }
+
+);
 
     }
 
