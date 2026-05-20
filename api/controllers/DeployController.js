@@ -181,15 +181,25 @@ async function levantarProyecto(proyecto) {
     carpetaRuntime
   );
 
-  const rutaLogs = path.resolve(sails.config.appPath, 'deploy_runtime', 'logs');
+  const rutaLogs = path.resolve(
+    sails.config.appPath,
+    'deploy_runtime',
+    'logs'
+  );
+
   if (!fs.existsSync(rutaLogs)) {
     fs.mkdirSync(rutaLogs, { recursive: true });
   }
 
-  const archivoLog = path.resolve(rutaLogs, `${carpetaRuntime}.log`);
+  const archivoLog = path.resolve(
+    rutaLogs,
+    `${carpetaRuntime}.log`
+  );
 
   if (!fs.existsSync(rutaProyecto)) {
-    const msg = '❌ No existe la carpeta runtime del proyecto:\n' + rutaProyecto;
+    const msg =
+      '❌ No existe la carpeta runtime del proyecto:\n' +
+      rutaProyecto;
 
     fs.writeFileSync(archivoLog, msg, 'utf8');
 
@@ -204,6 +214,7 @@ async function levantarProyecto(proyecto) {
 
   const puerto = proyecto.puerto || puertoAleatorio();
   const urlDemo = `/runtime/${carpetaRuntime}`;
+  const urlCompleta = `https://demoflowapp.com${urlDemo}`;
   const nombrePm2 = carpetaRuntime;
 
   const pm2Bin = path.resolve(
@@ -217,7 +228,8 @@ async function levantarProyecto(proyecto) {
     '🚀 DemoFlow Deploy\n' +
     `📁 Carpeta: ${rutaProyecto}\n` +
     `🔌 Puerto: ${puerto}\n` +
-    `🌎 URL DemoFlow: ${urlDemo}\n\n`;
+    `🌎 URL DemoFlow: ${urlDemo}\n` +
+    `🌐 Demo en vivo: ${urlCompleta}\n\n`;
 
   await Proyecto.updateOne({ id }).set({
     puerto,
@@ -227,8 +239,13 @@ async function levantarProyecto(proyecto) {
   });
 
   exec('npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
-    if (stdout) logRuntime += `\n[STDOUT npm install]\n${stdout}`;
-    if (stderr) logRuntime += `\n[STDERR npm install]\n${stderr}`;
+    if (stdout) {
+      logRuntime += `\n[STDOUT npm install]\n${stdout}`;
+    }
+
+    if (stderr) {
+      logRuntime += `\n[STDERR npm install]\n${stderr}`;
+    }
 
     if (error) {
       logRuntime += `\n❌ Fallo npm install:\n${error.message}`;
@@ -254,19 +271,19 @@ async function levantarProyecto(proyecto) {
     let comandoPm2;
 
     if (comandoInicio.startsWith('node ')) {
-  const archivo = comandoInicio.replace('node ', '').trim() || 'app.js';
+      const archivo =
+        comandoInicio.replace('node ', '').trim() || 'app.js';
 
-  comandoPm2 =
-    `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-    `PORT=${puerto} NODE_ENV=production ` +
-    `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
-
-} else {
-  comandoPm2 =
-    `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-    `PORT=${puerto} NODE_ENV=production ` +
-    `"${pm2Bin}" start npm --name "${nombrePm2}" -- start`;
-}
+      comandoPm2 =
+        `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+        `PORT=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
+        `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
+    } else {
+      comandoPm2 =
+        `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
+        `PORT=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
+        `"${pm2Bin}" start npm --name "${nombrePm2}" -- start`;
+    }
 
     logRuntime +=
       '\n✅ npm install terminado.\n' +
@@ -277,13 +294,15 @@ async function levantarProyecto(proyecto) {
 
     exec(
       comandoPm2,
-      {
-        cwd: rutaProyecto,
-        
-      },
+      { cwd: rutaProyecto },
       async function (pm2Error, pm2Stdout, pm2Stderr) {
-        if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
-        if (pm2Stderr) logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
+        if (pm2Stdout) {
+          logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
+        }
+
+        if (pm2Stderr) {
+          logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
+        }
 
         if (pm2Error) {
           logRuntime += `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
@@ -299,8 +318,8 @@ async function levantarProyecto(proyecto) {
         }
 
         logRuntime +=
-  '\n✅ Aplicación iniciada con PM2.\n' +
-  `🌐 Demo en vivo:\n${urlCompleta}\n`;
+          '\n✅ Aplicación iniciada con PM2.\n' +
+          `🌐 Demo en vivo:\n${urlCompleta}\n`;
 
         fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
