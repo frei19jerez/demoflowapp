@@ -191,25 +191,70 @@ async function levantarProyecto(proyecto) {
     fs.mkdirSync(rutaLogs, { recursive: true });
   }
 
-  const archivoLog = path.resolve(
-    rutaLogs,
-    `${carpetaRuntime}.log`
-  );
+  const archivoLog = path.resolve(rutaLogs, `${carpetaRuntime}.log`);
+
+  let logRuntime = '🚀 DemoFlow Deploy\n';
 
   if (!fs.existsSync(rutaProyecto)) {
-    const msg =
-      '❌ No existe la carpeta runtime del proyecto:\n' +
-      rutaProyecto;
+    if (!proyecto.urlRepositorio) {
+      const msg =
+        '❌ No existe la carpeta runtime del proyecto y no hay repositorio Git.\n' +
+        rutaProyecto;
 
-    fs.writeFileSync(archivoLog, msg, 'utf8');
+      fs.writeFileSync(archivoLog, msg, 'utf8');
+
+      await Proyecto.updateOne({ id }).set({
+        estadoDeploy: 'fallido',
+        urlDemo: null,
+        logDeploy: msg
+      });
+
+      return;
+    }
+
+    fs.mkdirSync(path.dirname(rutaProyecto), { recursive: true });
+
+    logRuntime +=
+      `📁 Creando carpeta runtime:\n${rutaProyecto}\n` +
+      `🔗 Clonando repositorio:\n${proyecto.urlRepositorio}\n\n`;
+
+    fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
     await Proyecto.updateOne({ id }).set({
-      estadoDeploy: 'fallido',
-      urlDemo: null,
-      logDeploy: msg
+      estadoDeploy: 'clonando',
+      logDeploy: logRuntime
     });
 
-    return;
+    await new Promise((resolve, reject) => {
+      exec(
+        `git clone "${proyecto.urlRepositorio}" "${rutaProyecto}"`,
+        function (error, stdout, stderr) {
+          if (stdout) logRuntime += `\n[STDOUT git clone]\n${stdout}`;
+          if (stderr) logRuntime += `\n[STDERR git clone]\n${stderr}`;
+
+          fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
+          if (error) return reject(error);
+          return resolve();
+        }
+      );
+    }).catch(async function (error) {
+      logRuntime += `\n❌ Falló git clone:\n${error.message}`;
+
+      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
+      await Proyecto.updateOne({ id }).set({
+        estadoDeploy: 'fallido',
+        urlDemo: null,
+        logDeploy: logRuntime
+      });
+
+      return null;
+    });
+
+    if (!fs.existsSync(rutaProyecto)) {
+      return;
+    }
   }
 
   const puerto = proyecto.puerto || puertoAleatorio();
@@ -224,8 +269,7 @@ async function levantarProyecto(proyecto) {
     process.platform === 'win32' ? 'pm2.cmd' : 'pm2'
   );
 
-  let logRuntime =
-    '🚀 DemoFlow Deploy\n' +
+  logRuntime +=
     `📁 Carpeta: ${rutaProyecto}\n` +
     `🔌 Puerto: ${puerto}\n` +
     `🌎 URL DemoFlow: ${urlDemo}\n` +
@@ -238,14 +282,9 @@ async function levantarProyecto(proyecto) {
     logDeploy: logRuntime + '📦 Ejecutando npm install...\n'
   });
 
-  exec('npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
-    if (stdout) {
-      logRuntime += `\n[STDOUT npm install]\n${stdout}`;
-    }
-
-    if (stderr) {
-      logRuntime += `\n[STDERR npm install]\n${stderr}`;
-    }
+  exec('rm -rf node_modules package-lock.json && npm install', { cwd: rutaProyecto }, async function (error, stdout, stderr) {
+    if (stdout) logRuntime += `\n[STDOUT npm install]\n${stdout}`;
+    if (stderr) logRuntime += `\n[STDERR npm install]\n${stderr}`;
 
     if (error) {
       logRuntime += `\n❌ Fallo npm install:\n${error.message}`;
@@ -271,8 +310,7 @@ async function levantarProyecto(proyecto) {
     let comandoPm2;
 
     if (comandoInicio.startsWith('node ')) {
-      const archivo =
-        comandoInicio.replace('node ', '').trim() || 'app.js';
+      const archivo = comandoInicio.replace('node ', '').trim() || 'app.js';
 
       comandoPm2 =
         `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
@@ -292,45 +330,36 @@ async function levantarProyecto(proyecto) {
 
     fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
-    exec(
-      comandoPm2,
-      { cwd: rutaProyecto },
-      async function (pm2Error, pm2Stdout, pm2Stderr) {
-        if (pm2Stdout) {
-          logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
-        }
+    exec(comandoPm2, { cwd: rutaProyecto }, async function (pm2Error, pm2Stdout, pm2Stderr) {
+      if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
+      if (pm2Stderr) logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
 
-        if (pm2Stderr) {
-          logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
-        }
-
-        if (pm2Error) {
-          logRuntime += `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
-
-          fs.writeFileSync(archivoLog, logRuntime, 'utf8');
-
-          await Proyecto.updateOne({ id }).set({
-            estadoDeploy: 'fallido',
-            logDeploy: logRuntime
-          });
-
-          return;
-        }
-
-        logRuntime +=
-          '\n✅ Aplicación iniciada con PM2.\n' +
-          `🌐 Demo en vivo:\n${urlCompleta}\n`;
+      if (pm2Error) {
+        logRuntime += `\n❌ Error iniciando PM2:\n${pm2Error.message}`;
 
         fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
         await Proyecto.updateOne({ id }).set({
-          estadoDeploy: 'activo',
-          puerto,
-          urlDemo,
+          estadoDeploy: 'fallido',
           logDeploy: logRuntime
         });
+
+        return;
       }
-    );
+
+      logRuntime +=
+        '\n✅ Aplicación iniciada con PM2.\n' +
+        `🌐 Demo en vivo:\n${urlCompleta}\n`;
+
+      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
+      await Proyecto.updateOne({ id }).set({
+        estadoDeploy: 'activo',
+        puerto,
+        urlDemo,
+        logDeploy: logRuntime
+      });
+    });
   });
 }
 module.exports = {
