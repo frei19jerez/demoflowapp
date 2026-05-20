@@ -299,8 +299,8 @@ async function levantarProyecto(proyecto) {
         }
 
         logRuntime +=
-          '\n✅ Aplicación iniciada con PM2.\n' +
-          `🌐 Abrir: ${urlDemo}\n`;
+  '\n✅ Aplicación iniciada con PM2.\n' +
+  `🌐 Demo en vivo:\n${urlCompleta}\n`;
 
         fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
