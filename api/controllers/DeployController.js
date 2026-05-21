@@ -298,7 +298,7 @@ async function levantarProyecto(proyecto) {
     `🌎 URL DemoFlow: ${urlDemo}\n` +
     `🌐 Demo en vivo: ${urlCompleta}\n\n` +
     '📦 IA DemoFlow: Iniciando instalación de dependencias.\n' +
-    '⏱ Tiempo máximo permitido: 3 minutos.\n';
+    '⏱ Tiempo máximo permitido: 5 minutos.\n';
 
   fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
@@ -313,7 +313,7 @@ async function levantarProyecto(proyecto) {
     'npm install --no-audit --no-fund',
     {
       cwd: rutaProyecto,
-      timeout: 180000,
+      timeout: 300000,
       maxBuffer: 1024 * 1024 * 10
     },
     async function (error, stdout, stderr) {

@@ -104,18 +104,20 @@ module.exports = {
     },
 
    estadoDeploy: {
-  type: 'string',
-  columnName: 'estado_deploy',
-  isIn: [
-    'registrado',
-    'pendiente',
-    'procesando',
-    'clonando',
-    'subido',
-    'instalando',
-    'activo',
-    'fallido',
-    'detenido'
+     type: 'string',
+     columnName: 'estado_deploy',
+     isIn: [
+      'registrado',
+      'pendiente',
+       'procesando',
+       'clonando',
+      'subido',
+      'instalando',
+      'iniciando',
+      'verificando',
+      'activo',
+      'fallido',
+      'detenido'
   ],
   defaultsTo: 'pendiente'
 },
