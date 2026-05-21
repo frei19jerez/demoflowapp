@@ -103,13 +103,14 @@ module.exports = {
       defaultsTo: 'external'
     },
 
-    estadoDeploy: {
+   estadoDeploy: {
   type: 'string',
   columnName: 'estado_deploy',
   isIn: [
     'registrado',
     'pendiente',
     'procesando',
+    'clonando',
     'subido',
     'instalando',
     'activo',
