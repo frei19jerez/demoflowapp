@@ -230,47 +230,100 @@ async function levantarProyecto(proyecto) {
   });
 
   await new Promise((resolve) => {
-    exec(
-      `git clone --branch "${proyecto.rama || 'main'}" "${proyecto.urlRepositorio}" "${rutaProyecto}"`,
-      {
-        timeout: 120000,
-        maxBuffer: 1024 * 1024 * 10
-      },
-      async function (cloneError, cloneStdout, cloneStderr) {
+   
+        const comandoReal = comandoInicio.startsWith('node ')
+  ? comandoInicio.replace('node ', '').trim() || 'app.js'
+  : 'app.js';
 
-        if (cloneStdout) logClone += `\n[STDOUT git clone]\n${cloneStdout}`;
-        if (cloneStderr) logClone += `\n[STDERR git clone]\n${cloneStderr}`;
+if (procesos[nombrePm2]) {
+  procesos[nombrePm2].kill();
+}
 
-        if (cloneError) {
-          logClone +=
-            '\n❌ IA DemoFlow: No pude clonar el repositorio.\n' +
-            `🧠 Error:\n${cloneError.message}\n`;
+const proceso = spawn('node', [comandoReal], {
+  cwd: rutaProyecto,
+  env: {
+    ...process.env,
+    PORT: String(puerto),
+    NODE_ENV: 'production',
+    DATABASE_URL: process.env.DATABASE_URL || ''
+  },
+  detached: false
+});
 
-          fs.writeFileSync(archivoLog, logClone, 'utf8');
+procesos[nombrePm2] = proceso;
 
-          await Proyecto.updateOne({ id }).set({
-            estadoDeploy: 'fallido',
-            urlDemo: null,
-            logDeploy: logClone
-          });
+logRuntime += '\n✅ Proceso Node iniciado.';
+logRuntime += '\n⏳ Esperando 10 segundos para verificar el puerto...\n';
 
-          return resolve(false);
-        }
+fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
-        logClone +=
-          '\n✅ Repositorio clonado correctamente.\n' +
-          '🤖 IA DemoFlow: Ahora continuaré con npm install.\n';
+await Proyecto.updateOne({ id }).set({
+  estadoDeploy: 'verificando',
+  puerto,
+  urlDemo,
+  logDeploy: logRuntime
+});
 
-        fs.writeFileSync(archivoLog, logClone, 'utf8');
+proceso.stdout.on('data', async (data) => {
+  logRuntime += `\n[APP STDOUT]\n${data.toString()}`;
+  fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+  await Proyecto.updateOne({ id }).set({ logDeploy: logRuntime }).catch(() => {});
+});
+
+proceso.stderr.on('data', async (data) => {
+  logRuntime += `\n[APP STDERR]\n${data.toString()}`;
+  fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+  await Proyecto.updateOne({ id }).set({ logDeploy: logRuntime }).catch(() => {});
+});
+
+setTimeout(function () {
+  exec(
+    `curl -I http://127.0.0.1:${puerto}`,
+    {
+      timeout: 20000,
+      maxBuffer: 1024 * 1024 * 5
+    },
+    async function (curlError, curlStdout, curlStderr) {
+
+      if (curlStdout) {
+        logRuntime += `\n[STDOUT curl]\n${curlStdout}`;
+      }
+
+      if (curlStderr) {
+        logRuntime += `\n[STDERR curl]\n${curlStderr}`;
+      }
+
+      if (curlError) {
+        logRuntime +=
+          '\n❌ El puerto interno no respondió.\n' +
+          `🔌 Puerto probado: ${puerto}\n`;
+
+        fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
         await Proyecto.updateOne({ id }).set({
-          estadoDeploy: 'instalando',
-          logDeploy: logClone
+          estadoDeploy: 'fallido',
+          logDeploy: logRuntime
         });
 
-        return resolve(true);
+        return;
       }
-    );
+
+      logRuntime +=
+        '\n✅ Puerto interno respondiendo correctamente.\n' +
+        '🚀 Deploy completado con éxito.\n' +
+        `🌐 Demo lista: ${urlCompleta}\n`;
+
+      fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
+      await Proyecto.updateOne({ id }).set({
+        estadoDeploy: 'activo',
+        puerto,
+        urlDemo,
+        logDeploy: logRuntime
+      });
+    }
+  );
+}, 10000);
   });
 
   if (!fs.existsSync(rutaProyecto)) {
