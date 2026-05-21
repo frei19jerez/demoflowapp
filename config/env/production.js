@@ -1,8 +1,15 @@
+/**
+ * Production environment settings
+ * (sails.config.*)
+ */
+
 module.exports = {
 
   models: {
-    // TEMPORAL: solo para que Sails cree la tabla proyecto_runtime
-    migrate: 'alter'
+
+    // 🔥 IMPORTANTE PARA RENDER
+    migrate: 'safe'
+
   },
 
   sockets: {
@@ -19,7 +26,9 @@ module.exports = {
 
   session: {
     cookie: {
+
       secure: process.env.NODE_ENV === 'production'
+
     }
   }
 
