@@ -1,21 +1,26 @@
 /**
  * Datastores
  * (sails.config.datastores)
+ *
+ * Configuration de bases de datos para DemoFlow
  */
 
 module.exports.datastores = {
 
   default: {
 
-    adapter: 'sails-postgresql',
+    /***************************************************************************
+    *                                                                          *
+    * 🔥 TEMPORAL PARA DEMOFLOW RUNTIME                                        *
+    *                                                                          *
+    * Usamos sails-disk mientras probamos                                     *
+    * despliegues automáticos de apps hijas.                                   *
+    *                                                                          *
+    * Luego volveremos a PostgreSQL real.                                      *
+    *                                                                          *
+    ***************************************************************************/
 
-    url:
-      process.env.DATABASE_URL ||
-      'postgresql://postgres:postgres@localhost:5432/demoflow',
-
-    ssl: process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : false
+    adapter: 'sails-disk'
 
   }
 
