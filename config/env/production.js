@@ -1,7 +1,8 @@
 module.exports = {
 
   models: {
-    migrate: 'safe'
+    // TEMPORAL: solo para que Sails cree la tabla proyecto_runtime
+    migrate: 'alter'
   },
 
   sockets: {
