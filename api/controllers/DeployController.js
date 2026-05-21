@@ -196,9 +196,10 @@ async function levantarProyecto(proyecto) {
 
   if (!fs.existsSync(rutaProyecto)) {
 
+  if (!proyecto.urlRepositorio) {
     const msg =
       '❌ IA DemoFlow detectó un problema:\n' +
-      'No existe la carpeta runtime del proyecto.\n\n' +
+      'No existe la carpeta runtime y el proyecto no tiene repositorio Git.\n\n' +
       `📁 Ruta esperada:\n${rutaProyecto}\n`;
 
     fs.writeFileSync(archivoLog, msg, 'utf8');
@@ -211,6 +212,71 @@ async function levantarProyecto(proyecto) {
 
     return;
   }
+
+  fs.mkdirSync(path.dirname(rutaProyecto), { recursive: true });
+
+  let logClone =
+    '🚀 DemoFlow Deploy\n' +
+    '🤖 IA DemoFlow: No encontré la carpeta runtime.\n' +
+    '📥 Clonando repositorio desde GitHub...\n\n' +
+    `🔗 Repo: ${proyecto.urlRepositorio}\n` +
+    `📁 Destino: ${rutaProyecto}\n`;
+
+  fs.writeFileSync(archivoLog, logClone, 'utf8');
+
+  await Proyecto.updateOne({ id }).set({
+    estadoDeploy: 'clonando',
+    logDeploy: logClone
+  });
+
+  await new Promise((resolve) => {
+    exec(
+      `git clone --branch "${proyecto.rama || 'main'}" "${proyecto.urlRepositorio}" "${rutaProyecto}"`,
+      {
+        timeout: 120000,
+        maxBuffer: 1024 * 1024 * 10
+      },
+      async function (cloneError, cloneStdout, cloneStderr) {
+
+        if (cloneStdout) logClone += `\n[STDOUT git clone]\n${cloneStdout}`;
+        if (cloneStderr) logClone += `\n[STDERR git clone]\n${cloneStderr}`;
+
+        if (cloneError) {
+          logClone +=
+            '\n❌ IA DemoFlow: No pude clonar el repositorio.\n' +
+            `🧠 Error:\n${cloneError.message}\n`;
+
+          fs.writeFileSync(archivoLog, logClone, 'utf8');
+
+          await Proyecto.updateOne({ id }).set({
+            estadoDeploy: 'fallido',
+            urlDemo: null,
+            logDeploy: logClone
+          });
+
+          return resolve(false);
+        }
+
+        logClone +=
+          '\n✅ Repositorio clonado correctamente.\n' +
+          '🤖 IA DemoFlow: Ahora continuaré con npm install.\n';
+
+        fs.writeFileSync(archivoLog, logClone, 'utf8');
+
+        await Proyecto.updateOne({ id }).set({
+          estadoDeploy: 'instalando',
+          logDeploy: logClone
+        });
+
+        return resolve(true);
+      }
+    );
+  });
+
+  if (!fs.existsSync(rutaProyecto)) {
+    return;
+  }
+}
 
   const puerto = proyecto.puerto || puertoAleatorio();
   const urlDemo = `/runtime/${carpetaRuntime}`;
@@ -244,7 +310,7 @@ async function levantarProyecto(proyecto) {
   });
 
   exec(
-    'rm -rf node_modules package-lock.json && npm install --no-audit --no-fund',
+    'npm install --no-audit --no-fund',
     {
       cwd: rutaProyecto,
       timeout: 180000,
