@@ -32,6 +32,151 @@
       </a>
     </div>
 
+    <!-- =========================
+🤖 IA DEMOFLOW
+========================= -->
+
+<div style="
+background:#fff;
+border-radius:18px;
+padding:30px;
+margin-bottom:35px;
+box-shadow:0 8px 24px rgba(0,0,0,0.08);
+">
+
+  <div style="
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:20px;
+  margin-bottom:25px;
+  ">
+
+    <div>
+      <h2 style="
+      margin:0;
+      color:#111827;
+      font-size:30px;
+      ">
+        🤖 DemoFlow IA
+      </h2>
+
+      <p style="
+      margin-top:10px;
+      color:#6b7280;
+      font-size:17px;
+      ">
+        Inteligencia artificial para analizar, optimizar y vender proyectos.
+      </p>
+    </div>
+
+    <div style="
+    background:linear-gradient(135deg,#7c3aed,#2563eb);
+    color:#fff;
+    padding:15px 20px;
+    border-radius:14px;
+    font-weight:bold;
+    font-size:18px;
+    ">
+      💎 Créditos IA:
+      <%= usuario && usuario.creditos ? usuario.creditos : 0 %>
+    </div>
+
+  </div>
+
+  <div style="
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:20px;
+  ">
+
+    <!-- CARD -->
+    <div style="
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:20px;
+    ">
+
+      <h3 style="margin-top:0;">
+        🚀 Estado IA
+      </h3>
+
+      <% if(usuario && usuario.acceso_ia){ %>
+
+        <p style="color:#16a34a; font-weight:bold;">
+          IA activada correctamente
+        </p>
+
+      <% } else { %>
+
+        <p style="color:#dc2626; font-weight:bold;">
+          Sin acceso IA
+        </p>
+
+      <% } %>
+
+    </div>
+
+    <!-- CARD -->
+    <div style="
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:20px;
+    ">
+
+      <h3 style="margin-top:0;">
+        📈 Recomendación IA
+      </h3>
+
+      <p style="color:#6b7280; line-height:1.6;">
+        Agrega capturas, demos en vivo y enlaces GitHub para aumentar conversiones.
+      </p>
+
+    </div>
+
+    <!-- CARD -->
+    <div style="
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:20px;
+    ">
+
+      <h3 style="margin-top:0;">
+        🔥 Potencial SaaS
+      </h3>
+
+      <p style="
+      color:#2563eb;
+      font-weight:bold;
+      line-height:1.6;
+      ">
+        Tu perfil tiene potencial comercial para vender software.
+      </p>
+
+    </div>
+
+    <!-- CARD -->
+    <div style="
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:20px;
+    ">
+
+      <h3 style="margin-top:0;">
+        🌐 Deploy Inteligente
+      </h3>
+
+      <p style="color:#6b7280; line-height:1.6;">
+        DemoFlow IA detecta HTML, Node.js, Sails y React automáticamente.
+      </p>
+
+    </div>
+
+  </div>
+
+</div>
+
     <!-- LISTADO -->
     <h2 style="margin-bottom:20px; color:#111827;">Proyectos en demo</h2>
 
