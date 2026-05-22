@@ -103,24 +103,24 @@ module.exports = {
       defaultsTo: 'external'
     },
 
-   estadoDeploy: {
-     type: 'string',
-     columnName: 'estado_deploy',
-     isIn: [
-      'registrado',
-      'pendiente',
-       'procesando',
-       'clonando',
-      'subido',
-      'instalando',
-      'iniciando',
-      'verificando',
-      'activo',
-      'fallido',
-      'detenido'
-  ],
-  defaultsTo: 'pendiente'
-},
+    estadoDeploy: {
+      type: 'string',
+      columnName: 'estado_deploy',
+      isIn: [
+        'registrado',
+        'pendiente',
+        'procesando',
+        'clonando',
+        'subido',
+        'instalando',
+        'iniciando',
+        'verificando',
+        'activo',
+        'fallido',
+        'detenido'
+      ],
+      defaultsTo: 'pendiente'
+    },
 
     logDeploy: {
       type: 'string',
@@ -153,20 +153,6 @@ module.exports = {
     cliente: {
       model: 'cliente',
       columnName: 'cliente_id'
-    },
-
-    createdAt: {
-      type: 'ref',
-      columnType: 'timestamp',
-      autoCreatedAt: true,
-      columnName: 'created_at'
-    },
-
-    updatedAt: {
-      type: 'ref',
-      columnType: 'timestamp',
-      autoUpdatedAt: true,
-      columnName: 'updated_at'
     }
 
   }
