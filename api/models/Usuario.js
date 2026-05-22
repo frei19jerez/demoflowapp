@@ -34,8 +34,6 @@ module.exports = {
 
     rol: {
       type: 'string',
-      allowNull: true,
-      columnType: 'varchar(50)',
       defaultsTo: 'programador'
     },
 
@@ -45,15 +43,13 @@ module.exports = {
     },
 
     createdAt: {
-      type: 'ref',
-      columnType: 'timestamp',
+      type: 'number',
       autoCreatedAt: true,
       columnName: 'created_at'
     },
 
     updatedAt: {
-      type: 'ref',
-      columnType: 'timestamp',
+      type: 'number',
       autoUpdatedAt: true,
       columnName: 'updated_at'
     }
@@ -70,7 +66,9 @@ module.exports = {
         const hash = await bcrypt.hash(valuesToSet.password, 10);
         valuesToSet.password = hash;
       }
+
       return proceed();
+
     } catch (err) {
       return proceed(err);
     }
