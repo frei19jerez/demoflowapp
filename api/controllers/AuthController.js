@@ -17,22 +17,15 @@ function analizarPasswordIA(password) {
     return 'La contraseña debe tener mínimo 6 caracteres.';
   }
 
-  if (
-    password === '123456' ||
-    password === '123123' ||
-    password.toLowerCase() === 'password'
-  ) {
-    return 'Por seguridad, usa una contraseña más fuerte.';
+  if (['123456', '123123', 'password', 'admin123'].includes(password.toLowerCase())) {
+    return 'IA DemoFlow: usa una contraseña más fuerte.';
   }
 
   return null;
 }
 
 function guardarFlash(req, tipo, mensaje) {
-  req.session.flash = {
-    tipo,
-    mensaje
-  };
+  req.session.flash = { tipo, mensaje };
 }
 
 function obtenerFlash(req) {
@@ -44,49 +37,31 @@ function obtenerFlash(req) {
 module.exports = {
 
   registerPage: function (req, res) {
-    try {
-      if (req.session && req.session.userId) {
-        return res.redirect('/dashboard');
-      }
-
-      const flash = obtenerFlash(req);
-
-      return res.view('pages/auth/register', {
-        titulo: 'Registro',
-        flash
-      });
-
-    } catch (err) {
-      sails.log.error('=========== ERROR CARGANDO REGISTER PAGE ===========');
-      sails.log.error(err);
-      sails.log.error('====================================================');
-      return res.serverError('Error cargando la página de registro.');
+    if (req.session && req.session.userId) {
+      return res.redirect('/dashboard');
     }
+
+    return res.view('pages/auth/register', {
+      titulo: 'Registro',
+      flash: obtenerFlash(req)
+    });
   },
 
   loginPage: function (req, res) {
-    try {
-      if (req.session && req.session.userId) {
-        return res.redirect('/dashboard');
-      }
-
-      const flash = obtenerFlash(req);
-
-      return res.view('pages/auth/login', {
-        titulo: 'Iniciar sesión',
-        flash
-      });
-
-    } catch (err) {
-      sails.log.error('============= ERROR CARGANDO LOGIN PAGE =============');
-      sails.log.error(err);
-      sails.log.error('=====================================================');
-      return res.serverError('Error cargando la página de inicio de sesión.');
+    if (req.session && req.session.userId) {
+      return res.redirect('/dashboard');
     }
+
+    return res.view('pages/auth/login', {
+      titulo: 'Iniciar sesión',
+      flash: obtenerFlash(req)
+    });
   },
 
   register: async function (req, res) {
     try {
+      sails.log.info('🤖 IA AUTH: BODY RECIBIDO EN REGISTER:', req.body);
+
       const nombre = limpiarTexto(req.body.nombre || req.body.name);
       const email = limpiarEmail(req.body.email || req.body.correo);
       const password = limpiarTexto(req.body.password || req.body.contrasena);
@@ -127,14 +102,14 @@ module.exports = {
       }
 
       const nuevoUsuario = await Usuario.create({
-        nombre,
-        email,
-        password,
+        nombre: nombre,
+        email: email,
+        password: password,
         rol: 'programador',
         activo: true
       }).fetch();
 
-      sails.log.info('🤖 IA AUTH: USUARIO CREADO OK:', nuevoUsuario.email);
+      sails.log.info('✅ IA AUTH: Usuario creado correctamente:', nuevoUsuario.email);
 
       req.session.userId = nuevoUsuario.id;
       req.session.userName = nuevoUsuario.nombre;
@@ -142,9 +117,7 @@ module.exports = {
 
       return req.session.save(function (err) {
         if (err) {
-          sails.log.error('=========== ERROR GUARDANDO SESION EN REGISTRO ===========');
-          sails.log.error(err);
-          sails.log.error('==========================================================');
+          sails.log.error('❌ IA AUTH: Error guardando sesión en registro:', err);
           return res.serverError('Usuario creado, pero no se pudo guardar la sesión.');
         }
 
@@ -152,11 +125,9 @@ module.exports = {
       });
 
     } catch (err) {
-      sails.log.error('================ ERROR EN REGISTRO ================');
+      sails.log.error('❌ IA AUTH: ERROR EN REGISTRO');
       sails.log.error(err);
-      sails.log.error('BODY RECIBIDO EN REGISTER:');
-      sails.log.error(req.body);
-      sails.log.error('===================================================');
+      sails.log.error('BODY RECIBIDO EN REGISTER:', req.body);
 
       guardarFlash(req, 'error', 'Error al registrar usuario.');
       return res.redirect('/register');
@@ -165,6 +136,8 @@ module.exports = {
 
   login: async function (req, res) {
     try {
+      sails.log.info('🤖 IA AUTH: Intentando iniciar sesión...');
+
       const email = limpiarEmail(req.body.email || req.body.correo);
       const password = limpiarTexto(req.body.password || req.body.contrasena);
 
@@ -190,12 +163,6 @@ module.exports = {
         return res.redirect('/login');
       }
 
-      if (!usuario.password) {
-        sails.log.error('El usuario no tiene contraseña:', usuario.email);
-        guardarFlash(req, 'error', 'La cuenta no tiene contraseña válida.');
-        return res.redirect('/login');
-      }
-
       const ok = await bcrypt.compare(password, usuario.password);
 
       if (!ok) {
@@ -203,7 +170,7 @@ module.exports = {
         return res.redirect('/login');
       }
 
-      sails.log.info('🤖 IA AUTH: LOGIN OK:', usuario.email);
+      sails.log.info('✅ IA AUTH: Login correcto:', usuario.email);
 
       req.session.userId = usuario.id;
       req.session.userName = usuario.nombre;
@@ -211,9 +178,7 @@ module.exports = {
 
       return req.session.save(function (err) {
         if (err) {
-          sails.log.error('============= ERROR GUARDANDO SESION EN LOGIN =============');
-          sails.log.error(err);
-          sails.log.error('===========================================================');
+          sails.log.error('❌ IA AUTH: Error guardando sesión en login:', err);
           return res.serverError('No se pudo guardar la sesión.');
         }
 
@@ -221,11 +186,9 @@ module.exports = {
       });
 
     } catch (err) {
-      sails.log.error('================ ERROR EN LOGIN ===================');
+      sails.log.error('❌ IA AUTH: ERROR EN LOGIN');
       sails.log.error(err);
-      sails.log.error('BODY RECIBIDO EN LOGIN:');
-      sails.log.error(req.body);
-      sails.log.error('===================================================');
+      sails.log.error('BODY RECIBIDO EN LOGIN:', req.body);
 
       guardarFlash(req, 'error', 'Error al iniciar sesión.');
       return res.redirect('/login');
@@ -239,9 +202,7 @@ module.exports = {
 
     req.session.destroy(function (err) {
       if (err) {
-        sails.log.error('================ ERROR EN LOGOUT ==================');
-        sails.log.error(err);
-        sails.log.error('===================================================');
+        sails.log.error('❌ IA AUTH: Error cerrando sesión:', err);
         return res.serverError('No se pudo cerrar sesión.');
       }
 
