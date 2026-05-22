@@ -80,6 +80,12 @@ module.exports.routes = {
   'POST /pago/crear': 'PagoController.crear',
 
   // ===============================
+  // IA DEMOFLOW
+  // ===============================
+  'POST /ia/analizar-proyecto': 'IAController.analizarProyecto',
+  'POST /ia/sugerir-descripcion': 'IAController.sugerirDescripcion',
+
+  // ===============================
   // ANALYTICS
   // ===============================
   'GET /analytics': async function(req, res) {
