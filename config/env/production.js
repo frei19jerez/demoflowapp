@@ -8,7 +8,7 @@ module.exports = {
   models: {
 
     // 🔥 IMPORTANTE PARA RENDER
-    migrate: 'alter'
+    migrate: 'safe'
 
   },
 
