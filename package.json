@@ -14,7 +14,7 @@
     "grunt": "1.0.4",
     "http-proxy": "^1.18.1",
     "http-proxy-middleware": "^4.0.0",
-    "pg": "^8.20.0",
+    "pg": "^8.21.0",
     "pm2": "^7.0.1",
     "sails": "^1.5.17",
     "sails-hook-grunt": "^5.0.0",

@@ -11,13 +11,11 @@ module.exports.datastores = {
 
     adapter: 'sails-postgresql',
 
-    url:
-      process.env.DATABASE_URL ||
-      'postgresql://postgres:postgres@localhost:5432/demoflow',
+    url: process.env.DATABASE_URL,
 
-    ssl: process.env.NODE_ENV === 'production'
-      ? { rejectUnauthorized: false }
-      : false
+    ssl: {
+      rejectUnauthorized: false
+    }
 
   }
 
