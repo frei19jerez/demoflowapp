@@ -17,19 +17,18 @@ proxy.on('error', function (err, req, res) {
     res.end(`
       <h1>🤖 IA DemoFlow: Demo no disponible</h1>
       <p>La aplicación todavía no está iniciada o el puerto interno no responde.</p>
-      <p>Vuelve al panel y presiona <strong>Iniciar deploy</strong>.</p>
+      <p>DemoFlow intentó conectarse al runtime, pero no recibió respuesta.</p>
+      <p>Vuelve al panel y presiona <strong>Reiniciar</strong> o <strong>Iniciar deploy</strong>.</p>
     `);
   }
 });
 
 proxy.on('proxyReq', function(proxyReq, req) {
-
   if (
     req.body &&
     Object.keys(req.body).length > 0 &&
     ['POST', 'PUT', 'PATCH'].includes(req.method)
   ) {
-
     sails.log.info('🤖 IA DemoFlow: Detecté datos enviados por formulario.');
     sails.log.info('📦 IA DemoFlow Body:', req.body);
     sails.log.info('🚀 IA DemoFlow: Reenviando datos al runtime hijo...');
@@ -40,16 +39,13 @@ proxy.on('proxyReq', function(proxyReq, req) {
     proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
 
     proxyReq.write(bodyData);
-
   }
-
 });
 
 module.exports = {
 
   proxy: async function (req, res) {
     try {
-
       const slug = req.params.slug;
 
       sails.log.info('🤖 IA DemoFlow: Analizando petición runtime...');
@@ -79,6 +75,24 @@ module.exports = {
         return res.serverError('El proyecto no tiene puerto asignado');
       }
 
+      // ===============================
+      // IA HEALTH CHECK / AUTO-RESTART
+      // ===============================
+
+      sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime antes del proxy...');
+
+      const health = await RuntimeHealthService.revisarRuntime(proyecto);
+
+      if (health.ok) {
+        sails.log.info('✅ IA DemoFlow:', health.mensaje);
+      } else {
+        sails.log.warn('⚠️ IA DemoFlow:', health.mensaje);
+      }
+
+      // ===============================
+      // PROXY RUNTIME
+      // ===============================
+
       const target = `http://127.0.0.1:${proyecto.puerto}`;
 
       req.url = req.url.replace(`/runtime/${slug}`, '') || '/';
@@ -95,12 +109,10 @@ module.exports = {
       });
 
     } catch (error) {
-
       sails.log.error('❌ IA DemoFlow: Error cargando runtime.');
       sails.log.error(error);
 
       return res.serverError('Error cargando runtime');
-
     }
   }
 
