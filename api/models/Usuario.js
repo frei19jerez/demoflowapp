@@ -37,6 +37,31 @@ module.exports = {
       defaultsTo: 'programador'
     },
 
+    // 🚀 PLAN DEL USUARIO
+    plan: {
+      type: 'string',
+      defaultsTo: 'free'
+    },
+
+    // 💎 CRÉDITOS DEMOFLOW
+    creditos: {
+      type: 'number',
+      defaultsTo: 5
+    },
+
+    // 🤖 IA ACTIVADA
+    accesoIA: {
+      type: 'boolean',
+      defaultsTo: false,
+      columnName: 'acceso_ia'
+    },
+
+    // ⭐ PREMIUM
+    premium: {
+      type: 'boolean',
+      defaultsTo: false
+    },
+
     activo: {
       type: 'boolean',
       defaultsTo: true
@@ -61,16 +86,24 @@ module.exports = {
   },
 
   beforeCreate: async function (valuesToSet, proceed) {
+
     try {
+
       if (valuesToSet.password) {
+
         const hash = await bcrypt.hash(valuesToSet.password, 10);
+
         valuesToSet.password = hash;
+
       }
 
       return proceed();
 
     } catch (err) {
+
       return proceed(err);
+
     }
+
   }
 };
