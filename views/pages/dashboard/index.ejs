@@ -1,63 +1,80 @@
-<body class="bg-light">
+<!-- =========================
+🤖 IA DEMOFLOW
+========================= -->
 
-  <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+<div class="card border-0 shadow-sm mb-4">
+
+  <div class="card-body">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
       <div>
-        <h1 class="h3 mb-1">Mi panel</h1>
-        <p class="text-muted mb-0">Aquí verás tus proyectos y demos.</p>
+        <h4 class="mb-1">
+          🤖 IA DemoFlow Assistant
+        </h4>
+
+        <p class="text-muted mb-0">
+          Inteligencia artificial para analizar tus demos y ayudarte a vender más.
+        </p>
       </div>
-      <a href="/proyecto/nuevo" class="btn btn-primary">+ Nuevo proyecto</a>
+
+      <span class="badge bg-dark p-3">
+        💎 Créditos:
+        <%= usuario.creditos || 0 %>
+      </span>
+
     </div>
 
-    <% if (proyectos && proyectos.length > 0) { %>
-      <div class="row">
-        <% proyectos.forEach(function(proyecto){ %>
-          <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card shadow-sm border-0 h-100">
-              <div class="card-body d-flex flex-column">
+    <div class="row">
 
-                <h5 class="mb-2"><%= proyecto.nombre %></h5>
+      <div class="col-md-4 mb-3">
+        <div class="border rounded p-3 h-100">
 
-                <p class="text-muted mb-2">
-                  <%= proyecto.descripcion || 'Sin descripción' %>
-                </p>
+          <h6>🚀 Estado IA</h6>
 
-                <p class="mb-2">
-                  <strong>Estado:</strong> <%= proyecto.estado || 'borrador' %>
-                </p>
+          <% if(usuario.acceso_ia){ %>
 
-                <p class="mb-3">
-                  <strong>Tecnología:</strong> <%= proyecto.tecnologia || '-' %>
-                </p>
+            <p class="text-success mb-0">
+              IA activada correctamente.
+            </p>
 
-                <div class="mt-auto pt-3 d-flex flex-wrap gap-2">
-                  <a href="/proyecto/<%= proyecto.id %>" class="btn btn-outline-secondary btn-sm">
-                    Ver detalle
-                  </a>
+          <% } else { %>
 
-                  <% if (proyecto.urlDemo) { %>
-                    <a href="<%= proyecto.urlDemo %>" target="_blank" class="btn btn-primary btn-sm">
-                      Ver en vivo
-                    </a>
-                  <% } %>
+            <p class="text-danger mb-0">
+              Sin acceso IA.
+            </p>
 
-                  <form action="/proyecto/<%= proyecto.id %>/eliminar" method="POST" onsubmit="return confirm('¿Seguro que deseas eliminar este proyecto?');" class="d-inline">
-                    <button type="submit" class="btn btn-danger btn-sm">
-                      Eliminar
-                    </button>
-                  </form>
-                </div>
+          <% } %>
 
-              </div>
-            </div>
-          </div>
-        <% }) %>
+        </div>
       </div>
-    <% } else { %>
-      <div class="alert alert-info">
-        Aún no tienes proyectos creados.
+
+      <div class="col-md-4 mb-3">
+        <div class="border rounded p-3 h-100">
+
+          <h6>📈 Recomendación IA</h6>
+
+          <p class="mb-0 text-muted">
+            Agrega más screenshots y demos en vivo para aumentar conversiones.
+          </p>
+
+        </div>
       </div>
-    <% } %>
+
+      <div class="col-md-4 mb-3">
+        <div class="border rounded p-3 h-100">
+
+          <h6>🔥 Potencial de venta</h6>
+
+          <p class="mb-0 text-primary">
+            Tu perfil tiene potencial SaaS comercial.
+          </p>
+
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
-</body>
+</div>
