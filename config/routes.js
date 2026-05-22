@@ -51,20 +51,49 @@ module.exports.routes = {
 
   'GET /logout': 'AuthController.logout',
 
+  // ===============================
+  // RUNTIME
+  // ===============================
   'ALL /runtime/:slug': {
-  controller: 'RuntimeController',
-  action: 'proxy',
-  skipAssets: true
-},
+    controller: 'RuntimeController',
+    action: 'proxy',
+    skipAssets: true
+  },
 
-'ALL /runtime/:slug/*': {
-  controller: 'RuntimeController',
-  action: 'proxy',
-  skipAssets: true
-},
+  'ALL /runtime/:slug/*': {
+    controller: 'RuntimeController',
+    action: 'proxy',
+    skipAssets: true
+  },
+
   // ===============================
   // DASHBOARD
   // ===============================
-  'GET /dashboard': 'ProyectoController.dashboard'
+  'GET /dashboard': 'ProyectoController.dashboard',
+
+  // ===============================
+  // PREMIUM / PAGOS
+  // ===============================
+  'GET /pricing': 'PremiumController.pricing',
+  'GET /premium': 'PremiumController.premium',
+
+  'POST /pago/crear': 'PagoController.crear',
+
+  // ===============================
+  // ANALYTICS
+  // ===============================
+  'GET /analytics': async function(req, res) {
+    const totalProyectos = await Proyecto.count();
+    const demosActivas = await Proyecto.count({ estadoDeploy: 'activo' });
+    const totalUsuarios = await Usuario.count();
+    const totalPagos = await Pago.count();
+
+    return res.view('pages/analytics', {
+      totalProyectos,
+      demosActivas,
+      totalUsuarios,
+      totalPagos
+    });
+  }
 
 };

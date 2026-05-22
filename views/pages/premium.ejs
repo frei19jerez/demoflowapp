@@ -1,0 +1,46 @@
+<div class="container py-5">
+
+  <h1 class="text-center mb-4">🚀 Activar DemoFlow Pro</h1>
+
+  <div class="card shadow border-0 mx-auto" style="max-width: 650px;">
+    <div class="card-body p-4">
+
+      <h3>💳 Métodos de pago</h3>
+      <p class="text-muted">
+        Elige cómo deseas pagar tu plan Premium.
+      </p>
+
+      <form method="POST" action="/pago/crear">
+
+        <div class="mb-3">
+          <label class="form-label">Plan</label>
+          <select name="plan" class="form-select">
+            <option value="pro">Pro - $30.000 COP</option>
+            <option value="empresa">Empresa - $80.000 COP</option>
+          </select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Método de pago</label>
+          <select name="metodo" class="form-select" required>
+            <option value="">Seleccione</option>
+            <option value="nequi">Nequi</option>
+            <option value="paypal">PayPal</option>
+            <option value="banco_bogota">Banco de Bogotá</option>
+          </select>
+        </div>
+
+        <div class="alert alert-info">
+          Después de registrar el pago, envía el comprobante por WhatsApp para activar tu cuenta.
+        </div>
+
+        <button class="btn btn-primary w-100">
+          Registrar pago
+        </button>
+
+      </form>
+
+    </div>
+  </div>
+
+</div>
