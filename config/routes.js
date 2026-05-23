@@ -18,6 +18,8 @@ module.exports.routes = {
 
   'GET /proyecto/:id': 'ProyectoController.ver',
 
+  'POST /proyecto/:id/analizar-ia': 'ProyectoController.analizarIA',
+
   'POST /proyecto/:id/eliminar': 'ProyectoController.eliminar',
   'GET /proyecto/:id/eliminar': 'ProyectoController.eliminar',
 
@@ -89,17 +91,30 @@ module.exports.routes = {
   // ANALYTICS
   // ===============================
   'GET /analytics': async function(req, res) {
-    const totalProyectos = await Proyecto.count();
-    const demosActivas = await Proyecto.count({ estadoDeploy: 'activo' });
-    const totalUsuarios = await Usuario.count();
-    const totalPagos = await Pago.count();
+    try {
+      const totalProyectos = await Proyecto.count();
+      const demosActivas = await Proyecto.count({ estadoDeploy: 'activo' });
+      const totalUsuarios = await Usuario.count();
+      const totalPagos = await Pago.count();
 
-    return res.view('pages/analytics', {
-      totalProyectos,
-      demosActivas,
-      totalUsuarios,
-      totalPagos
-    });
+      return res.view('pages/analytics', {
+        titulo: 'Analytics IA',
+        totalProyectos,
+        demosActivas,
+        totalUsuarios,
+        totalPagos,
+        usuario: req.session && req.session.userId ? {
+          id: req.session.userId,
+          nombre: req.session.userName,
+          email: req.session.userEmail
+        } : null
+      });
+
+    } catch (err) {
+      sails.log.error('❌ IA DemoFlow: Error cargando analytics.');
+      sails.log.error(err);
+      return res.serverError('Error cargando analytics.');
+    }
   }
 
 };

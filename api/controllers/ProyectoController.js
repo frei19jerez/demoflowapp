@@ -673,6 +673,104 @@ module.exports = {
   }
 },
 
+analizarIA: async function(req, res) {
+  try {
+    if (!req.session.userId) {
+      return res.redirect('/login');
+    }
+
+    const usuario = await Usuario.findOne({ id: req.session.userId });
+
+    if (!usuario) {
+      return res.redirect('/login');
+    }
+
+    if ((usuario.creditos || 0) <= 0) {
+      return res.redirect('/premium');
+    }
+
+    const proyecto = await Proyecto.findOne({
+      id: req.params.id,
+      usuario: req.session.userId
+    });
+
+    if (!proyecto) {
+      return res.notFound('Proyecto no encontrado.');
+    }
+
+    let rutaProyecto = null;
+
+    if (proyecto.carpetaRuntime) {
+      rutaProyecto = path.resolve(
+        sails.config.appPath,
+        'deploy_runtime',
+        'apps',
+        proyecto.carpetaRuntime
+      );
+    }
+
+    if (!rutaProyecto && proyecto.carpetaDemo) {
+      rutaProyecto = path.resolve(
+        sails.config.appPath,
+        'assets',
+        'demos',
+        proyecto.carpetaDemo
+      );
+    }
+
+    let resultadoIA = {
+      tecnologia: proyecto.tecnologia || 'Demo externa',
+      listoParaDeploy: true,
+      recomendaciones: [
+        'Proyecto registrado correctamente en DemoFlow.'
+      ],
+      errores: []
+    };
+
+    if (rutaProyecto && fs.existsSync(rutaProyecto)) {
+      resultadoIA = await IAAnalyzerService.analizarProyecto(rutaProyecto);
+    } else {
+      resultadoIA.recomendaciones.push(
+        'IA DemoFlow no encontró carpeta local, posiblemente es una URL externa.'
+      );
+    }
+
+    const logIA =
+      '\n\n================ 🤖 ANÁLISIS IA DEMOFLOW ================\n' +
+      `Fecha: ${new Date().toLocaleString('es-CO')}\n` +
+      `Proyecto: ${proyecto.nombre}\n` +
+      `Tecnología detectada: ${resultadoIA.tecnologia || 'desconocida'}\n` +
+      `Listo para deploy: ${resultadoIA.listoParaDeploy ? 'SI' : 'NO'}\n\n` +
+      'Recomendaciones:\n' +
+      (resultadoIA.recomendaciones || []).map(r => `✅ ${r}`).join('\n') +
+      '\n\nErrores detectados:\n' +
+      ((resultadoIA.errores && resultadoIA.errores.length > 0)
+        ? resultadoIA.errores.map(e => `❌ ${e}`).join('\n')
+        : '✅ No se detectaron errores críticos.') +
+      '\n=========================================================\n';
+
+    await Proyecto.updateOne({ id: proyecto.id }).set({
+      logDeploy: (proyecto.logDeploy || '') + logIA
+    });
+
+    await Usuario.updateOne({ id: usuario.id }).set({
+      creditos: usuario.creditos - 1
+    });
+
+    sails.log.info(
+      `🤖 IA DemoFlow: Análisis completado. Crédito descontado. Restantes: ${usuario.creditos - 1}`
+    );
+
+    return res.redirect('/proyecto/' + proyecto.id);
+
+  } catch (err) {
+    sails.log.error('❌ IA DemoFlow: Error analizando proyecto.');
+    sails.log.error(err);
+
+    return res.serverError('Error analizando proyecto con IA.');
+  }
+},
+
   ver: async function (req, res) {
     try {
       const valor = req.params.id;
