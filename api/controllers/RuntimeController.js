@@ -2,23 +2,32 @@ const httpProxy = require('http-proxy');
 
 const proxy = httpProxy.createProxyServer({
   ws: true,
-  changeOrigin: true
+  changeOrigin: true,
+  proxyTimeout: 30000,
+  timeout: 30000
 });
 
-proxy.on('error', function (err, req, res) {
+proxy.on('error', function(err, req, res) {
   sails.log.error('🤖 IA DemoFlow: Error en el proxy runtime.');
   sails.log.error('❌ Detalle:', err.message);
 
   if (res && !res.headersSent) {
-    res.writeHead(502, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.writeHead(502, {
+      'Content-Type': 'text/html; charset=utf-8'
+    });
   }
 
   if (res && res.end) {
     res.end(`
-      <h1>🤖 IA DemoFlow: Demo no disponible</h1>
-      <p>La aplicación todavía no está iniciada o el puerto interno no responde.</p>
-      <p>DemoFlow intentó conectarse al runtime, pero no recibió respuesta.</p>
-      <p>Vuelve al panel y presiona <strong>Reiniciar</strong> o <strong>Iniciar deploy</strong>.</p>
+      <div style="font-family:Arial;padding:40px;max-width:700px;margin:auto;">
+        <h1>🤖 IA DemoFlow: Demo no disponible</h1>
+        <p>La aplicación todavía no está iniciada o el puerto interno no responde.</p>
+        <p>DemoFlow intentó conectarse al runtime, pero no recibió respuesta.</p>
+        <p>Vuelve al panel y presiona <strong>Reiniciar</strong> o <strong>Iniciar deploy</strong>.</p>
+        <a href="/dashboard" style="display:inline-block;margin-top:20px;background:#2563eb;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;">
+          Volver al dashboard
+        </a>
+      </div>
     `);
   }
 });
@@ -29,10 +38,6 @@ proxy.on('proxyReq', function(proxyReq, req) {
     Object.keys(req.body).length > 0 &&
     ['POST', 'PUT', 'PATCH'].includes(req.method)
   ) {
-    sails.log.info('🤖 IA DemoFlow: Detecté datos enviados por formulario.');
-    sails.log.info('📦 IA DemoFlow Body:', req.body);
-    sails.log.info('🚀 IA DemoFlow: Reenviando datos al runtime hijo...');
-
     const bodyData = JSON.stringify(req.body);
 
     proxyReq.setHeader('Content-Type', 'application/json');
@@ -44,7 +49,7 @@ proxy.on('proxyReq', function(proxyReq, req) {
 
 module.exports = {
 
-  proxy: async function (req, res) {
+  proxy: async function(req, res) {
     try {
       const slug = req.params.slug;
 
@@ -54,15 +59,17 @@ module.exports = {
       sails.log.info('🌐 URL original:', req.url);
 
       if (!slug) {
-        sails.log.warn('⚠️ IA DemoFlow: No recibí slug del proyecto.');
         return res.badRequest('Slug requerido');
       }
 
-      let proyecto = await Proyecto.findOne({ slug });
+      let proyecto = await Proyecto.findOne({
+        slug
+      });
 
       if (!proyecto) {
-        sails.log.info('🤖 IA DemoFlow: No encontré por slug, buscaré por carpetaRuntime...');
-        proyecto = await Proyecto.findOne({ carpetaRuntime: slug });
+        proyecto = await Proyecto.findOne({
+          carpetaRuntime: slug
+        });
       }
 
       if (!proyecto) {
@@ -71,22 +78,28 @@ module.exports = {
       }
 
       if (!proyecto.puerto) {
-        sails.log.error('❌ IA DemoFlow: El proyecto existe pero no tiene puerto asignado.');
+        sails.log.error('❌ IA DemoFlow: Proyecto sin puerto asignado.');
         return res.serverError('El proyecto no tiene puerto asignado');
       }
 
       // ===============================
-      // IA HEALTH CHECK / AUTO-RESTART
+      // HEALTH CHECK IA
       // ===============================
 
-      sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime antes del proxy...');
+      try {
+        sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime...');
 
-      const health = await RuntimeHealthService.revisarRuntime(proyecto);
+        const health = await RuntimeHealthService.revisarRuntime(proyecto);
 
-      if (health.ok) {
-        sails.log.info('✅ IA DemoFlow:', health.mensaje);
-      } else {
-        sails.log.warn('⚠️ IA DemoFlow:', health.mensaje);
+        if (health && health.ok) {
+          sails.log.info('✅ IA DemoFlow:', health.mensaje);
+        } else {
+          sails.log.warn('⚠️ IA DemoFlow:', health ? health.mensaje : 'Runtime sin respuesta.');
+        }
+
+      } catch (healthError) {
+        sails.log.warn('⚠️ IA DemoFlow: Health check falló.');
+        sails.log.warn(healthError.message);
       }
 
       // ===============================
@@ -95,17 +108,22 @@ module.exports = {
 
       const target = `http://127.0.0.1:${proyecto.puerto}`;
 
-      req.url = req.url.replace(`/runtime/${slug}`, '') || '/';
+      req.url = req.url.replace(`/runtime/${slug}`, '');
+
+      if (!req.url || req.url.trim() === '') {
+        req.url = '/';
+      }
 
       sails.log.info('✅ IA DemoFlow: Proyecto encontrado:', proyecto.nombre);
-      sails.log.info('🔌 IA DemoFlow: Puerto interno:', proyecto.puerto);
-      sails.log.info('🚀 IA DemoFlow: Enviando petición al runtime:', target + req.url);
-      sails.log.info('📦 IA DemoFlow Body:', req.body);
+      sails.log.info('🔌 Puerto interno:', proyecto.puerto);
+      sails.log.info('🚀 Proxy hacia:', target + req.url);
 
       return proxy.web(req, res, {
         target,
         changeOrigin: true,
-        ws: true
+        ws: true,
+        proxyTimeout: 30000,
+        timeout: 30000
       });
 
     } catch (error) {
