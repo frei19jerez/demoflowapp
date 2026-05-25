@@ -1,4 +1,11 @@
+/**
+ * IAHistorial.js
+ * Historial IA DemoFlow
+ */
+
 module.exports = {
+
+  tableName: 'ia_historial',
 
   attributes: {
 
