@@ -261,32 +261,42 @@ module.exports = {
   },
 
   dashboard: async function (req, res) {
-    try {
-      if (!req.session.userId) {
-        return res.redirect('/login');
-      }
-
-      const proyectos = await Proyecto.find({
-        usuario: req.session.userId
-      }).sort('id DESC');
-
-      return res.view('pages/dashboard/index', {
-        titulo: 'Dashboard',
-        proyectos,
-        usuario: {
-          id: req.session.userId,
-          nombre: req.session.userName,
-          email: req.session.userEmail
-        }
-      });
-
-    } catch (err) {
-      console.log('================ ERROR DASHBOARD ================');
-      console.error(err.stack || err);
-      console.log('================================================');
-      return res.serverError('Error al cargar dashboard');
+  try {
+    if (!req.session.userId) {
+      return res.redirect('/login');
     }
-  },
+
+    const usuario = await Usuario.findOne({
+      id: req.session.userId
+    });
+
+    if (!usuario) {
+      return res.redirect('/login');
+    }
+
+    const proyectos = await Proyecto.find({
+      usuario: req.session.userId
+    }).sort('id DESC');
+
+    return res.view('pages/dashboard/index', {
+      titulo: 'Dashboard',
+      proyectos,
+      usuario,
+      iaDashboard: null
+    });
+
+  } catch (err) {
+    console.log('================ ERROR DASHBOARD ================');
+    console.error(err.stack || err);
+    console.log('================================================');
+
+    return res.status(500).send(
+      '<pre style="white-space:pre-wrap;font-size:16px;">' +
+      (err.stack || err.message || err) +
+      '</pre>'
+    );
+  }
+},
 
   nuevo: async function (req, res) {
     try {
