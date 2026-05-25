@@ -43,7 +43,7 @@ module.exports.routes = {
   'GET /demo-check/:slug': 'DemoController.check',
 
   // ===============================
-  // AUTENTICACIÓN
+  // AUTENTICACIÓN USUARIOS
   // ===============================
   'GET /register': 'AuthController.registerPage',
   'POST /register': 'AuthController.register',
@@ -53,6 +53,20 @@ module.exports.routes = {
 
   'GET /logout': 'AuthController.logout',
 
+  // ===============================
+  // ADMIN AUTH
+  // ===============================
+  'GET /admin/login': 'AdminController.loginPage',
+  'POST /admin/login': 'AdminController.login',
+
+  'GET /admin/register': 'AdminController.registerPage',
+  'POST /admin/register': 'AdminController.register',
+
+  'GET /admin/logout': 'AdminController.logout',
+
+  // ===============================
+  // ADMIN PANEL
+  // ===============================
   'GET /admin': 'AdminController.dashboard',
 
   // ===============================
@@ -95,9 +109,15 @@ module.exports.routes = {
   // ===============================
   'GET /analytics': async function(req, res) {
     try {
+
       const totalProyectos = await Proyecto.count();
-      const demosActivas = await Proyecto.count({ estadoDeploy: 'activo' });
+
+      const demosActivas = await Proyecto.count({
+        estadoDeploy: 'activo'
+      });
+
       const totalUsuarios = await Usuario.count();
+
       const totalPagos = await Pago.count();
 
       return res.view('pages/analytics', {
@@ -106,6 +126,7 @@ module.exports.routes = {
         demosActivas,
         totalUsuarios,
         totalPagos,
+
         usuario: req.session && req.session.userId ? {
           id: req.session.userId,
           nombre: req.session.userName,
@@ -114,8 +135,10 @@ module.exports.routes = {
       });
 
     } catch (err) {
+
       sails.log.error('❌ IA DemoFlow: Error cargando analytics.');
       sails.log.error(err);
+
       return res.serverError('Error cargando analytics.');
     }
   }
