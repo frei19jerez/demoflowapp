@@ -192,11 +192,15 @@ async function levantarProyecto(proyecto) {
     fs.mkdirSync(rutaLogs, { recursive: true });
   }
 
-  const archivoLog = path.resolve(rutaLogs, `${carpetaRuntime}.log`);
+  const archivoLog = path.resolve(
+    rutaLogs,
+    `${carpetaRuntime}.log`
+  );
 
   if (!fs.existsSync(rutaProyecto)) {
 
     if (!proyecto.urlRepositorio) {
+
       const msg =
         '❌ IA DemoFlow detectó un problema:\n' +
         'No existe la carpeta runtime y el proyecto no tiene repositorio Git.\n\n' +
@@ -213,7 +217,9 @@ async function levantarProyecto(proyecto) {
       return;
     }
 
-    fs.mkdirSync(path.dirname(rutaProyecto), { recursive: true });
+    fs.mkdirSync(path.dirname(rutaProyecto), {
+      recursive: true
+    });
 
     let logClone =
       '🚀 DemoFlow Deploy\n' +
@@ -230,18 +236,26 @@ async function levantarProyecto(proyecto) {
     });
 
     await new Promise((resolve) => {
+
       exec(
         `git clone --branch "${proyecto.rama || 'main'}" "${proyecto.urlRepositorio}" "${rutaProyecto}"`,
         {
           timeout: 120000,
           maxBuffer: 1024 * 1024 * 10
         },
-        async function (cloneError, cloneStdout, cloneStderr) {
 
-          if (cloneStdout) logClone += `\n[STDOUT git clone]\n${cloneStdout}`;
-          if (cloneStderr) logClone += `\n[STDERR git clone]\n${cloneStderr}`;
+        async function(cloneError, cloneStdout, cloneStderr) {
+
+          if (cloneStdout) {
+            logClone += `\n[STDOUT git clone]\n${cloneStdout}`;
+          }
+
+          if (cloneStderr) {
+            logClone += `\n[STDERR git clone]\n${cloneStderr}`;
+          }
 
           if (cloneError) {
+
             logClone +=
               '\n❌ IA DemoFlow: No pude clonar el repositorio.\n' +
               `🧠 Error:\n${cloneError.message}\n`;
@@ -259,7 +273,7 @@ async function levantarProyecto(proyecto) {
 
           logClone +=
             '\n✅ Repositorio clonado correctamente.\n' +
-            '🤖 IA DemoFlow: Ahora continuaré con npm install.\n';
+            '🤖 IA DemoFlow: Continuando instalación.\n';
 
           fs.writeFileSync(archivoLog, logClone, 'utf8');
 
@@ -271,6 +285,7 @@ async function levantarProyecto(proyecto) {
           return resolve(true);
         }
       );
+
     });
 
     if (!fs.existsSync(rutaProyecto)) {
@@ -279,26 +294,30 @@ async function levantarProyecto(proyecto) {
   }
 
   const puerto = proyecto.puerto || puertoAleatorio();
+
   const urlDemo = `/runtime/${carpetaRuntime}`;
-  const urlCompleta = `https://demoflowapp.com${urlDemo}`;
+
+  const urlCompleta =
+    `https://demoflowapp.com${urlDemo}`;
+
   const nombrePm2 = carpetaRuntime;
 
   const pm2Bin = path.resolve(
     sails.config.appPath,
     'node_modules',
     '.bin',
-    process.platform === 'win32' ? 'pm2.cmd' : 'pm2'
+    process.platform === 'win32'
+      ? 'pm2.cmd'
+      : 'pm2'
   );
 
   let logRuntime =
     '🚀 DemoFlow Deploy\n' +
-    '🤖 IA DemoFlow: Preparando análisis del proyecto...\n\n' +
+    '🤖 IA DemoFlow: Preparando runtime...\n\n' +
     `📁 Carpeta: ${rutaProyecto}\n` +
     `🔌 Puerto: ${puerto}\n` +
-    `🌎 URL DemoFlow: ${urlDemo}\n` +
-    `🌐 Demo en vivo: ${urlCompleta}\n\n` +
-    '📦 IA DemoFlow: Iniciando instalación de dependencias.\n' +
-    '⏱ Tiempo máximo permitido: 5 minutos.\n';
+    `🌐 URL: ${urlCompleta}\n\n` +
+    '📦 Instalando dependencias...\n';
 
   fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
@@ -316,21 +335,27 @@ async function levantarProyecto(proyecto) {
       timeout: 300000,
       maxBuffer: 1024 * 1024 * 10
     },
-    async function (error, stdout, stderr) {
 
-      if (stdout) logRuntime += `\n[STDOUT npm install]\n${stdout}`;
-      if (stderr) logRuntime += `\n[STDERR npm install]\n${stderr}`;
+    async function(error, stdout, stderr) {
+
+      if (stdout) {
+        logRuntime += `\n[STDOUT npm install]\n${stdout}`;
+      }
+
+      if (stderr) {
+        logRuntime += `\n[STDERR npm install]\n${stderr}`;
+      }
 
       if (error) {
+
         logRuntime +=
-          '\n❌ IA DemoFlow: La instalación no terminó correctamente.\n' +
-          `🧠 Error detectado:\n${error.message}\n`;
+          '\n❌ npm install falló.\n' +
+          `🧠 Error:\n${error.message}\n`;
 
         fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
         await Proyecto.updateOne({ id }).set({
           estadoDeploy: 'fallido',
-          urlDemo: null,
           logDeploy: logRuntime
         });
 
@@ -338,41 +363,66 @@ async function levantarProyecto(proyecto) {
       }
 
       const comandoInicio =
-        proyecto.comandoInicio && proyecto.comandoInicio.trim() !== ''
+        proyecto.comandoInicio &&
+        proyecto.comandoInicio.trim() !== ''
           ? proyecto.comandoInicio.trim()
           : proyecto.tipoProyecto === 'sails'
             ? 'node app.js'
             : 'npm start';
 
+      const appJsPath = path.resolve(
+        rutaProyecto,
+        'app.js'
+      );
+
+      if (
+        comandoInicio.includes('app.js') &&
+        !fs.existsSync(appJsPath)
+      ) {
+
+        logRuntime +=
+          '\n❌ No encontré app.js en el runtime.\n' +
+          `📁 Ruta buscada:\n${appJsPath}\n`;
+
+        fs.writeFileSync(archivoLog, logRuntime, 'utf8');
+
+        await Proyecto.updateOne({ id }).set({
+          estadoDeploy: 'fallido',
+          logDeploy: logRuntime
+        });
+
+        return;
+      }
+
       let comandoPm2;
 
       if (comandoInicio.startsWith('node ')) {
-        const archivo = comandoInicio.replace('node ', '').trim() || 'app.js';
+
+        const archivo =
+          comandoInicio.replace('node ', '').trim() || 'app.js';
 
         comandoPm2 =
           `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-          `PORT=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
+          `PORT=${puerto} sails_port=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
           `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
 
       } else {
+
         comandoPm2 =
           `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-          `PORT=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
+          `PORT=${puerto} sails_port=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
           `"${pm2Bin}" start npm --name "${nombrePm2}" -- start`;
+
       }
 
       logRuntime +=
-        '\n✅ npm install terminado.\n' +
-        '🤖 IA DemoFlow: Dependencias instaladas correctamente.\n' +
-        `🚀 Iniciando con PM2: ${comandoInicio}\n` +
-        `🧠 Nombre PM2: ${nombrePm2}\n`;
+        '\n✅ Dependencias instaladas.\n' +
+        `🚀 Iniciando runtime:\n${comandoInicio}\n`;
 
       fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
       await Proyecto.updateOne({ id }).set({
         estadoDeploy: 'iniciando',
-        puerto,
-        urlDemo,
         logDeploy: logRuntime
       });
 
@@ -383,15 +433,22 @@ async function levantarProyecto(proyecto) {
           timeout: 60000,
           maxBuffer: 1024 * 1024 * 10
         },
-        async function (pm2Error, pm2Stdout, pm2Stderr) {
 
-          if (pm2Stdout) logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
-          if (pm2Stderr) logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
+        async function(pm2Error, pm2Stdout, pm2Stderr) {
+
+          if (pm2Stdout) {
+            logRuntime += `\n[STDOUT PM2]\n${pm2Stdout}`;
+          }
+
+          if (pm2Stderr) {
+            logRuntime += `\n[STDERR PM2]\n${pm2Stderr}`;
+          }
 
           if (pm2Error) {
+
             logRuntime +=
-              '\n❌ IA DemoFlow: PM2 no pudo iniciar la aplicación.\n' +
-              `🧠 Error detectado:\n${pm2Error.message}\n`;
+              '\n❌ PM2 no pudo iniciar.\n' +
+              `🧠 Error:\n${pm2Error.message}\n`;
 
             fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
@@ -404,21 +461,17 @@ async function levantarProyecto(proyecto) {
           }
 
           logRuntime +=
-            '\n✅ Aplicación iniciada con PM2.\n' +
-            '🤖 IA DemoFlow: Ahora esperaré 25 segundos para que Sails levante completamente.\n' +
-            `🌐 Demo en vivo:\n${urlCompleta}\n` +
-            '\n⏳ Verificando puerto interno...\n';
+            '\n✅ PM2 iniciado.\n' +
+            '⏳ Esperando 25 segundos...\n';
 
           fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
           await Proyecto.updateOne({ id }).set({
             estadoDeploy: 'verificando',
-            puerto,
-            urlDemo,
             logDeploy: logRuntime
           });
 
-          setTimeout(function () {
+          setTimeout(function() {
 
             exec(
               `curl -I http://127.0.0.1:${puerto}`,
@@ -426,17 +479,23 @@ async function levantarProyecto(proyecto) {
                 timeout: 20000,
                 maxBuffer: 1024 * 1024 * 5
               },
-              async function (curlError, curlStdout, curlStderr) {
 
-                if (curlStdout) logRuntime += `\n[STDOUT curl]\n${curlStdout}`;
-                if (curlStderr) logRuntime += `\n[STDERR curl]\n${curlStderr}`;
+              async function(curlError, curlStdout, curlStderr) {
+
+                if (curlStdout) {
+                  logRuntime += `\n[STDOUT curl]\n${curlStdout}`;
+                }
+
+                if (curlStderr) {
+                  logRuntime += `\n[STDERR curl]\n${curlStderr}`;
+                }
 
                 if (curlError) {
+
                   logRuntime +=
-                    '\n❌ IA DemoFlow: PM2 inició, pero el puerto interno no respondió.\n' +
-                    `🔌 Puerto probado: ${puerto}\n` +
-                    '💡 Consejo IA: Revisa si la app hija está usando process.env.PORT correctamente.\n' +
-                    '💡 En Sails, production.js debe tener: port: process.env.PORT || 1337\n';
+                    '\n❌ Runtime no respondió.\n' +
+                    `🔌 Puerto:\n${puerto}\n` +
+                    '💡 Revisa process.env.PORT.\n';
 
                   fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
@@ -449,8 +508,7 @@ async function levantarProyecto(proyecto) {
                 }
 
                 logRuntime +=
-                  '\n✅ Puerto interno respondiendo correctamente.\n' +
-                  '🤖 IA DemoFlow: Deploy completado con éxito.\n' +
+                  '\n✅ Runtime respondiendo correctamente.\n' +
                   `🌐 Demo lista:\n${urlCompleta}\n`;
 
                 fs.writeFileSync(archivoLog, logRuntime, 'utf8');
@@ -461,14 +519,18 @@ async function levantarProyecto(proyecto) {
                   urlDemo,
                   logDeploy: logRuntime
                 });
+
               }
             );
 
           }, 25000);
+
         }
       );
+
     }
   );
+
 }
 
 module.exports = {
