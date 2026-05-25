@@ -86,6 +86,7 @@ module.exports.routes = {
   // ===============================
   'POST /ia/analizar-proyecto': 'IAController.analizarProyecto',
   'POST /ia/sugerir-descripcion': 'IAController.sugerirDescripcion',
+  'POST /ia/analizar-dashboard': 'IAController.analizarDashboard',
 
   // ===============================
   // ANALYTICS

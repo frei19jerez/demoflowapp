@@ -18,16 +18,66 @@
         </p>
       </div>
 
-      <span class="badge bg-dark p-3">
-        💎 Créditos:
-        <%= usuario.creditos || 0 %>
-      </span>
+      <div class="d-flex gap-2 align-items-center">
+
+        <span class="badge bg-dark p-3">
+          💎 Créditos:
+          <%= usuario.creditos || 0 %>
+        </span>
+
+        <% if(usuario.acceso_ia){ %>
+
+          <span class="badge bg-success p-3">
+            IA ACTIVA
+          </span>
+
+        <% } else { %>
+
+          <span class="badge bg-danger p-3">
+            IA BLOQUEADA
+          </span>
+
+        <% } %>
+
+      </div>
 
     </div>
 
+    <!-- BOTÓN IA -->
+
+    <div class="mb-4">
+
+      <% if(usuario.acceso_ia){ %>
+
+        <form action="/ia/analizar-dashboard" method="POST">
+
+          <button
+            type="submit"
+            class="btn btn-primary btn-lg"
+          >
+            🤖 Analizar mi plataforma con IA
+          </button>
+
+        </form>
+
+      <% } else { %>
+
+        <a href="/premium" class="btn btn-dark btn-lg">
+          🔓 Activar IA Premium
+        </a>
+
+      <% } %>
+
+    </div>
+
+    <!-- CARDS -->
+
     <div class="row">
 
-      <div class="col-md-4 mb-3">
+      <!-- ESTADO -->
+
+      <div class="col-md-3 mb-3">
+
         <div class="border rounded p-3 h-100">
 
           <h6>🚀 Estado IA</h6>
@@ -35,7 +85,10 @@
           <% if(usuario.acceso_ia){ %>
 
             <p class="text-success mb-0">
-              IA activada correctamente.
+              <%= iaDashboard
+                ? iaDashboard.estado
+                : 'IA activada correctamente.'
+              %>
             </p>
 
           <% } else { %>
@@ -47,30 +100,97 @@
           <% } %>
 
         </div>
+
       </div>
 
-      <div class="col-md-4 mb-3">
+      <!-- RECOMENDACIÓN -->
+
+      <div class="col-md-3 mb-3">
+
         <div class="border rounded p-3 h-100">
 
           <h6>📈 Recomendación IA</h6>
 
           <p class="mb-0 text-muted">
-            Agrega más screenshots y demos en vivo para aumentar conversiones.
+            <%= iaDashboard
+              ? iaDashboard.recomendacion
+              : 'Agrega más screenshots y demos en vivo para aumentar conversiones.'
+            %>
           </p>
 
         </div>
+
       </div>
 
-      <div class="col-md-4 mb-3">
+      <!-- POTENCIAL -->
+
+      <div class="col-md-3 mb-3">
+
         <div class="border rounded p-3 h-100">
 
           <h6>🔥 Potencial de venta</h6>
 
           <p class="mb-0 text-primary">
-            Tu perfil tiene potencial SaaS comercial.
+            <%= iaDashboard
+              ? iaDashboard.potencial
+              : 'Tu perfil tiene potencial SaaS comercial.'
+            %>
           </p>
 
         </div>
+
+      </div>
+
+      <!-- ESTADÍSTICAS -->
+
+      <div class="col-md-3 mb-3">
+
+        <div class="border rounded p-3 h-100">
+
+          <h6>📊 Estadísticas IA</h6>
+
+          <p class="mb-1">
+            Proyectos:
+            <strong>
+              <%= iaDashboard
+                ? iaDashboard.totalProyectos
+                : 0
+              %>
+            </strong>
+          </p>
+
+          <p class="mb-1">
+            Demos activas:
+            <strong>
+              <%= iaDashboard
+                ? iaDashboard.demosConUrl
+                : 0
+              %>
+            </strong>
+          </p>
+
+          <p class="mb-1">
+            Sails.js:
+            <strong>
+              <%= iaDashboard
+                ? iaDashboard.proyectosSails
+                : 0
+              %>
+            </strong>
+          </p>
+
+          <p class="mb-0">
+            HTML:
+            <strong>
+              <%= iaDashboard
+                ? iaDashboard.proyectosHtml
+                : 0
+              %>
+            </strong>
+          </p>
+
+        </div>
+
       </div>
 
     </div>

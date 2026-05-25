@@ -23,6 +23,7 @@ module.exports = {
         ${tecnologia || ''}
         ${urlRepositorio || ''}
         ${urlDemo || ''}
+        ${urlDemo || ''}
         ${archivoEntrada || ''}
         ${comandoInicio || ''}
       `.toLowerCase();
@@ -112,6 +113,65 @@ module.exports = {
         ok: false,
         descripcion: ''
       });
+    }
+  },
+
+  analizarDashboard: async function(req, res) {
+    try {
+      if (!req.session.userId) {
+        return res.redirect('/login');
+      }
+
+      const usuario = await Usuario.findOne({
+        id: req.session.userId
+      });
+
+      if (!usuario) {
+        return res.redirect('/login');
+      }
+
+      const proyectos = await Proyecto.find({
+        usuario: usuario.id
+      });
+
+      const totalProyectos = proyectos.length;
+      const demosConUrl = proyectos.filter(p => p.urlDemo).length;
+      const proyectosSails = proyectos.filter(p => (p.tipoProyecto || '').toLowerCase() === 'sails').length;
+      const proyectosHtml = proyectos.filter(p => (p.tipoProyecto || '').toLowerCase() === 'html').length;
+
+      let recomendacion = 'Agrega más demos en vivo, screenshots y descripciones comerciales para aumentar conversiones.';
+      let potencial = 'Tu perfil tiene potencial SaaS comercial.';
+      let estado = 'IA activada correctamente.';
+
+      if (totalProyectos === 0) {
+        recomendacion = 'Crea tu primer proyecto demo para que DemoFlow IA pueda analizar tu portafolio.';
+        potencial = 'Aún falta información para calcular el potencial comercial.';
+      }
+
+      if (demosConUrl >= 3) {
+        recomendacion = 'Tu portafolio ya tiene varias demos visibles. El siguiente paso es mejorar textos de venta y llamados a la acción.';
+        potencial = 'Alto potencial comercial para vender servicios o demos SaaS.';
+      }
+
+      return res.view('pages/dashboard/index', {
+        usuario,
+        proyectos,
+        iaDashboard: {
+          estado,
+          recomendacion,
+          potencial,
+          totalProyectos,
+          demosConUrl,
+          proyectosSails,
+          proyectosHtml
+        }
+      });
+
+    } catch (err) {
+      sails.log.error('❌ Error analizando dashboard IA');
+      sails.log.error(err);
+
+      return res.serverError(err);
     }
   }
 
