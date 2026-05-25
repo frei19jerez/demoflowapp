@@ -1,0 +1,231 @@
+<div class="container py-5">
+
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+
+    <div>
+      <h1 class="fw-bold mb-1">
+        🛡️ Panel Admin DemoFlow
+      </h1>
+
+      <p class="text-muted mb-0">
+        Control general de usuarios, proyectos, pagos, créditos y consumo IA.
+      </p>
+    </div>
+
+    <a href="/dashboard" class="btn btn-outline-primary">
+      ⬅ Volver al dashboard
+    </a>
+
+  </div>
+
+  <div class="row mb-4">
+
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted">👥 Usuarios</h6>
+          <h2 class="fw-bold"><%= totalUsuarios || 0 %></h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted">🚀 Proyectos</h6>
+          <h2 class="fw-bold"><%= totalProyectos || 0 %></h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted">✅ Demos activas</h6>
+          <h2 class="fw-bold text-success"><%= demosActivas || 0 %></h2>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-3 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h6 class="text-muted">❌ Deploys fallidos</h6>
+          <h2 class="fw-bold text-danger"><%= deploysFallidos || 0 %></h2>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="row mb-4">
+
+    <div class="col-md-4 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5>💰 Pagos</h5>
+          <p class="display-6 fw-bold"><%= totalPagos || 0 %></p>
+          <p class="text-muted mb-0">Pagos registrados en DemoFlow.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5>🤖 IA</h5>
+          <p class="display-6 fw-bold">Activa</p>
+          <p class="text-muted mb-0">Sistema IA conectado al dashboard.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4 mb-3">
+      <div class="card border-0 shadow-sm h-100">
+        <div class="card-body">
+          <h5>💎 Créditos</h5>
+          <p class="display-6 fw-bold">DemoFlow</p>
+          <p class="text-muted mb-0">Control de créditos por usuario.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+
+      <h4 class="mb-3">👥 Últimos usuarios</h4>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Créditos</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% usuarios.forEach(function(u){ %>
+              <tr>
+                <td><%= u.id %></td>
+                <td><%= u.nombre || '-' %></td>
+                <td><%= u.email || '-' %></td>
+                <td>
+                  <span class="badge bg-dark">
+                    <%= u.rol || 'usuario' %>
+                  </span>
+                </td>
+                <td>
+                  <strong><%= u.creditos || 0 %></strong>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+
+      <h4 class="mb-3">🚀 Últimos proyectos</h4>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Proyecto</th>
+              <th>Tipo</th>
+              <th>Estado deploy</th>
+              <th>Demo</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% proyectos.forEach(function(p){ %>
+              <tr>
+                <td><%= p.id %></td>
+                <td><%= p.nombre || '-' %></td>
+                <td><%= p.tipoProyecto || '-' %></td>
+                <td>
+                  <span class="badge bg-primary">
+                    <%= p.estadoDeploy || 'pendiente' %>
+                  </span>
+                </td>
+                <td>
+                  <% if(p.urlDemo){ %>
+                    <a href="<%= p.urlDemo %>" target="_blank" class="btn btn-sm btn-outline-primary">
+                      Ver demo
+                    </a>
+                  <% } else { %>
+                    <span class="text-muted">Sin demo</span>
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+
+      <h4 class="mb-3">💰 Últimos pagos</h4>
+
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Usuario</th>
+              <th>Plan</th>
+              <th>Valor</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <% if(pagos.length === 0){ %>
+
+              <tr>
+                <td colspan="5" class="text-muted">
+                  Todavía no hay pagos registrados.
+                </td>
+              </tr>
+
+            <% } %>
+
+            <% pagos.forEach(function(pago){ %>
+              <tr>
+                <td><%= pago.id %></td>
+                <td><%= pago.usuario || '-' %></td>
+                <td><%= pago.plan || '-' %></td>
+                <td>
+                  $<%= pago.valor || 0 %>
+                </td>
+                <td>
+                  <span class="badge bg-success">
+                    <%= pago.estado || 'registrado' %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -53,6 +53,8 @@ module.exports.routes = {
 
   'GET /logout': 'AuthController.logout',
 
+  'GET /admin': 'AdminController.dashboard',
+
   // ===============================
   // RUNTIME
   // ===============================
