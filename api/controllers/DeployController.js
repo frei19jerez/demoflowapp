@@ -294,12 +294,8 @@ async function levantarProyecto(proyecto) {
   }
 
   const puerto = proyecto.puerto || puertoAleatorio();
-
   const urlDemo = `/runtime/${carpetaRuntime}`;
-
-  const urlCompleta =
-    `https://demoflowapp.com${urlDemo}`;
-
+  const urlCompleta = `https://demoflowapp.com${urlDemo}`;
   const nombrePm2 = carpetaRuntime;
 
   const pm2Bin = path.resolve(
@@ -402,22 +398,26 @@ async function levantarProyecto(proyecto) {
           comandoInicio.replace('node ', '').trim() || 'app.js';
 
         comandoPm2 =
+          `export DATABASE_URL="${process.env.DATABASE_URL || ''}" && ` +
           `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-          `PORT=${puerto} sails_port=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
+          `PORT=${puerto} sails_port=${puerto} NODE_ENV=production ` +
           `"${pm2Bin}" start "${archivo}" --name "${nombrePm2}" --update-env`;
 
       } else {
 
         comandoPm2 =
+          `export DATABASE_URL="${process.env.DATABASE_URL || ''}" && ` +
           `"${pm2Bin}" delete "${nombrePm2}" || true && ` +
-          `PORT=${puerto} sails_port=${puerto} NODE_ENV=production DATABASE_URL="${process.env.DATABASE_URL || ''}" ` +
+          `PORT=${puerto} sails_port=${puerto} NODE_ENV=production ` +
           `"${pm2Bin}" start npm --name "${nombrePm2}" -- start`;
 
       }
 
       logRuntime +=
         '\n✅ Dependencias instaladas.\n' +
-        `🚀 Iniciando runtime:\n${comandoInicio}\n`;
+        `🚀 Iniciando runtime:\n${comandoInicio}\n` +
+        `🔐 DATABASE_URL: ${process.env.DATABASE_URL ? 'detectada' : 'NO detectada'}\n` +
+        `🔌 PORT: ${puerto}\n`;
 
       fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
@@ -495,7 +495,8 @@ async function levantarProyecto(proyecto) {
                   logRuntime +=
                     '\n❌ Runtime no respondió.\n' +
                     `🔌 Puerto:\n${puerto}\n` +
-                    '💡 Revisa process.env.PORT.\n';
+                    '💡 Revisa que la app hija use process.env.PORT.\n' +
+                    '💡 Si es Sails, revisa config/env/production.js.\n';
 
                   fs.writeFileSync(archivoLog, logRuntime, 'utf8');
 
