@@ -23,7 +23,6 @@ module.exports = {
 
     proyecto: {
       model: 'proyecto',
-      allowNull: true,
       columnName: 'proyecto'
     },
 
@@ -35,7 +34,6 @@ module.exports = {
 
     resultado: {
       type: 'json',
-      columnType: 'jsonb',
       columnName: 'resultado'
     },
 
@@ -47,15 +45,15 @@ module.exports = {
 
     createdAt: {
       type: 'ref',
-      columnType: 'timestamp',
       autoCreatedAt: true,
+      columnType: 'timestamp',
       columnName: 'created_at'
     },
 
     updatedAt: {
       type: 'ref',
-      columnType: 'timestamp',
       autoUpdatedAt: true,
+      columnType: 'timestamp',
       columnName: 'updated_at'
     }
 
