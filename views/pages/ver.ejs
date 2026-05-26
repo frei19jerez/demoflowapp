@@ -293,59 +293,6 @@
 
         <% } %>
 
-        <% if (esDinamico) { %>
-
-          <a
-            href="/deploy/<%= proyecto.id %>/logs"
-            class="btn-demo"
-            style="
-              background:#111827;
-              color:#fff;
-            "
-          >
-            📄 Logs IA
-          </a>
-
-          <a
-            href="/deploy/<%= proyecto.id %>/reiniciar"
-            class="btn-demo"
-            style="
-              background:#f59e0b;
-              color:#111827;
-            "
-          >
-            🔄 Reiniciar runtime
-          </a>
-
-          <a
-            href="/deploy/<%= proyecto.id %>/detener"
-            class="btn-demo"
-            style="
-              background:#dc2626;
-              color:#fff;
-            "
-          >
-            🛑 Detener runtime
-          </a>
-
-        <% } %>
-
-        <% if (proyecto.urlRepositorio) { %>
-
-          <a
-            href="<%= proyecto.urlRepositorio %>"
-            target="_blank"
-            class="btn-demo"
-            style="
-              background:#0f172a;
-              color:#fff;
-            "
-          >
-            💻 Repositorio
-          </a>
-
-        <% } %>
-
       </div>
 
       <!-- IA ANALYZER -->
@@ -437,88 +384,45 @@
 
         </div>
 
-        <% if (proyecto.analisisIa) { %>
+        <!-- RESULTADO IA -->
 
-          <div style="
+        <div
+          id="resultadoIA"
+          style="
+            display:none;
+            margin-top:24px;
             background:rgba(255,255,255,0.06);
             border-radius:18px;
             padding:24px;
-            margin-top:28px;
             border:1px solid rgba(255,255,255,0.08);
-          ">
+          "
+        >
 
-            <h3 style="margin-top:0;">
-              📄 Resultado del análisis IA
-            </h3>
+          <h3 style="margin-top:0;">
+            🤖 Resultado IA
+          </h3>
 
-            <p style="
+          <div
+            id="contenidoResultadoIA"
+            style="
               color:#e2e8f0;
               line-height:1.9;
-              margin-bottom:0;
-            ">
-              <%= proyecto.analisisIa %>
-            </p>
-
+            "
+          >
+            Analizando proyecto...
           </div>
 
-        <% } %>
+        </div>
 
         <!-- BOTÓN IA -->
 
         <% if (usuario) { %>
 
-          <form
-            action="/ia/analizar-proyecto"
-            method="POST"
-            style="
-              margin-top:28px;
-            "
-          >
-
-            <input
-              type="hidden"
-              name="nombre"
-              value="<%= proyecto.nombre || '' %>"
-            >
-
-            <input
-              type="hidden"
-              name="tipoProyecto"
-              value="<%= proyecto.tipoProyecto || '' %>"
-            >
-
-            <input
-              type="hidden"
-              name="tecnologia"
-              value="<%= proyecto.tecnologia || '' %>"
-            >
-
-            <input
-              type="hidden"
-              name="urlRepositorio"
-              value="<%= proyecto.urlRepositorio || '' %>"
-            >
-
-            <input
-              type="hidden"
-              name="urlDemo"
-              value="<%= proyecto.urlDemo || '' %>"
-            >
-
-            <input
-              type="hidden"
-              name="archivoEntrada"
-              value="<%= proyecto.archivoEntrada || '' %>"
-            >
-
-            <input
-              type="hidden"
-              name="comandoInicio"
-              value="<%= proyecto.comandoInicio || '' %>"
-            >
+          <div style="margin-top:28px;">
 
             <button
-              type="submit"
+              id="btnAnalizarIA"
+              type="button"
               style="
                 background:linear-gradient(135deg,#7c3aed,#2563eb);
                 color:#fff;
@@ -533,99 +437,82 @@
               🤖 Analizar proyecto con IA
             </button>
 
-          </form>
+          </div>
 
         <% } %>
 
       </div>
-
-      <!-- DEMO -->
-
-      <% if (esHtml && demoUrl) { %>
-
-        <div style="
-          margin-top:10px;
-          border:1px solid #d1d5db;
-          border-radius:18px;
-          overflow:hidden;
-          background:#fff;
-          box-shadow:0 8px 24px rgba(0,0,0,0.06);
-        ">
-
-          <iframe
-            src="<%= demoUrl %>"
-            style="
-              width:100%;
-              height:720px;
-              border:none;
-            "
-            loading="lazy">
-          </iframe>
-
-        </div>
-
-      <% } else if (esDinamico && runtimeActivo) { %>
-
-        <div style="
-          margin-top:25px;
-          border:1px solid #22c55e;
-          background:#f0fdf4;
-          border-radius:18px;
-          padding:28px;
-        ">
-
-          <h3 style="
-            margin-top:0;
-            color:#166534;
-          ">
-            ✅ Runtime IA activo
-          </h3>
-
-          <p style="
-            color:#14532d;
-            line-height:1.9;
-          ">
-            DemoFlow IA detectó automáticamente
-            el proyecto dinámico
-            <strong><%= proyecto.tipoProyecto %></strong>
-            y desplegó el runtime exitosamente.
-          </p>
-
-        </div>
-
-      <% } else { %>
-
-        <div style="
-          margin-top:25px;
-          border:1px solid #facc15;
-          background:#fffbeb;
-          border-radius:18px;
-          padding:28px;
-        ">
-
-          <h3 style="
-            margin-top:0;
-            color:#92400e;
-          ">
-            ⚠ Runtime IA pendiente
-          </h3>
-
-          <p style="
-            color:#78350f;
-            line-height:1.9;
-            margin-bottom:20px;
-          ">
-            DemoFlow IA detectó que el proyecto
-            <strong><%= proyecto.tipoProyecto %></strong>
-            todavía no ha sido desplegado.
-          </p>
-
-        </div>
-
-      <% } %>
 
     </div>
 
   </div>
 
 </div>
+
+<script>
+
+  const btnIA = document.getElementById('btnAnalizarIA');
+  const resultadoIA = document.getElementById('resultadoIA');
+  const contenidoIA = document.getElementById('contenidoResultadoIA');
+
+  if (btnIA) {
+
+    btnIA.addEventListener('click', async function() {
+
+      btnIA.disabled = true;
+      btnIA.innerText = '🤖 Analizando proyecto...';
+
+      resultadoIA.style.display = 'block';
+
+      contenidoIA.innerHTML =
+        '⏳ DemoFlow IA está analizando el proyecto...';
+
+      try {
+
+        const respuesta = await fetch('/ia/analizar-proyecto', {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json'
+          },
+
+          body: JSON.stringify({
+
+            nombre: '<%= proyecto.nombre || "" %>',
+            tipoProyecto: '<%= proyecto.tipoProyecto || "" %>',
+            tecnologia: '<%= proyecto.tecnologia || "" %>',
+            urlRepositorio: '<%= proyecto.urlRepositorio || "" %>',
+            urlDemo: '<%= proyecto.urlDemo || "" %>',
+            archivoEntrada: '<%= proyecto.archivoEntrada || "" %>',
+            comandoInicio: '<%= proyecto.comandoInicio || "" %>'
+
+          })
+        });
+
+        const data = await respuesta.json();
+
+        contenidoIA.innerHTML = `
+          <p><strong>🧠 Tipo detectado:</strong> ${data.tipoDetectado || '-'}</p>
+          <p><strong>📄 Archivo recomendado:</strong> ${data.archivoRecomendado || '-'}</p>
+          <p><strong>⚙️ Comando recomendado:</strong> ${data.comandoRecomendado || '-'}</p>
+          <p><strong>🤖 Resultado IA:</strong> ${data.mensaje || 'Análisis completado.'}</p>
+        `;
+
+      } catch (error) {
+
+        contenidoIA.innerHTML =
+          '❌ DemoFlow IA no pudo analizar el proyecto.';
+
+        console.error(error);
+      }
+
+      btnIA.disabled = false;
+
+      btnIA.innerText =
+        '🤖 Analizar proyecto con IA';
+
+    });
+
+  }
+
+</script>
