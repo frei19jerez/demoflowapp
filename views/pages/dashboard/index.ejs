@@ -302,3 +302,56 @@
   </div>
 
 </div>
+
+<!-- IA ANALYTICS CHARTS -->
+
+<div class="ia-insights mt-4">
+
+  <h5 class="mb-4">
+    📊 Analytics IA DemoFlow
+  </h5>
+
+  <div
+    id="iaChartData"
+    data-total-proyectos="<%= iaDashboard ? iaDashboard.totalProyectos : 0 %>"
+    data-demos-url="<%= iaDashboard ? iaDashboard.demosConUrl : 0 %>"
+    data-sails="<%= iaDashboard ? iaDashboard.proyectosSails : 0 %>"
+    data-html="<%= iaDashboard ? iaDashboard.proyectosHtml : 0 %>"
+  ></div>
+
+  <div class="row">
+
+    <div class="col-md-6 mb-4">
+      <div class="ia-insight-box">
+        <h6>🚀 Demos activas</h6>
+        <canvas id="chartDemos"></canvas>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <div class="ia-insight-box">
+        <h6>🧠 Tecnologías detectadas</h6>
+        <canvas id="chartTecnologias"></canvas>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <div class="ia-insight-box">
+        <h6>👁️ Vistas estimadas</h6>
+        <canvas id="chartVistas"></canvas>
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <div class="ia-insight-box">
+        <h6>🔥 IA Score comercial</h6>
+        <canvas id="chartScore"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="/js/ia-demoflow-charts.js"></script>

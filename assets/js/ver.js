@@ -1,379 +1,323 @@
-console.log('✅ ver.js cargado correctamente');
+/* =========================
+   📊 CHARTS DEMOFLOW IA
+========================= */
 
-const btnIA = document.getElementById('btnAnalizarIA');
-const resultadoIA = document.getElementById('resultadoIA');
-const contenidoIA = document.getElementById('contenidoResultadoIA');
-const logsIA = document.getElementById('iaLogs');
-const barraIA = document.getElementById('iaBarra');
-const textoEstado = document.getElementById('iaTextoEstado');
+document.addEventListener('DOMContentLoaded', () => {
 
-if (btnIA) {
+  if (typeof Chart === 'undefined') {
+    return;
+  }
 
-  btnIA.addEventListener('click', async function () {
+  const dataBox =
+    document.getElementById('iaChartData');
 
-    console.log('🤖 Click IA ejecutado');
+  if (!dataBox) {
+    return;
+  }
 
-    const proyectoId = btnIA.dataset.id;
+  const totalProyectos =
+    parseInt(
+      dataBox.dataset.totalProyectos
+    ) || 0;
 
-    if (!proyectoId) {
+  const demosConUrl =
+    parseInt(
+      dataBox.dataset.demosUrl
+    ) || 0;
 
-      console.error('❌ Falta data-id en el botón IA');
+  const proyectosSails =
+    parseInt(
+      dataBox.dataset.sails
+    ) || 0;
 
-      alert('Error: falta ID del proyecto.');
+  const proyectosHtml =
+    parseInt(
+      dataBox.dataset.html
+    ) || 0;
 
-      return;
+  /* =========================
+     🚀 DEMOS ACTIVAS
+  ========================= */
 
-    }
+  const chartDemos =
+    document.getElementById(
+      'chartDemos'
+    );
 
-    btnIA.disabled = true;
+  if (chartDemos) {
 
-    btnIA.innerHTML =
-      '🤖 DemoFlow IA analizando...';
+    new Chart(chartDemos, {
 
-    resultadoIA.style.display = 'block';
+      type: 'doughnut',
 
-    contenidoIA.innerHTML =
-      '⏳ Preparando análisis inteligente...';
+      data: {
 
-    logsIA.innerHTML =
-      '🤖 DemoFlow IA conectando con el motor inteligente...';
+        labels: [
+          'Demos activas',
+          'Sin demo'
+        ],
 
-    barraIA.style.width = '0%';
+        datasets: [{
 
-    textoEstado.innerText =
-      'DemoFlow IA iniciando análisis...';
+          data: [
+            demosConUrl,
+            Math.max(
+              totalProyectos - demosConUrl,
+              0
+            )
+          ],
 
-    let progreso = 0;
+          backgroundColor: [
+            '#2563eb',
+            '#d1d5db'
+          ],
 
-    let paso = 0;
+          borderWidth: 0
 
-    const mensajes = [
+        }]
 
-      '🧠 IA leyendo datos del proyecto...',
-      '📦 Detectando tecnología y estructura...',
-      '⚡ Verificando runtime y deploy...',
-      '🌐 Revisando URL, puerto y demo...',
-      '🚀 Evaluando potencial SaaS...',
-      '💎 Generando recomendaciones IA...',
-      '✅ Preparando resultado final...'
+      },
 
-    ];
+      options: {
 
-    const intervalo = setInterval(function () {
+        responsive: true,
 
-      progreso += 14;
+        plugins: {
 
-      if (progreso > 95) {
-        progreso = 95;
-      }
-
-      barraIA.style.width =
-        progreso + '%';
-
-      if (mensajes[paso]) {
-
-        textoEstado.innerText =
-          mensajes[paso];
-
-        logsIA.innerHTML += `
-          <div>${mensajes[paso]}</div>
-        `;
-
-        logsIA.scrollTop =
-          logsIA.scrollHeight;
-
-        paso++;
-
-      }
-
-    }, 900);
-
-    try {
-
-      const respuesta = await fetch(
-
-        '/proyecto/' + proyectoId + '/analizar-ia',
-
-        {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json'
+          legend: {
+            position: 'bottom'
           }
+
         }
 
-      );
+      }
 
-      const contentType =
-        respuesta.headers.get('content-type') || '';
+    });
 
-      if (!respuesta.ok) {
+  }
 
-        throw new Error(
-          'Error HTTP ' + respuesta.status
-        );
+  /* =========================
+     🧠 TECNOLOGÍAS
+  ========================= */
+
+  const chartTecnologias =
+    document.getElementById(
+      'chartTecnologias'
+    );
+
+  if (chartTecnologias) {
+
+    new Chart(chartTecnologias, {
+
+      type: 'bar',
+
+      data: {
+
+        labels: [
+          'Sails.js',
+          'HTML'
+        ],
+
+        datasets: [{
+
+          label: 'Proyectos',
+
+          data: [
+            proyectosSails,
+            proyectosHtml
+          ],
+
+          backgroundColor: [
+            '#7c3aed',
+            '#06b6d4'
+          ],
+
+          borderRadius: 12
+
+        }]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        plugins: {
+
+          legend: {
+            display: false
+          }
+
+        },
+
+        scales: {
+
+          y: {
+
+            beginAtZero: true,
+
+            ticks: {
+              precision: 0
+            }
+
+          }
+
+        }
 
       }
 
-      if (
-        !contentType.includes('application/json')
-      ) {
+    });
 
-        throw new Error(
-          'El servidor no devolvió JSON. Revisa si todavía hay redirect en analizarIA.'
-        );
+  }
+
+  /* =========================
+     👁️ VISTAS
+  ========================= */
+
+  const chartVistas =
+    document.getElementById(
+      'chartVistas'
+    );
+
+  if (chartVistas) {
+
+    new Chart(chartVistas, {
+
+      type: 'line',
+
+      data: {
+
+        labels: [
+          'Lun',
+          'Mar',
+          'Mié',
+          'Jue',
+          'Vie',
+          'Sáb',
+          'Dom'
+        ],
+
+        datasets: [{
+
+          label: 'Vistas',
+
+          data: [
+            5,
+            12,
+            18,
+            25,
+            33,
+            41,
+            58
+          ],
+
+          borderColor: '#2563eb',
+
+          backgroundColor:
+            'rgba(37,99,235,0.15)',
+
+          fill: true,
+
+          tension: 0.4
+
+        }]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        plugins: {
+
+          legend: {
+            position: 'bottom'
+          }
+
+        }
 
       }
 
-      const data =
-        await respuesta.json();
+    });
 
-      clearInterval(intervalo);
+  }
 
-      barraIA.style.width = '100%';
+  /* =========================
+     🔥 IA SCORE
+  ========================= */
 
-      textoEstado.innerText =
-        '✅ DemoFlow IA completó el análisis';
+  const chartScore =
+    document.getElementById(
+      'chartScore'
+    );
 
-      const ia =
-        data.resultadoIA || {};
+  if (chartScore) {
 
-      const tecnologia =
-        ia.tecnologia ||
-        btnIA.dataset.tecnologia ||
-        'No detectada';
+    new Chart(chartScore, {
 
-      const listoParaDeploy =
-        ia.listoParaDeploy === true;
+      type: 'radar',
 
-      const recomendaciones =
-        Array.isArray(ia.recomendaciones)
-          ? ia.recomendaciones
-          : [];
+      data: {
 
-      const errores =
-        Array.isArray(ia.errores)
-          ? ia.errores
-          : [];
+        labels: [
+          'Diseño',
+          'Demo',
+          'Venta',
+          'Tecnología',
+          'SaaS'
+        ],
 
-      logsIA.innerHTML += `
-        <div>✅ Análisis completado correctamente.</div>
-      `;
+        datasets: [{
 
-      contenidoIA.innerHTML = `
+          label: 'IA Score',
 
-        <div class="ia-result-card">
+          data: [
+            85,
+            70,
+            92,
+            88,
+            96
+          ],
 
-          <h3>
-            🤖 Resultado inteligente DemoFlow IA
-          </h3>
+          borderColor: '#7c3aed',
 
-          <div class="ia-result-grid">
+          backgroundColor:
+            'rgba(124,58,237,0.15)',
 
-            <div class="ia-result-item">
+          pointBackgroundColor:
+            '#7c3aed'
 
-              <strong>
-                🧠 Tecnología detectada
-              </strong>
+        }]
 
-              <span>
-                ${tecnologia}
-              </span>
+      },
 
-            </div>
+      options: {
 
-            <div class="ia-result-item">
+        responsive: true,
 
-              <strong>
-                🚀 Estado deploy
-              </strong>
+        scales: {
 
-              <span>
+          r: {
 
-                ${
-                  listoParaDeploy
+            beginAtZero: true,
+            max: 100
 
-                    ? '✅ Listo para deploy'
+          }
 
-                    : '⚠️ Requiere revisión'
-                }
+        },
 
-              </span>
+        plugins: {
 
-            </div>
+          legend: {
+            position: 'bottom'
+          }
 
-            <div class="ia-result-item">
+        }
 
-              <strong>
-                📦 Tipo de proyecto
-              </strong>
+      }
 
-              <span>
-                ${btnIA.dataset.tipo || '-'}
-              </span>
+    });
 
-            </div>
+  }
 
-            <div class="ia-result-item">
-
-              <strong>
-                💎 Créditos restantes
-              </strong>
-
-              <span>
-
-                ${
-                  data.creditosRestantes !== undefined &&
-                  data.creditosRestantes !== null
-
-                    ? data.creditosRestantes
-
-                    : '-'
-                }
-
-              </span>
-
-            </div>
-
-          </div>
-
-          <div class="ia-section">
-
-            <h4>
-              ✅ Recomendaciones IA
-            </h4>
-
-            <ul>
-
-              ${
-                recomendaciones.length
-
-                  ? recomendaciones
-                      .map(function(r) {
-
-                        return '<li>' + r + '</li>';
-
-                      })
-                      .join('')
-
-                  : `
-                      <li>
-                        Proyecto registrado correctamente en DemoFlow.
-                      </li>
-                    `
-              }
-
-            </ul>
-
-          </div>
-
-          <div class="ia-section">
-
-            <h4>
-              ❌ Errores detectados
-            </h4>
-
-            <ul>
-
-              ${
-                errores.length
-
-                  ? errores
-                      .map(function(e) {
-
-                        return '<li>' + e + '</li>';
-
-                      })
-                      .join('')
-
-                  : `
-                      <li>
-                        No se detectaron errores críticos.
-                      </li>
-                    `
-              }
-
-            </ul>
-
-          </div>
-
-          <div class="ia-section">
-
-            <h4>
-              🧠 Diagnóstico IA
-            </h4>
-
-            <p>
-
-              ${
-                data.mensaje ||
-
-                'DemoFlow IA analizó el proyecto correctamente.'
-              }
-
-            </p>
-
-          </div>
-
-        </div>
-
-      `;
-
-    } catch (error) {
-
-      clearInterval(intervalo);
-
-      barraIA.style.width = '100%';
-
-      textoEstado.innerText =
-        '❌ Error en DemoFlow IA';
-
-      logsIA.innerHTML += `
-        <div>❌ Error: ${error.message}</div>
-      `;
-
-      contenidoIA.innerHTML = `
-
-        <div class="ia-error-box">
-
-          <h3>
-            ❌ DemoFlow IA no pudo completar el análisis
-          </h3>
-
-          <p>
-            ${error.message}
-          </p>
-
-          <p>
-
-            Revisa que
-            <strong>
-              ProyectoController.analizarIA
-            </strong>
-
-            esté devolviendo
-
-            <strong>
-              res.json()
-            </strong>
-
-            y no redirect.
-
-          </p>
-
-        </div>
-
-      `;
-
-      console.error(error);
-
-    }
-
-    btnIA.disabled = false;
-
-    btnIA.innerHTML =
-      '🤖 Analizar proyecto con IA';
-
-  });
-
-}
+});
