@@ -1,0 +1,118 @@
+/* =========================
+   🤖 IA DEMOFLOW DASHBOARD
+========================= */
+
+.ia-demoflow-card {
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+}
+
+.ia-demoflow-title {
+  font-weight: 800;
+  color: #111827;
+}
+
+.ia-demoflow-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.ia-badge {
+  border-radius: 14px;
+  font-weight: 700;
+  padding: 14px 18px;
+}
+
+.ia-alert {
+  border-radius: 14px;
+  border: 1px solid #93c5fd;
+  background: linear-gradient(90deg, #dbeafe, #bfdbfe);
+  color: #0f3f8f;
+  font-weight: 500;
+}
+
+.ia-premium-btn {
+  border: none;
+  border-radius: 16px;
+  padding: 16px 26px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  color: #ffffff;
+  box-shadow: 0 10px 25px rgba(17, 24, 39, 0.25);
+  transition: all 0.25s ease;
+}
+
+.ia-premium-btn:hover {
+  transform: translateY(-3px);
+  color: #ffffff;
+  box-shadow: 0 16px 35px rgba(17, 24, 39, 0.35);
+}
+
+.ia-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 22px;
+  height: 100%;
+  background: #ffffff;
+  transition: all 0.25s ease;
+}
+
+.ia-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+  border-color: #c7d2fe;
+}
+
+.ia-box h6 {
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.ia-insights {
+  border: 1px solid #e5e7eb;
+  border-radius: 22px;
+  padding: 28px;
+  background: #ffffff;
+}
+
+.ia-insight-box {
+  border: 1px solid #e5e7eb;
+  border-radius: 18px;
+  padding: 22px;
+  height: 100%;
+  background: #f9fafb;
+  transition: all 0.25s ease;
+}
+
+.ia-insight-box:hover {
+  transform: translateY(-4px);
+  background: #ffffff;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+.ia-last-analysis {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.ia-stat-number {
+  color: #2563eb;
+  font-weight: 900;
+}
+
+@media (max-width: 768px) {
+  .ia-demoflow-card {
+    border-radius: 18px;
+  }
+
+  .ia-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  .ia-premium-btn {
+    width: 100%;
+  }
+}
