@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="/styles/ver.css">
+
 <%
   const esHtml = proyecto.tipoProyecto === 'html';
 
@@ -22,93 +24,21 @@
       : '🔴 Runtime IA offline';
 %>
 
-<style>
+<div class="proyecto-page">
 
-  .ia-online{
-    color:#4ade80;
-  }
+  <div class="proyecto-container">
 
-  .ia-offline{
-    color:#f87171;
-  }
+    <div class="proyecto-card">
 
-  .btn-demo{
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    padding:13px 18px;
-    border-radius:12px;
-    text-decoration:none;
-    font-weight:bold;
-    transition:0.3s;
-  }
-
-  .btn-demo:hover{
-    transform:translateY(-3px);
-    opacity:0.95;
-  }
-
-  .ia-card{
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:16px;
-    padding:20px;
-    transition:0.3s;
-  }
-
-  .ia-card:hover{
-    transform:translateY(-4px);
-    background:rgba(255,255,255,0.08);
-  }
-
-</style>
-
-<div style="
-  font-family:Arial,sans-serif;
-  background:#f5f7fb;
-  min-height:100vh;
-  padding:40px 20px;
-">
-
-  <div style="
-    max-width:1200px;
-    margin:0 auto;
-  ">
-
-    <div style="
-      background:#fff;
-      border-radius:22px;
-      padding:35px;
-      box-shadow:0 10px 30px rgba(0,0,0,0.08);
-    ">
-
-      <!-- HEADER -->
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        flex-wrap:wrap;
-        gap:20px;
-        margin-bottom:30px;
-      ">
+      <div class="proyecto-header">
 
         <div>
 
-          <h1 style="
-            margin-top:0;
-            margin-bottom:10px;
-            color:#111827;
-            font-size:40px;
-          ">
+          <h1 class="titulo-proyecto">
             🚀 <%= proyecto.nombre %>
           </h1>
 
-          <p style="
-            color:#6b7280;
-            font-size:17px;
-            margin-bottom:0;
-          ">
+          <p class="subtitulo-proyecto">
             Sistema administrado por DemoFlow IA
           </p>
 
@@ -116,108 +46,52 @@
 
         <% if (usuario) { %>
 
-          <div style="
-            background:linear-gradient(135deg,#7c3aed,#2563eb);
-            color:#fff;
-            padding:15px 22px;
-            border-radius:16px;
-            font-weight:bold;
-            box-shadow:0 8px 24px rgba(37,99,235,0.25);
-          ">
-
+          <div class="creditos-box">
             💎 Créditos IA:
             <%= usuario.creditos || 0 %>
-
           </div>
 
         <% } %>
 
       </div>
 
-      <!-- GRID -->
+      <div class="info-grid">
 
-      <div style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-        gap:18px;
-        margin-bottom:30px;
-      ">
+        <div class="info-card">
 
-        <div style="
-          border:1px solid #e5e7eb;
-          border-radius:16px;
-          padding:22px;
-        ">
+          <h3>📦 Tipo</h3>
 
-          <h3 style="margin-top:0;">
-            📦 Tipo
-          </h3>
-
-          <p style="
-            margin-bottom:0;
-            font-weight:bold;
-          ">
+          <p>
             <%= proyecto.tipoProyecto || '-' %>
           </p>
 
         </div>
 
-        <div style="
-          border:1px solid #e5e7eb;
-          border-radius:16px;
-          padding:22px;
-        ">
+        <div class="info-card">
 
-          <h3 style="margin-top:0;">
-            🧠 Tecnología
-          </h3>
+          <h3>🧠 Tecnología</h3>
 
-          <p style="
-            margin-bottom:0;
-            font-weight:bold;
-            color:#2563eb;
-          ">
+          <p class="texto-azul">
             <%= proyecto.tecnologia || '-' %>
           </p>
 
         </div>
 
-        <div style="
-          border:1px solid #e5e7eb;
-          border-radius:16px;
-          padding:22px;
-        ">
+        <div class="info-card">
 
-          <h3 style="margin-top:0;">
-            ⚡ Estado IA
-          </h3>
+          <h3>⚡ Estado IA</h3>
 
-          <p
-            class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>"
-            style="
-              margin-bottom:0;
-              font-weight:bold;
-            "
-          >
+          <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
             <%= estadoTexto %>
           </p>
 
         </div>
 
-        <div style="
-          border:1px solid #e5e7eb;
-          border-radius:16px;
-          padding:22px;
-        ">
+        <div class="info-card">
 
-          <h3 style="margin-top:0;">
-            🌐 Puerto
-          </h3>
+          <h3>🌐 Puerto</h3>
 
-          <p style="
-            margin-bottom:0;
-            font-weight:bold;
-          ">
+          <p>
             <%= proyecto.puerto || 'No asignado' %>
           </p>
 
@@ -225,52 +99,25 @@
 
       </div>
 
-      <!-- DESCRIPCIÓN -->
+      <div class="descripcion-box">
 
-      <div style="
-        background:#f9fafb;
-        border:1px solid #e5e7eb;
-        border-radius:18px;
-        padding:25px;
-        margin-bottom:35px;
-      ">
-
-        <h2 style="
-          margin-top:0;
-          color:#111827;
-        ">
+        <h2>
           📄 Descripción del proyecto
         </h2>
 
-        <p style="
-          color:#4b5563;
-          line-height:1.9;
-          font-size:16px;
-          margin-bottom:0;
-        ">
+        <p>
           <%= proyecto.descripcion || 'Sin descripción.' %>
         </p>
 
       </div>
 
-      <!-- BOTONES -->
-
-      <div style="
-        display:flex;
-        gap:14px;
-        flex-wrap:wrap;
-        margin-bottom:35px;
-      ">
+      <div class="botones-box">
 
         <% if (esDinamico && !runtimeActivo) { %>
 
           <a
             href="/deploy/<%= proyecto.id %>/desplegar"
-            class="btn-demo"
-            style="
-              background:#16a34a;
-              color:#fff;
-            "
+            class="btn-demo btn-verde"
           >
             🚀 Iniciar deploy IA
           </a>
@@ -282,11 +129,7 @@
           <a
             href="<%= demoUrl %>"
             target="_blank"
-            class="btn-demo"
-            style="
-              background:#2563eb;
-              color:#fff;
-            "
+            class="btn-demo btn-azul"
           >
             🌐 Ver aplicación
           </a>
@@ -295,53 +138,27 @@
 
       </div>
 
-      <!-- IA ANALYZER -->
+      <div class="ia-analyzer">
 
-      <div style="
-        background:linear-gradient(135deg,#0f172a,#1e293b);
-        border-radius:24px;
-        padding:30px;
-        color:#fff;
-        margin-bottom:35px;
-      ">
-
-        <h2 style="
-          margin-top:0;
-          font-size:34px;
-        ">
+        <h2 class="ia-title">
           🤖 DemoFlow IA Analyzer
         </h2>
 
-        <p style="
-          color:#cbd5e1;
-          line-height:1.9;
-          font-size:16px;
-        ">
+        <p class="ia-description">
           DemoFlow IA analiza automáticamente
           la estructura del proyecto,
           detecta tecnologías,
-          verifica el runtime
-          y evalúa el potencial SaaS.
+          verifica runtime
+          y evalúa potencial SaaS.
         </p>
 
-        <div style="
-          display:grid;
-          grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-          gap:18px;
-          margin-top:25px;
-        ">
+        <div class="ia-grid">
 
           <div class="ia-card">
 
-            <h3 style="margin-top:0;">
-              🧠 IA Detectó
-            </h3>
+            <h3>🧠 IA Detectó</h3>
 
-            <p style="
-              color:#93c5fd;
-              font-weight:bold;
-              margin-bottom:0;
-            ">
+            <p class="ia-detectado">
               <%= proyecto.tecnologia || 'Tecnología desconocida' %>
             </p>
 
@@ -349,18 +166,9 @@
 
           <div class="ia-card">
 
-            <h3 style="margin-top:0;">
-              ⚡ Runtime IA
-            </h3>
+            <h3>⚡ Runtime IA</h3>
 
-            <p
-              class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>"
-              style="
-                margin-bottom:0;
-                font-weight:bold;
-                font-size:17px;
-              "
-            >
+            <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
               <%= estadoTexto %>
             </p>
 
@@ -368,15 +176,9 @@
 
           <div class="ia-card">
 
-            <h3 style="margin-top:0;">
-              📈 Potencial SaaS
-            </h3>
+            <h3>📈 Potencial SaaS</h3>
 
-            <p style="
-              color:#facc15;
-              font-weight:bold;
-              margin-bottom:0;
-            ">
+            <p class="ia-saas">
               Alto potencial comercial detectado por IA.
             </p>
 
@@ -384,55 +186,81 @@
 
         </div>
 
-        <!-- RESULTADO IA -->
-
         <div
           id="resultadoIA"
-          style="
-            display:none;
-            margin-top:24px;
-            background:rgba(255,255,255,0.06);
-            border-radius:18px;
-            padding:24px;
-            border:1px solid rgba(255,255,255,0.08);
-          "
+          class="resultado-ia"
         >
 
-          <h3 style="margin-top:0;">
+          <h3 class="resultado-title">
             🤖 Resultado IA
           </h3>
 
-          <div
-            id="contenidoResultadoIA"
-            style="
-              color:#e2e8f0;
-              line-height:1.9;
-            "
-          >
-            Analizando proyecto...
+          <div class="ia-live-box">
+
+            <div class="ia-live-top">
+
+              <div class="ia-spinner"></div>
+
+              <div>
+
+                <div
+                  id="iaTextoEstado"
+                  class="ia-estado-texto"
+                >
+                  DemoFlow IA iniciando análisis...
+                </div>
+
+                <div class="ia-subestado">
+                  Runtime inteligente procesando proyecto.
+                </div>
+
+              </div>
+
+            </div>
+
+            <div class="ia-progress">
+
+              <div
+                id="iaBarra"
+                class="ia-progress-bar"
+              ></div>
+
+            </div>
+
+            <div
+              id="iaLogs"
+              class="ia-logs"
+            >
+              🤖 DemoFlow IA esperando instrucciones...
+            </div>
+
+            <div
+              id="contenidoResultadoIA"
+              class="contenido-resultado-ia"
+            >
+              ⏳ Preparando análisis...
+            </div>
+
           </div>
 
         </div>
 
-        <!-- BOTÓN IA -->
-
         <% if (usuario) { %>
 
-          <div style="margin-top:28px;">
+          <div class="box-boton-ia">
 
             <button
               id="btnAnalizarIA"
               type="button"
-              style="
-                background:linear-gradient(135deg,#7c3aed,#2563eb);
-                color:#fff;
-                border:none;
-                padding:15px 24px;
-                border-radius:16px;
-                font-weight:bold;
-                font-size:16px;
-                cursor:pointer;
-              "
+              class="btn-analizar-ia"
+
+              data-nombre="<%= proyecto.nombre || '' %>"
+              data-tipo="<%= proyecto.tipoProyecto || '' %>"
+              data-tecnologia="<%= proyecto.tecnologia || '' %>"
+              data-repo="<%= proyecto.urlRepositorio || '' %>"
+              data-demo="<%= proyecto.urlDemo || '' %>"
+              data-archivo="<%= proyecto.archivoEntrada || '' %>"
+              data-comando="<%= proyecto.comandoInicio || '' %>"
             >
               🤖 Analizar proyecto con IA
             </button>
@@ -449,70 +277,4 @@
 
 </div>
 
-<script>
-
-  const btnIA = document.getElementById('btnAnalizarIA');
-  const resultadoIA = document.getElementById('resultadoIA');
-  const contenidoIA = document.getElementById('contenidoResultadoIA');
-
-  if (btnIA) {
-
-    btnIA.addEventListener('click', async function() {
-
-      btnIA.disabled = true;
-      btnIA.innerText = '🤖 Analizando proyecto...';
-
-      resultadoIA.style.display = 'block';
-
-      contenidoIA.innerHTML =
-        '⏳ DemoFlow IA está analizando el proyecto...';
-
-      try {
-
-        const respuesta = await fetch('/ia/analizar-proyecto', {
-          method: 'POST',
-
-          headers: {
-            'Content-Type': 'application/json'
-          },
-
-          body: JSON.stringify({
-
-            nombre: '<%= proyecto.nombre || "" %>',
-            tipoProyecto: '<%= proyecto.tipoProyecto || "" %>',
-            tecnologia: '<%= proyecto.tecnologia || "" %>',
-            urlRepositorio: '<%= proyecto.urlRepositorio || "" %>',
-            urlDemo: '<%= proyecto.urlDemo || "" %>',
-            archivoEntrada: '<%= proyecto.archivoEntrada || "" %>',
-            comandoInicio: '<%= proyecto.comandoInicio || "" %>'
-
-          })
-        });
-
-        const data = await respuesta.json();
-
-        contenidoIA.innerHTML = `
-          <p><strong>🧠 Tipo detectado:</strong> ${data.tipoDetectado || '-'}</p>
-          <p><strong>📄 Archivo recomendado:</strong> ${data.archivoRecomendado || '-'}</p>
-          <p><strong>⚙️ Comando recomendado:</strong> ${data.comandoRecomendado || '-'}</p>
-          <p><strong>🤖 Resultado IA:</strong> ${data.mensaje || 'Análisis completado.'}</p>
-        `;
-
-      } catch (error) {
-
-        contenidoIA.innerHTML =
-          '❌ DemoFlow IA no pudo analizar el proyecto.';
-
-        console.error(error);
-      }
-
-      btnIA.disabled = false;
-
-      btnIA.innerText =
-        '🤖 Analizar proyecto con IA';
-
-    });
-
-  }
-
-</script>
+<script src="/js/ver.js"></script>
