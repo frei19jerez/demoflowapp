@@ -75,8 +75,6 @@
     margin:0 auto;
   ">
 
-    <!-- CONTENEDOR -->
-
     <div style="
       background:#fff;
       border-radius:22px;
@@ -136,7 +134,7 @@
 
       </div>
 
-      <!-- GRID INFO -->
+      <!-- GRID -->
 
       <div style="
         display:grid;
@@ -144,8 +142,6 @@
         gap:18px;
         margin-bottom:30px;
       ">
-
-        <!-- CARD -->
 
         <div style="
           border:1px solid #e5e7eb;
@@ -166,8 +162,6 @@
 
         </div>
 
-        <!-- CARD -->
-
         <div style="
           border:1px solid #e5e7eb;
           border-radius:16px;
@@ -187,8 +181,6 @@
           </p>
 
         </div>
-
-        <!-- CARD -->
 
         <div style="
           border:1px solid #e5e7eb;
@@ -211,8 +203,6 @@
           </p>
 
         </div>
-
-        <!-- CARD -->
 
         <div style="
           border:1px solid #e5e7eb;
@@ -356,17 +346,6 @@
 
         <% } %>
 
-        <a
-          href="<%= usuario ? '/dashboard' : '/' %>"
-          class="btn-demo"
-          style="
-            background:#e5e7eb;
-            color:#111827;
-          "
-        >
-          ⬅ Volver
-        </a>
-
       </div>
 
       <!-- IA ANALYZER -->
@@ -398,16 +377,12 @@
           y evalúa el potencial SaaS.
         </p>
 
-        <!-- GRID IA -->
-
         <div style="
           display:grid;
           grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
           gap:18px;
           margin-top:25px;
         ">
-
-          <!-- IA CARD -->
 
           <div class="ia-card">
 
@@ -424,8 +399,6 @@
             </p>
 
           </div>
-
-          <!-- IA CARD -->
 
           <div class="ia-card">
 
@@ -446,8 +419,6 @@
 
           </div>
 
-          <!-- IA CARD -->
-
           <div class="ia-card">
 
             <h3 style="margin-top:0;">
@@ -465,8 +436,6 @@
           </div>
 
         </div>
-
-        <!-- RESULTADO IA -->
 
         <% if (proyecto.analisisIa) { %>
 
@@ -508,8 +477,44 @@
 
             <input
               type="hidden"
-              name="proyectoId"
-              value="<%= proyecto.id %>"
+              name="nombre"
+              value="<%= proyecto.nombre || '' %>"
+            >
+
+            <input
+              type="hidden"
+              name="tipoProyecto"
+              value="<%= proyecto.tipoProyecto || '' %>"
+            >
+
+            <input
+              type="hidden"
+              name="tecnologia"
+              value="<%= proyecto.tecnologia || '' %>"
+            >
+
+            <input
+              type="hidden"
+              name="urlRepositorio"
+              value="<%= proyecto.urlRepositorio || '' %>"
+            >
+
+            <input
+              type="hidden"
+              name="urlDemo"
+              value="<%= proyecto.urlDemo || '' %>"
+            >
+
+            <input
+              type="hidden"
+              name="archivoEntrada"
+              value="<%= proyecto.archivoEntrada || '' %>"
+            >
+
+            <input
+              type="hidden"
+              name="comandoInicio"
+              value="<%= proyecto.comandoInicio || '' %>"
             >
 
             <button
@@ -534,7 +539,7 @@
 
       </div>
 
-      <!-- DEMO HTML -->
+      <!-- DEMO -->
 
       <% if (esHtml && demoUrl) { %>
 
@@ -561,8 +566,6 @@
 
       <% } else if (esDinamico && runtimeActivo) { %>
 
-        <!-- RUNTIME ONLINE -->
-
         <div style="
           margin-top:25px;
           border:1px solid #22c55e;
@@ -582,46 +585,15 @@
             color:#14532d;
             line-height:1.9;
           ">
-
             DemoFlow IA detectó automáticamente
             el proyecto dinámico
             <strong><%= proyecto.tipoProyecto %></strong>
             y desplegó el runtime exitosamente.
-
           </p>
-
-          <% if (proyecto.puerto) { %>
-
-            <p style="
-              color:#14532d;
-            ">
-              🔌 Puerto interno:
-              <strong><%= proyecto.puerto %></strong>
-            </p>
-
-          <% } %>
-
-          <div style="margin-top:20px;">
-
-            <a
-              href="<%= demoUrl %>"
-              target="_blank"
-              class="btn-demo"
-              style="
-                background:#16a34a;
-                color:#fff;
-              "
-            >
-              🚀 Abrir aplicación online
-            </a>
-
-          </div>
 
         </div>
 
       <% } else { %>
-
-        <!-- PENDIENTE -->
 
         <div style="
           margin-top:25px;
@@ -643,23 +615,10 @@
             line-height:1.9;
             margin-bottom:20px;
           ">
-
             DemoFlow IA detectó que el proyecto
             <strong><%= proyecto.tipoProyecto %></strong>
             todavía no ha sido desplegado.
-
           </p>
-
-          <a
-            href="/deploy/<%= proyecto.id %>/desplegar"
-            class="btn-demo"
-            style="
-              background:#16a34a;
-              color:#fff;
-            "
-          >
-            🚀 Iniciar deploy ahora
-          </a>
 
         </div>
 
