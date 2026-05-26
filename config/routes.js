@@ -63,6 +63,7 @@ module.exports.routes = {
   'POST /admin/register': 'AdminController.register',
 
   'GET /admin/logout': 'AdminController.logout',
+  'GET /deploy/:id/log-json': 'DeployController.logJson',
 
   // ===============================
   // ADMIN PANEL

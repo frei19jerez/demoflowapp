@@ -586,6 +586,56 @@ module.exports = {
     }
   },
 
+  logJson: async function (req, res) {
+
+  try {
+
+    if (!req.session.userId) {
+      return res.forbidden();
+    }
+
+    const proyecto = await Proyecto.findOne({
+      id: req.params.id
+    });
+
+    if (!proyecto) {
+      return res.notFound();
+    }
+
+    const permitido =
+      await validarPermiso(req, proyecto);
+
+    if (!permitido) {
+      return res.forbidden();
+    }
+
+    return res.json({
+
+      ok: true,
+
+      estado:
+        proyecto.estadoDeploy,
+
+      logs:
+        proyecto.logDeploy || '',
+
+      urlDemo:
+        proyecto.urlDemo || null
+
+    });
+
+  } catch (err) {
+
+    console.error(err);
+
+    return res.json({
+      ok: false
+    });
+
+  }
+
+},
+
   desplegar: async function (req, res) {
     try {
       if (!req.session.userId) return res.redirect('/login');
