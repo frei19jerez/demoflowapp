@@ -9,100 +9,229 @@
       </h1>
 
       <p style="color:#6b7280; font-size:18px;">
-        Proyecto: <strong><%= proyecto ? proyecto.nombre : 'Sin proyecto' %></strong>
+        Proyecto:
+        <strong>
+          <%= proyecto ? proyecto.nombre : 'Sin proyecto' %>
+        </strong>
       </p>
 
       <% if (proyecto && proyecto.estadoDeploy === 'instalando') { %>
-        <div style="background:#fef3c7; color:#92400e; padding:14px 18px; border-radius:12px; margin:18px 0; font-weight:bold;">
-          ⏳ Instalando dependencias... Esta parte puede tardar 1 o 2 minutos.
+
+        <div style="
+          background:#fef3c7;
+          color:#92400e;
+          padding:14px 18px;
+          border-radius:12px;
+          margin:18px 0;
+          font-weight:bold;
+        ">
+          ⏳ Instalando dependencias...
+          Esta parte puede tardar 1 o 2 minutos.
         </div>
+
       <% } %>
 
       <% if (proyecto && proyecto.estadoDeploy === 'verificando') { %>
-        <div style="background:#dbeafe; color:#1e40af; padding:14px 18px; border-radius:12px; margin:18px 0; font-weight:bold;">
+
+        <div style="
+          background:#dbeafe;
+          color:#1e40af;
+          padding:14px 18px;
+          border-radius:12px;
+          margin:18px 0;
+          font-weight:bold;
+        ">
           🔎 Verificando puerto interno y preparando demo en vivo...
         </div>
+
       <% } %>
 
       <% if (proyecto && proyecto.estadoDeploy === 'activo') { %>
-        <div style="background:#dcfce7; color:#166534; padding:14px 18px; border-radius:12px; margin:18px 0; font-weight:bold;">
+
+        <div style="
+          background:#dcfce7;
+          color:#166534;
+          padding:14px 18px;
+          border-radius:12px;
+          margin:18px 0;
+          font-weight:bold;
+        ">
           ✅ Demo activa correctamente.
         </div>
+
       <% } %>
 
       <% if (proyecto && proyecto.estadoDeploy === 'fallido') { %>
-        <div style="background:#fee2e2; color:#991b1b; padding:14px 18px; border-radius:12px; margin:18px 0; font-weight:bold;">
+
+        <div style="
+          background:#fee2e2;
+          color:#991b1b;
+          padding:14px 18px;
+          border-radius:12px;
+          margin:18px 0;
+          font-weight:bold;
+        ">
           ❌ El deploy falló. Revisa el log de abajo.
         </div>
+
       <% } %>
 
-      <div style="display:flex; gap:12px; flex-wrap:wrap; margin:25px 0;">
-        <a href="/proyecto/<%= proyecto.id %>"
-           style="background:#2563eb; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
-          Volver al proyecto
+      <!-- BOTONES -->
+
+      <div style="
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+        margin:25px 0;
+      ">
+
+        <a
+          href="/proyecto/<%= proyecto.id %>"
+          style="
+            background:#2563eb;
+            color:#fff;
+            padding:12px 18px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+          "
+        >
+          📦 Volver al proyecto
         </a>
 
-        <a href="/deploy/<%= proyecto.id %>/desplegar"
-           style="background:#16a34a; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+        <a
+          href="/deploy/<%= proyecto.id %>/desplegar"
+          style="
+            background:#16a34a;
+            color:#fff;
+            padding:12px 18px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+          "
+        >
           🚀 Iniciar deploy
         </a>
 
-        <a href="/deploy/<%= proyecto.id %>/reiniciar"
-           style="background:#f59e0b; color:#111827; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+        <a
+          href="/deploy/<%= proyecto.id %>/reiniciar"
+          style="
+            background:#f59e0b;
+            color:#111827;
+            padding:12px 18px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+          "
+        >
           🔄 Reiniciar
         </a>
 
         <% if (proyecto && proyecto.urlDemo) { %>
-          <a href="<%= proyecto.urlDemo %>"
-             target="_blank"
-             style="background:#0f172a; color:#fff; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
+
+          <a
+            href="<%= proyecto.urlDemo %>"
+            target="_blank"
+            style="
+              background:#0f172a;
+              color:#fff;
+              padding:12px 18px;
+              border-radius:10px;
+              text-decoration:none;
+              font-weight:bold;
+            "
+          >
             🌐 Ver demo
           </a>
+
         <% } %>
 
-        <a href="/dashboard"
-           style="background:#e5e7eb; color:#111827; padding:12px 18px; border-radius:10px; text-decoration:none; font-weight:bold;">
-          Dashboard
+        <a
+          href="/dashboard"
+          style="
+            background:#e5e7eb;
+            color:#111827;
+            padding:12px 18px;
+            border-radius:10px;
+            text-decoration:none;
+            font-weight:bold;
+          "
+        >
+          🧠 Dashboard
         </a>
+
       </div>
 
-      <% if (proyecto && ['instalando', 'verificando', 'clonando'].includes(proyecto.estadoDeploy)) { %>
+      <!-- IA STATUS -->
 
-        <div style="margin-bottom:12px; color:#475569; font-size:15px;">
+      <% if (
+        proyecto &&
+        ['instalando', 'verificando', 'clonando']
+        .includes(proyecto.estadoDeploy)
+      ) { %>
+
+        <div style="
+          margin-bottom:12px;
+          color:#475569;
+          font-size:15px;
+        ">
           🔄 Esta página se actualiza automáticamente cada 5 segundos.
         </div>
 
         <div id="estadoDeploy" style="
           background:#fef3c7;
           color:#92400e;
-          padding:18px;
-          border-radius:14px;
-          margin-bottom:20px;
-          font-size:20px;
-          font-weight:bold;
+          padding:22px;
+          border-radius:16px;
+          margin-bottom:24px;
           display:flex;
           align-items:center;
-          gap:12px;
-          animation:pulse 1.5s infinite;
+          gap:18px;
         ">
+
           <div class="loader"></div>
 
           <div>
-            🚀 DemoFlow IA está preparando tu aplicación...
-            <br>
-            <span id="contadorDeploy" style="font-size:15px; opacity:.8;">
+
+            <div style="
+              font-size:22px;
+              font-weight:bold;
+              margin-bottom:6px;
+            ">
+              🚀 DemoFlow IA está preparando tu aplicación...
+            </div>
+
+            <div
+              id="contadorDeploy"
+              style="
+                font-size:15px;
+                opacity:.8;
+                margin-bottom:8px;
+              "
+            >
               Tiempo transcurrido: 0 segundos
-            </span>
-            <br>
-            <span id="mensajeIA" style="font-size:15px; color:#78350f;">
+            </div>
+
+            <div
+              id="mensajeIA"
+              style="
+                font-size:15px;
+                color:#78350f;
+              "
+            >
               🤖 Analizando dependencias del proyecto...
-            </span>
+            </div>
+
           </div>
+
         </div>
 
       <% } %>
 
+      <!-- IA RESULTADO -->
+
       <% if (proyecto && proyecto.estadoDeploy === 'activo') { %>
+
         <div style="
           background:#ecfdf5;
           color:#065f46;
@@ -112,11 +241,15 @@
           font-size:18px;
           font-weight:bold;
         ">
-          🤖 IA DemoFlow: Deploy completado. La demo ya puede abrirse en vivo.
+          🤖 IA DemoFlow:
+          Deploy completado.
+          La demo ya puede abrirse en vivo.
         </div>
+
       <% } %>
 
       <% if (proyecto && proyecto.estadoDeploy === 'fallido') { %>
+
         <div style="
           background:#fef2f2;
           color:#7f1d1d;
@@ -126,9 +259,15 @@
           font-size:18px;
           font-weight:bold;
         ">
-          🤖 IA DemoFlow: Detecté que el deploy falló. Revisa si faltan variables, dependencias o configuración de producción.
+          🤖 IA DemoFlow:
+          Detecté que el deploy falló.
+          Revisa si faltan variables,
+          dependencias o configuración de producción.
         </div>
+
       <% } %>
+
+      <!-- LOGS -->
 
       <pre style="
         background:#020617;
@@ -149,88 +288,127 @@
 </div>
 
 <style>
-.loader {
-  width:26px;
-  height:26px;
+
+.loader{
+  width:28px;
+  height:28px;
   border:4px solid #f59e0b;
   border-top:4px solid transparent;
   border-radius:50%;
   animation:girar 1s linear infinite;
 }
 
-@keyframes girar {
-  from {
+@keyframes girar{
+  from{
     transform:rotate(0deg);
   }
-  to {
+
+  to{
     transform:rotate(360deg);
   }
 }
 
-@keyframes pulse {
-  0% {
-    opacity:1;
-  }
-  50% {
-    opacity:.7;
-  }
-  100% {
-    opacity:1;
-  }
-}
 </style>
 
-<% if (proyecto && ['instalando', 'verificando', 'clonando'].includes(proyecto.estadoDeploy)) { %>
-  <script>
-    let segundos = Number(sessionStorage.getItem('deploySegundos_<%= proyecto.id %>') || 0);
+<% if (
+  proyecto &&
+  ['instalando', 'verificando', 'clonando']
+  .includes(proyecto.estadoDeploy)
+) { %>
 
-    const contador = document.getElementById('contadorDeploy');
-    const mensajeIA = document.getElementById('mensajeIA');
+<script>
 
-    const mensajesIA = [
-      '🤖 Analizando dependencias del proyecto...',
-      '📦 Revisando package.json y módulos necesarios...',
-      '🧠 Preparando entorno Node.js para producción...',
-      '🚀 Instalando paquetes y optimizando runtime...',
-      '🔎 Verificando configuración del puerto interno...',
-      '🌐 Preparando enlace público de DemoFlow...',
-      '⚙️ Si el proyecto es Sails, esto puede tardar un poco más...',
-      '✅ Cuando termine, podrás abrir la demo en vivo.'
-    ];
+let segundos = Number(
+  sessionStorage.getItem(
+    'deploySegundos_<%= proyecto.id %>'
+  ) || 0
+);
 
-    function actualizarContador() {
-      if (!contador) return;
+const contador =
+  document.getElementById('contadorDeploy');
 
-      contador.innerText =
-        'Tiempo transcurrido: ' + segundos + ' segundos';
+const mensajeIA =
+  document.getElementById('mensajeIA');
 
-      if (mensajeIA) {
-        const indice = Math.floor(segundos / 6) % mensajesIA.length;
-        mensajeIA.innerText = mensajesIA[indice];
-      }
-    }
+const mensajesIA = [
 
-    actualizarContador();
+  '🤖 Analizando dependencias del proyecto...',
 
-    setInterval(function () {
-      segundos++;
+  '📦 Revisando package.json y módulos necesarios...',
 
-      sessionStorage.setItem(
-        'deploySegundos_<%= proyecto.id %>',
-        segundos
-      );
+  '🧠 Preparando entorno Node.js para producción...',
 
-      actualizarContador();
-    }, 1000);
+  '🚀 Instalando paquetes y optimizando runtime...',
 
-    setTimeout(function () {
-      window.location.reload();
-    }, 5000);
-  </script>
+  '🔎 Verificando configuración del puerto interno...',
+
+  '🌐 Preparando enlace público de DemoFlow...',
+
+  '⚙️ Si el proyecto es Sails, esto puede tardar un poco más...',
+
+  '✅ Cuando termine, podrás abrir la demo en vivo.'
+
+];
+
+function actualizarContador(){
+
+  if(!contador){
+    return;
+  }
+
+  contador.innerText =
+    'Tiempo transcurrido: ' +
+    segundos +
+    ' segundos';
+
+  if(mensajeIA){
+
+    const indice =
+      Math.floor(segundos / 6)
+      % mensajesIA.length;
+
+    mensajeIA.innerText =
+      mensajesIA[indice];
+  }
+}
+
+actualizarContador();
+
+setInterval(function(){
+
+  segundos++;
+
+  sessionStorage.setItem(
+    'deploySegundos_<%= proyecto.id %>',
+    segundos
+  );
+
+  actualizarContador();
+
+}, 1000);
+
+setTimeout(function(){
+
+  window.location.reload();
+
+}, 5000);
+
+</script>
+
 <% } %>
 
-<% if (proyecto && ['activo', 'fallido'].includes(proyecto.estadoDeploy)) { %>
-  <script>
-    sessionStorage.removeItem('deploySegundos_<%= proyecto.id %>');
-  </script>
+<% if (
+  proyecto &&
+  ['activo', 'fallido']
+  .includes(proyecto.estadoDeploy)
+) { %>
+
+<script>
+
+sessionStorage.removeItem(
+  'deploySegundos_<%= proyecto.id %>'
+);
+
+</script>
+
 <% } %>
