@@ -38,8 +38,8 @@
 
         <% } else { %>
 
-          <span class="badge bg-danger p-3">
-            🔴 IA BLOQUEADA
+          <span class="badge bg-warning text-dark p-3">
+            🟡 IA FREE
           </span>
 
         <% } %>
@@ -52,9 +52,7 @@
 
     <div class="alert alert-primary d-flex align-items-center gap-3 mb-4">
 
-      <span
-        class="spinner-border spinner-border-sm"
-      ></span>
+      <i class="bi bi-robot fs-5"></i>
 
       <div>
         🤖 DemoFlow IA monitorea tus demos
@@ -89,7 +87,7 @@
           href="/premium"
           class="btn btn-dark btn-lg"
         >
-          🔓 Activar IA Premium
+          🚀 Mejorar a IA Premium
         </a>
 
       <% } %>
@@ -123,8 +121,8 @@
 
           <% } else { %>
 
-            <p class="text-danger mb-0">
-              Sin acceso IA.
+            <p class="text-warning mb-0">
+              Modo gratuito activo.
             </p>
 
           <% } %>
@@ -190,59 +188,31 @@
           </h6>
 
           <p class="mb-1">
-
             Proyectos:
             <strong>
-
-              <%= iaDashboard
-                ? iaDashboard.totalProyectos
-                : 0
-              %>
-
+              <%= iaDashboard ? iaDashboard.totalProyectos : 0 %>
             </strong>
-
           </p>
 
           <p class="mb-1">
-
             Demos activas:
             <strong>
-
-              <%= iaDashboard
-                ? iaDashboard.demosConUrl
-                : 0
-              %>
-
+              <%= iaDashboard ? iaDashboard.demosConUrl : 0 %>
             </strong>
-
           </p>
 
           <p class="mb-1">
-
             Sails.js:
             <strong>
-
-              <%= iaDashboard
-                ? iaDashboard.proyectosSails
-                : 0
-              %>
-
+              <%= iaDashboard ? iaDashboard.proyectosSails : 0 %>
             </strong>
-
           </p>
 
           <p class="mb-0">
-
             HTML:
             <strong>
-
-              <%= iaDashboard
-                ? iaDashboard.proyectosHtml
-                : 0
-              %>
-
+              <%= iaDashboard ? iaDashboard.proyectosHtml : 0 %>
             </strong>
-
           </p>
 
         </div>
