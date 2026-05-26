@@ -25,15 +25,11 @@
 %>
 
 <div class="proyecto-page">
-
   <div class="proyecto-container">
-
     <div class="proyecto-card">
 
       <div class="proyecto-header">
-
         <div>
-
           <h1 class="titulo-proyecto">
             🚀 <%= proyecto.nombre %>
           </h1>
@@ -41,91 +37,58 @@
           <p class="subtitulo-proyecto">
             Sistema administrado por DemoFlow IA
           </p>
-
         </div>
 
         <% if (usuario) { %>
-
           <div class="creditos-box">
             💎 Créditos IA:
             <%= usuario.creditos || 0 %>
           </div>
-
         <% } %>
-
       </div>
 
       <div class="info-grid">
-
         <div class="info-card">
-
           <h3>📦 Tipo</h3>
-
-          <p>
-            <%= proyecto.tipoProyecto || '-' %>
-          </p>
-
+          <p><%= proyecto.tipoProyecto || '-' %></p>
         </div>
 
         <div class="info-card">
-
           <h3>🧠 Tecnología</h3>
-
           <p class="texto-azul">
             <%= proyecto.tecnologia || '-' %>
           </p>
-
         </div>
 
         <div class="info-card">
-
           <h3>⚡ Estado IA</h3>
-
           <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
             <%= estadoTexto %>
           </p>
-
         </div>
 
         <div class="info-card">
-
           <h3>🌐 Puerto</h3>
-
-          <p>
-            <%= proyecto.puerto || 'No asignado' %>
-          </p>
-
+          <p><%= proyecto.puerto || 'No asignado' %></p>
         </div>
-
       </div>
 
       <div class="descripcion-box">
-
-        <h2>
-          📄 Descripción del proyecto
-        </h2>
-
-        <p>
-          <%= proyecto.descripcion || 'Sin descripción.' %>
-        </p>
-
+        <h2>📄 Descripción del proyecto</h2>
+        <p><%= proyecto.descripcion || 'Sin descripción.' %></p>
       </div>
 
       <div class="botones-box">
-
         <% if (esDinamico && !runtimeActivo) { %>
-
           <a
             href="/deploy/<%= proyecto.id %>/desplegar"
             class="btn-demo btn-verde"
           >
             🚀 Iniciar deploy IA
           </a>
-
         <% } %>
 
         <% if (demoUrl) { %>
-
           <a
             href="<%= demoUrl %>"
             target="_blank"
@@ -133,13 +96,10 @@
           >
             🌐 Ver aplicación
           </a>
-
         <% } %>
-
       </div>
 
       <div class="ia-analyzer">
-
         <h2 class="ia-title">
           🤖 DemoFlow IA Analyzer
         </h2>
@@ -153,79 +113,59 @@
         </p>
 
         <div class="ia-grid">
-
           <div class="ia-card">
-
             <h3>🧠 IA Detectó</h3>
-
             <p class="ia-detectado">
               <%= proyecto.tecnologia || 'Tecnología desconocida' %>
             </p>
-
           </div>
 
           <div class="ia-card">
-
             <h3>⚡ Runtime IA</h3>
-
             <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
               <%= estadoTexto %>
             </p>
-
           </div>
 
           <div class="ia-card">
-
             <h3>📈 Potencial SaaS</h3>
-
             <p class="ia-saas">
               Alto potencial comercial detectado por IA.
             </p>
-
           </div>
-
         </div>
 
         <div
           id="resultadoIA"
           class="resultado-ia"
-          style="display:none;"
         >
-
           <h3 class="resultado-title">
             🤖 Resultado IA
           </h3>
 
           <div class="ia-live-box">
-
             <div class="ia-live-top">
-
               <div class="ia-spinner"></div>
 
               <div>
-
                 <div
                   id="iaTextoEstado"
                   class="ia-estado-texto"
                 >
-                  DemoFlow IA esperando análisis...
+                  DemoFlow IA iniciando análisis...
                 </div>
 
                 <div class="ia-subestado">
-                  Runtime inteligente listo para procesar.
+                  Runtime inteligente procesando proyecto.
                 </div>
-
               </div>
-
             </div>
 
             <div class="ia-progress">
-
               <div
                 id="iaBarra"
                 class="ia-progress-bar"
               ></div>
-
             </div>
 
             <div
@@ -239,22 +179,17 @@
               id="contenidoResultadoIA"
               class="contenido-resultado-ia"
             >
-              ⏳ Esperando análisis...
+              ⏳ Preparando análisis...
             </div>
-
           </div>
-
         </div>
 
         <% if (usuario) { %>
-
           <div class="box-boton-ia">
-
             <button
               id="btnAnalizarIA"
               type="button"
               class="btn-analizar-ia"
-
               data-nombre="<%= proyecto.nombre || '' %>"
               data-tipo="<%= proyecto.tipoProyecto || '' %>"
               data-tecnologia="<%= proyecto.tecnologia || '' %>"
@@ -265,17 +200,12 @@
             >
               🤖 Analizar proyecto con IA
             </button>
-
           </div>
-
         <% } %>
-
       </div>
 
     </div>
-
   </div>
-
 </div>
 
 <script src="/js/ver.js"></script>
