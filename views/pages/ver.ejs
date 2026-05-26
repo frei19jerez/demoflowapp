@@ -186,20 +186,23 @@
 
         <% if (usuario) { %>
           <div class="box-boton-ia">
-            <button
-              id="btnAnalizarIA"
-              type="button"
-              class="btn-analizar-ia"
-              data-nombre="<%= proyecto.nombre || '' %>"
-              data-tipo="<%= proyecto.tipoProyecto || '' %>"
-              data-tecnologia="<%= proyecto.tecnologia || '' %>"
-              data-repo="<%= proyecto.urlRepositorio || '' %>"
-              data-demo="<%= proyecto.urlDemo || '' %>"
-              data-archivo="<%= proyecto.archivoEntrada || '' %>"
-              data-comando="<%= proyecto.comandoInicio || '' %>"
-            >
-              🤖 Analizar proyecto con IA
-            </button>
+           <button
+  id="btnAnalizarIA"
+  type="button"
+  class="btn-analizar-ia"
+
+  data-id="<%= proyecto.id %>"
+
+  data-nombre="<%= proyecto.nombre || '' %>"
+  data-tipo="<%= proyecto.tipoProyecto || '' %>"
+  data-tecnologia="<%= proyecto.tecnologia || '' %>"
+  data-repo="<%= proyecto.urlRepositorio || '' %>"
+  data-demo="<%= proyecto.urlDemo || '' %>"
+  data-archivo="<%= proyecto.archivoEntrada || '' %>"
+  data-comando="<%= proyecto.comandoInicio || '' %>"
+>
+  🤖 Analizar proyecto con IA
+</button>
           </div>
         <% } %>
       </div>

@@ -16,6 +16,11 @@ if (btnIA) {
 
     resultadoIA.style.display = 'block';
 
+    contenidoIA.innerHTML = '';
+
+    logsIA.innerHTML =
+      '🤖 DemoFlow IA iniciando análisis...';
+
     let progreso = 0;
 
     barraIA.style.width = '0%';
@@ -53,6 +58,9 @@ if (btnIA) {
           <div>${mensajes[paso]}</div>
         `;
 
+        logsIA.scrollTop =
+          logsIA.scrollHeight;
+
         paso++;
       }
 
@@ -60,44 +68,31 @@ if (btnIA) {
 
     try {
 
-      const payload = {
+      const proyectoId =
+        btnIA.dataset.id;
 
-        nombre:
-          btnIA.dataset.nombre || '',
+      const respuesta = await fetch(
 
-        tipoProyecto:
-          btnIA.dataset.tipo || '',
+        '/proyecto/' + proyectoId + '/analizar-ia',
 
-        tecnologia:
-          btnIA.dataset.tecnologia || '',
+        {
+          method: 'POST',
 
-        urlRepositorio:
-          btnIA.dataset.repo || '',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
 
-        urlDemo:
-          btnIA.dataset.demo || '',
+      );
 
-        archivoEntrada:
-          btnIA.dataset.archivo || '',
+      if (!respuesta.ok) {
+        throw new Error(
+          'Error HTTP ' + respuesta.status
+        );
+      }
 
-        comandoInicio:
-          btnIA.dataset.comando || ''
-
-      };
-
-      const respuesta = await fetch('/ia/analizar-proyecto', {
-
-        method: 'POST',
-
-        headers: {
-          'Content-Type': 'application/json'
-        },
-
-        body: JSON.stringify(payload)
-
-      });
-
-      const data = await respuesta.json();
+      const data =
+        await respuesta.json();
 
       clearInterval(intervalo);
 
@@ -106,27 +101,95 @@ if (btnIA) {
       textoEstado.innerText =
         '✅ Análisis completado';
 
+      const ia =
+        data.resultadoIA || {};
+
       contenidoIA.innerHTML = `
 
-        <p>
-          <strong>🧠 Tipo detectado:</strong>
-          ${data.tipoDetectado || '-'}
-        </p>
+        <div class="alert alert-success">
 
-        <p>
-          <strong>📄 Archivo recomendado:</strong>
-          ${data.archivoRecomendado || '-'}
-        </p>
+          <h3>
+            🤖 Resultado DemoFlow IA
+          </h3>
 
-        <p>
-          <strong>⚙️ Comando recomendado:</strong>
-          ${data.comandoRecomendado || '-'}
-        </p>
+          <hr>
 
-        <p>
-          <strong>🤖 Resultado IA:</strong>
-          ${data.mensaje || 'Análisis completado.'}
-        </p>
+          <p>
+            <strong>🧠 Tecnología detectada:</strong>
+            ${ia.tecnologia || '-'}
+          </p>
+
+          <p>
+            <strong>🚀 Listo para deploy:</strong>
+            ${
+              ia.listoParaDeploy
+                ? '✅ Sí'
+                : '❌ No'
+            }
+          </p>
+
+          <hr>
+
+          <h4>
+            ✅ Recomendaciones IA
+          </h4>
+
+          <ul>
+
+            ${
+              ia.recomendaciones &&
+              ia.recomendaciones.length
+
+                ? ia.recomendaciones
+                    .map(r => `
+                      <li>${r}</li>
+                    `)
+                    .join('')
+
+                : `
+                    <li>
+                      Proyecto analizado correctamente.
+                    </li>
+                  `
+            }
+
+          </ul>
+
+          <hr>
+
+          <h4>
+            ❌ Errores detectados
+          </h4>
+
+          <ul>
+
+            ${
+              ia.errores &&
+              ia.errores.length
+
+                ? ia.errores
+                    .map(e => `
+                      <li>${e}</li>
+                    `)
+                    .join('')
+
+                : `
+                    <li>
+                      No se detectaron errores críticos.
+                    </li>
+                  `
+            }
+
+          </ul>
+
+          <hr>
+
+          <p>
+            💎 Créditos restantes:
+            ${data.creditosRestantes || 0}
+          </p>
+
+        </div>
 
       `;
 
@@ -134,8 +197,21 @@ if (btnIA) {
 
       clearInterval(intervalo);
 
-      contenidoIA.innerHTML =
-        '❌ DemoFlow IA no pudo analizar el proyecto.';
+      barraIA.style.width = '100%';
+
+      textoEstado.innerText =
+        '❌ Error IA';
+
+      contenidoIA.innerHTML = `
+
+        <div class="alert alert-danger">
+
+          ❌ DemoFlow IA no pudo
+          completar el análisis.
+
+        </div>
+
+      `;
 
       console.error(error);
 
