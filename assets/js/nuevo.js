@@ -76,28 +76,49 @@ function cambiarMetodoEntrada() {
 }
 
 function cambiarTipoProyecto() {
+
   const tipo = document.getElementById('tipoProyecto').value;
-  const metodo = document.getElementById('metodoEntrada').value;
 
-  const bloqueRuntime = document.getElementById('bloqueRuntime');
-  const bloqueCarpetaDemo = document.getElementById('bloqueCarpetaDemo');
-  const ayudaArchivo = document.getElementById('ayudaArchivo');
-  const tecnologia = document.getElementById('tecnologia');
-  const selectorCarpetaSails = document.getElementById('selectorCarpetaSails');
+  const bloqueRuntime =
+    document.getElementById('bloqueRuntime');
 
-  bloqueRuntime.style.display = 'none';
+  const bloqueCarpetaDemo =
+    document.getElementById('bloqueCarpetaDemo');
+
+  const ayudaArchivo =
+    document.getElementById('ayudaArchivo');
+
+  const tecnologia =
+    document.getElementById('tecnologia');
+
+  const selectorCarpetaSails =
+    document.getElementById('selectorCarpetaSails');
+
+  if (bloqueRuntime) {
+    bloqueRuntime.classList.add('oculto');
+    bloqueRuntime.style.display = 'none';
+  }
 
   if (bloqueCarpetaDemo) {
     bloqueCarpetaDemo.style.display = 'none';
   }
 
   if (selectorCarpetaSails) {
+    selectorCarpetaSails.classList.add('oculto');
     selectorCarpetaSails.style.display = 'none';
   }
 
+  // HTML
+
   if (tipo === 'html') {
+
     if (bloqueCarpetaDemo) {
       bloqueCarpetaDemo.style.display = 'block';
+    }
+
+    if (tecnologia) {
+      tecnologia.value =
+        'HTML + CSS + JavaScript';
     }
 
     if (ayudaArchivo) {
@@ -105,37 +126,65 @@ function cambiarTipoProyecto() {
         'Sube un archivo <strong>.html</strong> o un <strong>.zip</strong> con tu proyecto estático.';
     }
 
-    tecnologia.value = 'HTML + CSS + JavaScript';
   }
 
-  if (tipo === 'node') {
-    bloqueRuntime.style.display = 'block';
-    tecnologia.value = 'Node.js';
+  // NODE
 
-    if (ayudaArchivo && metodo === 'zip') {
+  if (tipo === 'node') {
+
+    if (bloqueRuntime) {
+      bloqueRuntime.classList.remove('oculto');
+      bloqueRuntime.style.display = 'block';
+    }
+
+    if (tecnologia) {
+      tecnologia.value = 'Node.js';
+    }
+
+    if (ayudaArchivo) {
       ayudaArchivo.innerHTML =
         'Sube un archivo <strong>.zip</strong> del proyecto Node.js.';
     }
+
   }
 
+  // SAILS
+
   if (tipo === 'sails') {
-    bloqueRuntime.style.display = 'block';
+
+    if (bloqueRuntime) {
+      bloqueRuntime.classList.remove('oculto');
+      bloqueRuntime.style.display = 'block';
+    }
 
     if (selectorCarpetaSails) {
+      selectorCarpetaSails.classList.remove('oculto');
       selectorCarpetaSails.style.display = 'block';
     }
 
-    tecnologia.value = 'Sails.js + Node.js + PostgreSQL';
+    if (tecnologia) {
+      tecnologia.value =
+        'Sails.js + Node.js + PostgreSQL';
+    }
 
-    if (ayudaArchivo && metodo === 'zip') {
+    if (ayudaArchivo) {
       ayudaArchivo.innerHTML =
         'Sube un archivo <strong>.zip</strong> del proyecto Sails.js o selecciona una carpeta completa.';
     }
+
   }
 
+  // EXTERNO
+
   if (tipo === 'externo') {
-    tecnologia.value = 'Demo externa';
+
+    if (tecnologia) {
+      tecnologia.value =
+        'Demo externa';
+    }
+
   }
+
 }
 
 function mostrarNombreArchivo() {
