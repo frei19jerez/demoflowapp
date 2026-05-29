@@ -585,9 +585,26 @@ module.exports = {
           );
 
           eliminarCarpeta(carpetaDestinoRuntime);
-          crearCarpeta(carpetaDestinoRuntime);
+crearCarpeta(carpetaDestinoRuntime);
 
-          copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
+// =====================================
+// 🤖 IA ZIP INTELIGENTE
+// Limpia y comprime el proyecto
+// sin node_modules, .git, .tmp, uploads
+// =====================================
+
+await ZipBuilderService.crearZipInteligente({
+  carpetaOrigen: carpetaTemporalIA,
+  nombreProyecto: slugFinal
+});
+
+// =====================================
+// 📁 COPIA LIMPIA AL RUNTIME
+// copiarCarpeta ya ignora node_modules,
+// .git, .tmp, .vscode y uploads
+// =====================================
+
+copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
 
           puertoFinal = generarPuerto();
 
