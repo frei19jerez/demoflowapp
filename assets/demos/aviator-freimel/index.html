@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Simulador Aviator</title>
+
+  <!-- CSS con ruta relativa -->
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+
+<body>
+
+  <main class="container">
+
+    <h1>✈️ Simulador Aviator</h1>
+
+    <p class="info">
+      Simulación educativa basada en valores aleatorios.
+    </p>
+
+    <section id="gameArea">
+      <canvas id="chart"></canvas>
+
+      <div id="multiplier">1.00x</div>
+      <div id="priceIndicator">$0.00</div>
+    </section>
+
+    <div class="buttons">
+      <button id="predictButton" class="btn" type="button">
+        Predecir
+      </button>
+
+      <button id="cashoutBtn" class="btn" type="button" style="background:#ffc107;color:black;">
+        💸 Retirar
+      </button>
+    </div>
+
+    <div id="result"></div>
+
+    <div class="circle-loader-container" style="display:none;">
+      <div class="circle-loader"></div>
+    </div>
+
+  </main>
+
+  <!-- JS con ruta relativa -->
+  <script src="./script/script.js"></script>
+
+</body>
+</html>
