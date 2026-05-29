@@ -1,38 +1,60 @@
-<div style="font-family: Arial, sans-serif; background:#f5f7fb; min-height:100vh; padding:40px 20px;">
-  <div style="max-width:900px; margin:0 auto; background:#fff; padding:30px; border-radius:18px; box-shadow:0 8px 24px rgba(0,0,0,0.08);">
+<link rel="stylesheet" href="/styles/nuevo.css">
 
-    <div style="margin-bottom:25px;">
-      <h1 style="margin:0; font-size:34px; color:#111827;">+ Nuevo proyecto</h1>
-      <p style="margin-top:10px; color:#6b7280; font-size:17px;">
+<div class="nuevo-page">
+  <div class="nuevo-card">
+
+    <div class="nuevo-header">
+      <h1>+ Nuevo proyecto</h1>
+      <p>
         Sube un ZIP, importa desde Git o registra una URL externa para mostrar tu proyecto en DemoFlow.
       </p>
     </div>
 
-    <form id="formProyecto" action="/proyecto/crear" method="POST" enctype="multipart/form-data">
+    <form
+      id="formProyecto"
+      action="/proyecto/crear"
+      method="POST"
+      enctype="multipart/form-data"
+    >
 
-      <div style="margin-bottom:22px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Método de carga</label>
-        <select name="metodoEntrada" id="metodoEntrada" onchange="cambiarMetodoEntrada()" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      <div class="form-grupo">
+        <label for="metodoEntrada">Método de carga</label>
+        <select name="metodoEntrada" id="metodoEntrada">
           <option value="zip">Subir archivo ZIP</option>
           <option value="git">Importar desde Git</option>
           <option value="externo">Registrar URL externa</option>
         </select>
       </div>
 
-      <div style="margin-bottom:18px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Nombre del proyecto</label>
-        <input type="text" name="nombre" id="nombre" required placeholder="Ej: Portal de noticias" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      <div class="form-grupo">
+        <label for="nombre">Nombre del proyecto</label>
+        <input
+          type="text"
+          name="nombre"
+          id="nombre"
+          required
+          placeholder="Ej: Portal de noticias"
+        >
       </div>
 
-      <div style="margin-bottom:18px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Slug / nombre corto</label>
-        <input type="text" name="slug" id="slug" required placeholder="Ej: portal-noticias" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
-        <small style="color:#6b7280;">Se usará para la ruta del demo, por ejemplo: <strong>/demo/portal-noticias</strong></small>
+      <div class="form-grupo">
+        <label for="slug">Slug / nombre corto</label>
+        <input
+          type="text"
+          name="slug"
+          id="slug"
+          required
+          placeholder="Ej: portal-noticias"
+        >
+        <small>
+          Se usará para la ruta del demo, por ejemplo:
+          <strong>/demo/portal-noticias</strong>
+        </small>
       </div>
 
-      <div style="margin-bottom:18px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Tipo de proyecto</label>
-        <select name="tipoProyecto" id="tipoProyecto" onchange="cambiarTipoProyecto()" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      <div class="form-grupo">
+        <label for="tipoProyecto">Tipo de proyecto</label>
+        <select name="tipoProyecto" id="tipoProyecto">
           <option value="html">Página HTML</option>
           <option value="node">Aplicación Node.js</option>
           <option value="sails">Aplicación Sails.js</option>
@@ -40,384 +62,179 @@
         </select>
       </div>
 
-      <div style="margin-bottom:18px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Tecnología</label>
-        <input type="text" name="tecnologia" id="tecnologia" placeholder="Ej: HTML + CSS + JavaScript" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      <div class="form-grupo">
+        <label for="tecnologia">Tecnología</label>
+        <input
+          type="text"
+          name="tecnologia"
+          id="tecnologia"
+          placeholder="Ej: HTML + CSS + JavaScript"
+        >
       </div>
 
       <div id="bloqueZip">
-        <div style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Subir archivo demo (.zip o .html)</label>
-          <input type="file" name="archivoDemo" id="archivoDemo" accept=".zip,.html,.htm" onchange="mostrarNombreArchivo()" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px; background:#fff;">
-          <small id="ayudaArchivo" style="color:#6b7280;">Puedes subir un archivo ZIP o un HTML para publicarlo en DemoFlow.</small>
-          <div id="nombreArchivoSeleccionado" style="margin-top:8px; color:#2563eb; font-size:14px; display:none;"></div>
+
+        <div class="form-grupo">
+          <label for="archivoDemo">Subir archivo demo (.zip o .html)</label>
+          <input
+            type="file"
+            name="archivoDemo"
+            id="archivoDemo"
+            accept=".zip,.html,.htm"
+          >
+
+          <small id="ayudaArchivo">
+            Puedes subir un archivo ZIP o un HTML para publicarlo en DemoFlow.
+          </small>
+
+          <div
+            id="nombreArchivoSeleccionado"
+            class="archivo-seleccionado"
+          ></div>
         </div>
 
-        <div id="bloqueCarpetaDemo" style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Carpeta demo (opcional)</label>
-          <input type="text" name="carpetaDemo" id="carpetaDemo" placeholder="Ej: aviator-freimel" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
-          <small style="color:#6b7280;">Si no la escribes, DemoFlow usará el slug automáticamente.</small>
+        <div id="selectorCarpetaSails" class="form-grupo oculto">
+          <label for="carpetaSails">O seleccionar carpeta Sails completa</label>
+
+          <input
+            type="file"
+            id="carpetaSails"
+            webkitdirectory
+            directory
+            multiple
+          >
+
+          <small>
+            DemoFlow creará un ZIP limpio ignorando node_modules, .git, .tmp, uploads y archivos pesados.
+          </small>
         </div>
+
+        <div id="bloqueCarpetaDemo" class="form-grupo">
+          <label for="carpetaDemo">Carpeta demo (opcional)</label>
+          <input
+            type="text"
+            name="carpetaDemo"
+            id="carpetaDemo"
+            placeholder="Ej: aviator-freimel"
+          >
+          <small>
+            Si no la escribes, DemoFlow usará el slug automáticamente.
+          </small>
+        </div>
+
       </div>
 
-      <div id="bloqueGit" style="display:none;">
-        <div style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">URL del repositorio</label>
-          <input type="url" name="urlRepositorio" id="urlRepositorio" placeholder="https://github.com/usuario/proyecto" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      <div id="bloqueGit" class="oculto">
+
+        <div class="form-grupo">
+          <label for="urlRepositorio">URL del repositorio</label>
+          <input
+            type="url"
+            name="urlRepositorio"
+            id="urlRepositorio"
+            placeholder="https://github.com/usuario/proyecto"
+          >
         </div>
 
-        <div style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Rama (opcional)</label>
-          <input type="text" name="ramaGit" id="ramaGit" placeholder="main" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+        <div class="form-grupo">
+          <label for="ramaGit">Rama (opcional)</label>
+          <input
+            type="text"
+            name="ramaGit"
+            id="ramaGit"
+            placeholder="main"
+          >
         </div>
+
       </div>
 
-      <div id="bloqueExterno" style="display:none;">
-        <div style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">URL o ruta de la demostración</label>
-          <input type="text" name="urlDemo" id="urlDemo" placeholder="https://midemo.com" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
-          <small id="ayudaDemo" style="color:#6b7280;">Si es externa: <strong>https://midemo.com</strong></small>
+      <div id="bloqueExterno" class="oculto">
+
+        <div class="form-grupo">
+          <label for="urlDemo">URL o ruta de la demostración</label>
+          <input
+            type="text"
+            name="urlDemo"
+            id="urlDemo"
+            placeholder="https://midemo.com"
+          >
+
+          <small id="ayudaDemo">
+            Si es externa:
+            <strong>https://midemo.com</strong>
+          </small>
         </div>
+
       </div>
 
-      <div id="bloqueRuntime" style="display:none;">
-        <div style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Comando de inicio (opcional)</label>
-          <input type="text" name="comandoInicio" id="comandoInicio" placeholder="Ej: npm start o node app.js" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+      <div id="bloqueRuntime" class="oculto">
+
+        <div class="form-grupo">
+          <label for="comandoInicio">Comando de inicio (opcional)</label>
+          <input
+            type="text"
+            name="comandoInicio"
+            id="comandoInicio"
+            placeholder="Ej: npm start o node app.js"
+          >
         </div>
 
-        <div style="margin-bottom:18px;">
-          <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Archivo de entrada (opcional)</label>
-          <input type="text" name="archivoEntrada" id="archivoEntrada" placeholder="Ej: app.js" style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px;">
+        <div class="form-grupo">
+          <label for="archivoEntrada">Archivo de entrada (opcional)</label>
+          <input
+            type="text"
+            name="archivoEntrada"
+            id="archivoEntrada"
+            placeholder="Ej: app.js"
+          >
         </div>
+
       </div>
 
-      <div style="margin-bottom:22px;">
-        <label style="display:block; margin-bottom:8px; font-weight:bold; color:#111827;">Descripción</label>
-        <textarea name="descripcion" id="descripcion" rows="5" placeholder="Describe qué hace esta aplicación o demostración..." style="width:100%; padding:12px; border:1px solid #d1d5db; border-radius:10px; font-size:16px; resize:vertical;"></textarea>
+      <div class="form-grupo">
+        <label for="descripcion">Descripción</label>
+        <textarea
+          name="descripcion"
+          id="descripcion"
+          rows="5"
+          placeholder="Describe qué hace esta aplicación o demostración..."
+        ></textarea>
       </div>
 
-      <div id="cargaBox" style="display:none; margin-bottom:20px;">
+      <div id="cargaBox" class="carga-box oculto">
 
-  <div style="
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-bottom:8px;
-  ">
+        <div class="carga-header">
+          <strong>Procesando proyecto...</strong>
+          <span id="cargaTexto">Preparando...</span>
+        </div>
 
-    <strong style="
-      color:#111827;
-      font-size:15px;
-    ">
-      Procesando proyecto...
-    </strong>
+        <div class="barra-contenedor">
+          <div id="barraCarga"></div>
+        </div>
 
-    <span id="cargaTexto" style="
-      color:#2563eb;
-      font-size:14px;
-      font-weight:bold;
-    ">
-      Preparando...
-    </span>
+      </div>
 
-  </div>
+      <div class="acciones-form">
 
-  <div style="
-    width:100%;
-    height:14px;
-    background:#e5e7eb;
-    border-radius:999px;
-    overflow:hidden;
-    position:relative;
-    box-shadow:inset 0 2px 6px rgba(0,0,0,.08);
-  ">
-
-    <div
-      id="barraCarga"
-      style="
-        width:0%;
-        height:100%;
-        border-radius:999px;
-        background:linear-gradient(
-          90deg,
-          #2563eb,
-          #60a5fa,
-          #2563eb
-        );
-        background-size:300% 100%;
-        animation:moverBarra 1s linear infinite;
-        transition:width .08s linear;
-        box-shadow:
-          0 0 10px rgba(37,99,235,.5),
-          0 0 20px rgba(96,165,250,.4);
-      ">
-    </div>
-
-  </div>
-
-</div>
-
-<style>
-
-@keyframes moverBarra{
-
-  0%{
-    background-position:0% 0%;
-  }
-
-  100%{
-    background-position:300% 0%;
-  }
-
-}
-
-</style>
-
-      <div style="display:flex; gap:12px; flex-wrap:wrap;">
-        <button id="btnGuardarProyecto" type="submit" style="background:#2563eb; color:#fff; border:none; padding:12px 22px; border-radius:10px; font-size:16px; font-weight:bold; cursor:pointer;">
+        <button
+          id="btnGuardarProyecto"
+          type="submit"
+          class="btn-guardar"
+        >
           Guardar proyecto
         </button>
 
-        <a href="/dashboard" style="display:inline-block; background:#e5e7eb; color:#111827; padding:12px 22px; border-radius:10px; text-decoration:none; font-size:16px; font-weight:bold;">
+        <a href="/dashboard" class="btn-volver">
           Volver
         </a>
+
       </div>
 
     </form>
+
   </div>
 </div>
 
-<script>
-  function slugify(texto) {
-    return (texto || '')
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .replace(/[^a-z0-9\s-]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-  }
-
-  function cambiarMetodoEntrada() {
-    const metodo = document.getElementById('metodoEntrada').value;
-    const bloqueZip = document.getElementById('bloqueZip');
-    const bloqueGit = document.getElementById('bloqueGit');
-    const bloqueExterno = document.getElementById('bloqueExterno');
-    const tipoSelect = document.getElementById('tipoProyecto');
-
-    bloqueZip.style.display = 'none';
-    bloqueGit.style.display = 'none';
-    bloqueExterno.style.display = 'none';
-
-    if (metodo === 'zip') {
-      bloqueZip.style.display = 'block';
-      tipoSelect.innerHTML = `
-        <option value="html">Página HTML</option>
-        <option value="node">Aplicación Node.js</option>
-        <option value="sails">Aplicación Sails.js</option>
-      `;
-      tipoSelect.value = 'html';
-    }
-
-    if (metodo === 'git') {
-      bloqueGit.style.display = 'block';
-      tipoSelect.innerHTML = `
-        <option value="node">Aplicación Node.js</option>
-        <option value="sails">Aplicación Sails.js</option>
-        <option value="html">Página HTML</option>
-      `;
-      tipoSelect.value = 'node';
-    }
-
-    if (metodo === 'externo') {
-      bloqueExterno.style.display = 'block';
-      tipoSelect.innerHTML = `
-        <option value="externo">Demostración externa</option>
-      `;
-      tipoSelect.value = 'externo';
-    }
-
-    cambiarTipoProyecto();
-  }
-
-  function cambiarTipoProyecto() {
-    const tipo = document.getElementById('tipoProyecto').value;
-    const metodo = document.getElementById('metodoEntrada').value;
-    const bloqueRuntime = document.getElementById('bloqueRuntime');
-    const bloqueCarpetaDemo = document.getElementById('bloqueCarpetaDemo');
-    const ayudaArchivo = document.getElementById('ayudaArchivo');
-    const tecnologia = document.getElementById('tecnologia');
-
-    bloqueRuntime.style.display = 'none';
-    if (bloqueCarpetaDemo) bloqueCarpetaDemo.style.display = 'none';
-
-    if (tipo === 'html') {
-      if (bloqueCarpetaDemo) bloqueCarpetaDemo.style.display = 'block';
-      if (ayudaArchivo) ayudaArchivo.innerHTML = 'Sube un archivo <strong>.html</strong> o un <strong>.zip</strong> con tu proyecto estático.';
-      tecnologia.value = 'HTML + CSS + JavaScript';
-    }
-
-    if (tipo === 'node') {
-      bloqueRuntime.style.display = 'block';
-      tecnologia.value = 'Node.js';
-      if (ayudaArchivo && metodo === 'zip') ayudaArchivo.innerHTML = 'Sube un archivo <strong>.zip</strong> del proyecto Node.js.';
-    }
-
-    if (tipo === 'sails') {
-      bloqueRuntime.style.display = 'block';
-      tecnologia.value = 'Sails.js + Node.js';
-      if (ayudaArchivo && metodo === 'zip') ayudaArchivo.innerHTML = 'Sube un archivo <strong>.zip</strong> del proyecto Sails.js.';
-    }
-
-    if (tipo === 'externo') {
-      tecnologia.value = 'Demo externa';
-    }
-  }
-
-  function mostrarNombreArchivo() {
-    const input = document.getElementById('archivoDemo');
-    const box = document.getElementById('nombreArchivoSeleccionado');
-
-    if (input.files && input.files[0]) {
-      const archivo = input.files[0];
-
-      if (archivo.size > 2 * 1024 * 1024 * 1024) {
-        alert('El archivo pesa más de 2GB.');
-        input.value = '';
-        box.style.display = 'none';
-        return;
-      }
-
-      box.style.display = 'block';
-      box.textContent = 'Archivo seleccionado: ' + archivo.name;
-
-      const nombreBase = archivo.name.replace(/\.(zip|html|htm)$/i, '');
-      const nombreInput = document.getElementById('nombre');
-      const slugInput = document.getElementById('slug');
-      const tipoSelect = document.getElementById('tipoProyecto');
-
-      if (!nombreInput.value.trim()) nombreInput.value = nombreBase;
-      if (!slugInput.value.trim()) slugInput.value = slugify(nombreBase);
-
-      const lower = archivo.name.toLowerCase();
-
-      if (lower.endsWith('.html') || lower.endsWith('.htm')) {
-        tipoSelect.value = 'html';
-      }
-
-      cambiarTipoProyecto();
-    }
-  }
-
-  document.getElementById('nombre').addEventListener('input', function () {
-    const slugInput = document.getElementById('slug');
-
-    if (!slugInput.dataset.editadoManualmente) {
-      slugInput.value = slugify(this.value);
-    }
-  });
-
-  document.getElementById('slug').addEventListener('input', function () {
-    this.dataset.editadoManualmente = 'true';
-  });
-
-  document.getElementById('formProyecto').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const form = e.target;
-    const formData = new FormData(form);
-
-    const cargaBox = document.getElementById('cargaBox');
-    const barra = document.getElementById('barraCarga');
-    const texto = document.getElementById('cargaTexto');
-    const boton = document.getElementById('btnGuardarProyecto');
-
-    cargaBox.style.display = 'block';
-    barra.style.width = '0%';
-    texto.textContent = 'Preparando subida...';
-
-    boton.disabled = true;
-    boton.textContent = 'Procesando...';
-    boton.style.opacity = '0.7';
-    boton.style.cursor = 'not-allowed';
-
-    const xhr = new XMLHttpRequest();
-    let procesandoIntervalo = null;
-
-    xhr.open('POST', form.action, true);
-
-    xhr.upload.onprogress = function (event) {
-      if (event.lengthComputable) {
-        const porcentaje = Math.round((event.loaded / event.total) * 100);
-
-        barra.style.width = porcentaje + '%';
-        texto.textContent = 'Subiendo archivo... ' + porcentaje + '%';
-
-        if (porcentaje >= 100 && !procesandoIntervalo) {
-          texto.textContent = '✅ Subida completada. Procesando ZIP...';
-
-          let paso = 0;
-          const mensajes = [
-            '📦 Extrayendo archivos...',
-            '🧠 Detectando tipo de proyecto...',
-            '⚙️ Preparando runtime...',
-            '🚀 Guardando proyecto...',
-            '✅ Finalizando...'
-          ];
-
-          procesandoIntervalo = setInterval(function () {
-            texto.textContent = mensajes[paso] || '✅ Finalizando...';
-            paso++;
-
-            if (paso >= mensajes.length) {
-              paso = mensajes.length - 1;
-            }
-          }, 1800);
-        }
-      } else {
-        texto.textContent = 'Subiendo archivo...';
-      }
-    };
-
-    xhr.onload = function () {
-      if (procesandoIntervalo) clearInterval(procesandoIntervalo);
-
-      if (xhr.status >= 200 && xhr.status < 400) {
-        texto.textContent = '✅ Proyecto creado correctamente';
-        barra.style.width = '100%';
-
-        setTimeout(function () {
-          window.location.href = '/dashboard';
-        }, 800);
-
-        return;
-      }
-
-      texto.textContent = 'Error al crear proyecto';
-      boton.disabled = false;
-      boton.textContent = 'Guardar proyecto';
-      boton.style.opacity = '1';
-      boton.style.cursor = 'pointer';
-
-      alert('Error del servidor:\n\n' + xhr.responseText);
-    };
-
-    xhr.onerror = function () {
-      if (procesandoIntervalo) clearInterval(procesandoIntervalo);
-
-      texto.textContent = 'Error de conexión';
-      boton.disabled = false;
-      boton.textContent = 'Guardar proyecto';
-      boton.style.opacity = '1';
-      boton.style.cursor = 'pointer';
-
-      alert('No se pudo subir el proyecto. Revisa conexión o Render.');
-    };
-
-    xhr.send(formData);
-  });
-
-  cambiarMetodoEntrada();
-</script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="/js/sails-folder-builder.js"></script>
+<script src="/js/nuevo.js"></script>

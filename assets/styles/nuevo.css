@@ -1,0 +1,232 @@
+/* =========================
+   NUEVO PROYECTO DEMOFLOW
+========================= */
+
+.nuevo-page {
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+.nuevo-card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #ffffff;
+  padding: 30px;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.nuevo-header {
+  margin-bottom: 25px;
+}
+
+.nuevo-header h1 {
+  margin: 0;
+  font-size: 34px;
+  color: #111827;
+}
+
+.nuevo-header p {
+  margin-top: 10px;
+  color: #6b7280;
+  font-size: 17px;
+}
+
+.form-grupo {
+  margin-bottom: 18px;
+}
+
+.form-grupo label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #111827;
+}
+
+.form-grupo input,
+.form-grupo select,
+.form-grupo textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 16px;
+  background: #ffffff;
+}
+
+.form-grupo textarea {
+  resize: vertical;
+}
+
+.form-grupo small {
+  color: #6b7280;
+}
+
+.archivo-seleccionado {
+  margin-top: 8px;
+  color: #2563eb;
+  font-size: 14px;
+  display: none;
+}
+
+.oculto {
+  display: none;
+}
+
+/* =========================
+   CARGA
+========================= */
+
+.carga-box {
+  margin-bottom: 20px;
+}
+
+.carga-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.carga-header strong {
+  color: #111827;
+  font-size: 15px;
+}
+
+.carga-header span {
+  color: #2563eb;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.barra-contenedor {
+  width: 100%;
+  height: 14px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+#barraCarga {
+  width: 0%;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #2563eb,
+    #60a5fa,
+    #2563eb
+  );
+  background-size: 300% 100%;
+  animation: moverBarra 1s linear infinite;
+  transition: width 0.08s linear;
+  box-shadow:
+    0 0 10px rgba(37, 99, 235, 0.5),
+    0 0 20px rgba(96, 165, 250, 0.4);
+}
+
+@keyframes moverBarra {
+  0% {
+    background-position: 0% 0%;
+  }
+
+  100% {
+    background-position: 300% 0%;
+  }
+}
+
+/* =========================
+   BOTONES
+========================= */
+
+.acciones-form {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-guardar {
+  background: #2563eb;
+  color: #ffffff;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-guardar:hover {
+  background: #1d4ed8;
+}
+
+.btn-guardar:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-volver {
+  display: inline-block;
+  background: #e5e7eb;
+  color: #111827;
+  padding: 12px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn-volver:hover {
+  background: #d1d5db;
+}
+
+/* =========================
+   SELECTOR CARPETA SAILS
+========================= */
+
+#selectorCarpetaSails {
+  background: #f8fafc;
+  border: 1px dashed #93c5fd;
+  padding: 16px;
+  border-radius: 14px;
+}
+
+#selectorCarpetaSails label {
+  color: #1d4ed8;
+}
+
+#carpetaSails {
+  background: #ffffff;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
+  .nuevo-page {
+    padding: 20px 12px;
+  }
+
+  .nuevo-card {
+    padding: 22px;
+  }
+
+  .nuevo-header h1 {
+    font-size: 28px;
+  }
+
+  .acciones-form {
+    flex-direction: column;
+  }
+
+  .btn-guardar,
+  .btn-volver {
+    width: 100%;
+    text-align: center;
+  }
+}
