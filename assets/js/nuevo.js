@@ -283,7 +283,9 @@ if (formProyecto) {
     const cargaBox = document.getElementById('cargaBox');
     const barra = document.getElementById('barraCarga');
     const texto = document.getElementById('cargaTexto');
+    const iaEstado = document.getElementById('iaEstado');
     const boton = document.getElementById('btnGuardarProyecto');
+
     const tipoProyectoInput = document.getElementById('tipoProyecto');
     const carpetaSails = document.getElementById('carpetaSails');
     const archivoDemoInput = document.getElementById('archivoDemo');
@@ -298,12 +300,16 @@ if (formProyecto) {
     }
 
     if (texto) {
-      texto.textContent = 'Preparando proyecto...';
+      texto.textContent = '🤖 IA DemoFlow preparando proyecto...';
+    }
+
+    if (iaEstado) {
+      iaEstado.textContent = '🧠 IA analizando estructura del proyecto...';
     }
 
     if (boton) {
       boton.disabled = true;
-      boton.textContent = 'Procesando...';
+      boton.textContent = 'Procesando con IA...';
       boton.style.opacity = '0.7';
       boton.style.cursor = 'not-allowed';
     }
@@ -317,7 +323,12 @@ if (formProyecto) {
         carpetaSails.files.length > 0
       ) {
         if (texto) {
-          texto.textContent = '🤖 DemoFlow limpiando carpeta Sails...';
+          texto.textContent = '🤖 IA limpiando carpeta Sails...';
+        }
+
+        if (iaEstado) {
+          iaEstado.textContent =
+            '📁 IA ignorando node_modules, .git, .tmp, uploads y archivos pesados...';
         }
 
         if (typeof window.crearZipSailsLimpio !== 'function') {
@@ -342,7 +353,14 @@ if (formProyecto) {
           texto.textContent =
             '✅ ZIP limpio creado. Subiendo solo lo necesario...';
         }
-      } else if (
+
+        if (iaEstado) {
+          iaEstado.textContent =
+            '📦 IA creó un ZIP limpio y optimizado para DemoFlow.';
+        }
+      }
+
+      else if (
         archivoDemoInput &&
         (!archivoDemoInput.files || archivoDemoInput.files.length === 0)
       ) {
@@ -368,29 +386,39 @@ if (formProyecto) {
 
           if (texto) {
             texto.textContent =
-              'Subiendo archivo optimizado... ' + porcentaje + '%';
+              '⬆️ IA subiendo archivo optimizado... ' + porcentaje + '%';
+          }
+
+          if (iaEstado) {
+            iaEstado.textContent =
+              '🚀 Enviando proyecto a DemoFlow... ' + porcentaje + '%';
           }
 
           if (porcentaje >= 100 && !procesandoIntervalo) {
             if (texto) {
               texto.textContent =
-                '✅ Subida completada. Procesando proyecto...';
+                '✅ Subida completada. IA procesando proyecto...';
+            }
+
+            if (iaEstado) {
+              iaEstado.textContent =
+                '🚀 IA preparando runtime, detectando tecnología y guardando proyecto...';
             }
 
             let paso = 0;
 
             const mensajes = [
-              '📦 Extrayendo archivos...',
-              '🧠 Detectando Sails.js...',
-              '⚙️ Preparando runtime...',
-              '🚀 Guardando proyecto...',
-              '✅ Finalizando...'
+              '📦 IA extrayendo archivos...',
+              '🧠 IA detectando tecnología...',
+              '⚙️ IA preparando runtime...',
+              '🚀 IA guardando proyecto...',
+              '✅ IA finalizando...'
             ];
 
             procesandoIntervalo = setInterval(function () {
               if (texto) {
                 texto.textContent =
-                  mensajes[paso] || '✅ Finalizando...';
+                  mensajes[paso] || '✅ IA finalizando...';
               }
 
               paso++;
@@ -413,6 +441,11 @@ if (formProyecto) {
             texto.textContent = '✅ Proyecto creado correctamente';
           }
 
+          if (iaEstado) {
+            iaEstado.textContent =
+              '🎉 IA DemoFlow terminó el proceso correctamente.';
+          }
+
           if (barra) {
             barra.style.width = '100%';
           }
@@ -425,7 +458,12 @@ if (formProyecto) {
         }
 
         if (texto) {
-          texto.textContent = 'Error al crear proyecto';
+          texto.textContent = '❌ Error al crear proyecto';
+        }
+
+        if (iaEstado) {
+          iaEstado.textContent =
+            '⚠️ IA detectó un problema durante el procesamiento.';
         }
 
         if (boton) {
@@ -444,7 +482,12 @@ if (formProyecto) {
         }
 
         if (texto) {
-          texto.textContent = 'Error de conexión';
+          texto.textContent = '❌ Error de conexión';
+        }
+
+        if (iaEstado) {
+          iaEstado.textContent =
+            '⚠️ IA no pudo completar la subida por error de conexión.';
         }
 
         if (boton) {
@@ -461,7 +504,12 @@ if (formProyecto) {
 
     } catch (error) {
       if (texto) {
-        texto.textContent = 'Error preparando proyecto';
+        texto.textContent = '❌ Error preparando proyecto';
+      }
+
+      if (iaEstado) {
+        iaEstado.textContent =
+          '⚠️ IA no pudo preparar el proyecto antes de subirlo.';
       }
 
       if (boton) {

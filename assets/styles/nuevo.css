@@ -230,3 +230,26 @@
     text-align: center;
   }
 }
+
+/* =========================
+   IA DEMOFLOW
+========================= */
+
+.ia-info {
+  margin-top: 12px;
+  padding: 12px;
+  background: #eef4ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+
+#iaEstado {
+  font-weight: bold;
+  color: #1d4ed8;
+  margin-bottom: 6px;
+}
+
+.ia-info small {
+  color: #475569;
+  line-height: 1.5;
+}
