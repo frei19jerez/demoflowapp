@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const archiver = require('archiver');
 
 module.exports = {
 
@@ -28,52 +27,47 @@ module.exports = {
         `${nombreProyecto}.zip`
       );
 
-      // eliminar zip anterior
+      const archiverModule =
+        await import('archiver');
+
+      const archiver =
+        archiverModule.default || archiverModule;
+
       if (fs.existsSync(rutaZip)) {
         fs.unlinkSync(rutaZip);
       }
 
-      const output = fs.createWriteStream(rutaZip);
+      const output =
+        fs.createWriteStream(rutaZip);
 
-      const archive = archiver('zip', {
-        zlib: { level: 9 }
-      });
+      const archive =
+        archiver('zip', {
+          zlib: { level: 9 }
+        });
 
       archive.pipe(output);
 
-      // =====================================
-      // 🚫 IGNORAR BASURA PESADA
-      // =====================================
-
       archive.glob('**/*', {
-
         cwd: carpetaOrigen,
-
         ignore: [
-
           '**/node_modules/**',
-
           '**/.git/**',
-
           '**/.tmp/**',
-
           '**/.vscode/**',
-
           '**/uploads/**',
-
+          '**/assets/uploads/**',
+          '**/logs/**',
+          '**/.env',
           '**/.DS_Store',
-
-          '**/Thumbs.db'
-
+          '**/Thumbs.db',
+          '**/*.mp4',
+          '**/*.mov',
+          '**/*.avi',
+          '**/*.mkv'
         ]
-
       });
 
       await archive.finalize();
-
-      sails.log.info(
-        `🤖 ZIP inteligente creado: ${rutaZip}`
-      );
 
       return {
         ok: true,
@@ -82,10 +76,7 @@ module.exports = {
 
     } catch (error) {
 
-      sails.log.error(
-        '❌ Error creando ZIP inteligente'
-      );
-
+      sails.log.error('❌ Error creando ZIP inteligente');
       sails.log.error(error);
 
       return {
