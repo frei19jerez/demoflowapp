@@ -16,35 +16,59 @@ function cambiarMetodoEntrada() {
   const bloqueExterno = document.getElementById('bloqueExterno');
   const tipoSelect = document.getElementById('tipoProyecto');
 
+  const tipoActual = tipoSelect.value;
+
   bloqueZip.style.display = 'none';
   bloqueGit.style.display = 'none';
   bloqueExterno.style.display = 'none';
 
   if (metodo === 'zip') {
     bloqueZip.style.display = 'block';
+
     tipoSelect.innerHTML = `
       <option value="html">Página HTML</option>
       <option value="node">Aplicación Node.js</option>
       <option value="sails">Aplicación Sails.js</option>
     `;
-    tipoSelect.value = 'html';
+
+    if (
+      tipoActual === 'html' ||
+      tipoActual === 'node' ||
+      tipoActual === 'sails'
+    ) {
+      tipoSelect.value = tipoActual;
+    } else {
+      tipoSelect.value = 'html';
+    }
   }
 
   if (metodo === 'git') {
     bloqueGit.style.display = 'block';
+
     tipoSelect.innerHTML = `
       <option value="node">Aplicación Node.js</option>
       <option value="sails">Aplicación Sails.js</option>
       <option value="html">Página HTML</option>
     `;
-    tipoSelect.value = 'node';
+
+    if (
+      tipoActual === 'node' ||
+      tipoActual === 'sails' ||
+      tipoActual === 'html'
+    ) {
+      tipoSelect.value = tipoActual;
+    } else {
+      tipoSelect.value = 'node';
+    }
   }
 
   if (metodo === 'externo') {
     bloqueExterno.style.display = 'block';
+
     tipoSelect.innerHTML = `
       <option value="externo">Demostración externa</option>
     `;
+
     tipoSelect.value = 'externo';
   }
 
