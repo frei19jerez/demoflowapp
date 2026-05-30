@@ -236,6 +236,20 @@ box-shadow:0 8px 24px rgba(0,0,0,0.08);
                    style="background:#f3f4f6; color:#111827; padding:10px 14px; border-radius:10px; text-decoration:none; font-weight:bold;">
                   Ver detalle
                 </a>
+
+                <form
+ action="/proyecto/<%= p.id %>/eliminar"
+  method="POST"
+  onsubmit="return confirm('¿Seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.');"
+  style="display:inline-block; margin:0;"
+>
+  <button
+    type="submit"
+    style="background:#dc2626; color:#fff; padding:10px 14px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;"
+  >
+    🗑️ Eliminar
+  </button>
+</form>
               </div>
             </div>
 
