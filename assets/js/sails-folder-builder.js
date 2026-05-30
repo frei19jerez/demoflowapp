@@ -4,12 +4,12 @@ window.crearZipSailsLimpio = async function (archivos) {
   }
 
   if (typeof JSZip === 'undefined') {
-    throw new Error('JSZip no está cargado. Revisa el script de JSZip en nuevo.ejs.');
+    throw new Error('JSZip no está cargado.');
   }
 
   const zip = new JSZip();
 
-  const ignorarCarpetas = [
+  const ignorar = [
     'node_modules/',
     '.git/',
     '.tmp/',
@@ -21,27 +21,10 @@ window.crearZipSailsLimpio = async function (archivos) {
     'spec/'
   ];
 
-  const ignorarArchivos = [
-    '.DS_Store',
-    'Thumbs.db',
-    'package-lock.json',
-    'yarn.lock'
-  ];
-
   for (const archivo of archivos) {
-    const ruta = archivo.webkitRelativePath || archivo.name;
-    const rutaNormalizada = ruta.replace(/\\/g, '/');
+    const ruta = (archivo.webkitRelativePath || archivo.name).replace(/\\/g, '/');
 
-    const ignoradoPorCarpeta = ignorarCarpetas.some(function (carpeta) {
-      return rutaNormalizada.includes('/' + carpeta) ||
-             rutaNormalizada.startsWith(carpeta);
-    });
-
-    const nombreArchivo = rutaNormalizada.split('/').pop();
-
-    const ignoradoPorArchivo = ignorarArchivos.includes(nombreArchivo);
-
-    if (ignoradoPorCarpeta || ignoradoPorArchivo) {
+    if (ignorar.some(carpeta => ruta.includes(carpeta))) {
       continue;
     }
 
@@ -49,22 +32,16 @@ window.crearZipSailsLimpio = async function (archivos) {
       continue;
     }
 
-    zip.file(rutaNormalizada, archivo);
+    zip.file(ruta, archivo);
   }
 
-  const contenidoZip = await zip.generateAsync({
+  const blob = await zip.generateAsync({
     type: 'blob',
     compression: 'DEFLATE',
-    compressionOptions: {
-      level: 6
-    }
+    compressionOptions: { level: 6 }
   });
 
-  return new File(
-    [contenidoZip],
-    'sails-limpio.zip',
-    {
-      type: 'application/zip'
-    }
-  );
+  return new File([blob], 'sails-limpio.zip', {
+    type: 'application/zip'
+  });
 };
