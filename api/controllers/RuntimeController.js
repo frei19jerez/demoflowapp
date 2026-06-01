@@ -49,176 +49,222 @@ proxy.on('proxyReq', function(proxyReq, req) {
 
 module.exports = {
 
-  proxy: async function(req, res) {
+ proxy: async function(req, res) {
+  try {
+
+    const slug = req.params.slug;
+
+    sails.log.info('🤖 IA DemoFlow: Analizando petición runtime...');
+    sails.log.info('🔎 Slug recibido:', slug);
+    sails.log.info('📨 Método:', req.method);
+    sails.log.info('🌐 URL original:', req.url);
+
+    if (!slug) {
+      return res.badRequest('Slug requerido');
+    }
+
+    // =====================================
+    // BUSCAR PROYECTO
+    // =====================================
+
+    let proyecto = await Proyecto.findOne({
+      slug
+    });
+
+    if (!proyecto) {
+      proyecto = await Proyecto.findOne({
+        carpetaRuntime: slug
+      });
+    }
+
+    if (!proyecto) {
+      sails.log.warn('⚠️ IA DemoFlow: Proyecto runtime no encontrado.');
+      return res.notFound('Proyecto no encontrado');
+    }
+
+    if (!proyecto.puerto) {
+      sails.log.error('❌ IA DemoFlow: Proyecto sin puerto asignado.');
+      return res.serverError('El proyecto no tiene puerto asignado');
+    }
+
+    // =====================================
+    // HEALTH CHECK + AUTO RESTART IA
+    // =====================================
+
     try {
 
-      const slug = req.params.slug;
+      sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime...');
 
-      sails.log.info('🤖 IA DemoFlow: Analizando petición runtime...');
-      sails.log.info('🔎 Slug recibido:', slug);
-      sails.log.info('📨 Método:', req.method);
-      sails.log.info('🌐 URL original:', req.url);
+      let health = await RuntimeHealthService.revisarRuntime(proyecto);
 
-      if (!slug) {
-        return res.badRequest('Slug requerido');
-      }
+      // ============================
+      // SI ESTÁ ONLINE
+      // ============================
 
-      // =====================================
-      // BUSCAR PROYECTO
-      // =====================================
+      if (health && health.ok) {
 
-      let proyecto = await Proyecto.findOne({
-        slug
-      });
+        sails.log.info('✅ IA DemoFlow Runtime:', health.mensaje);
 
-      if (!proyecto) {
-        proyecto = await Proyecto.findOne({
-          carpetaRuntime: slug
-        });
-      }
+      } else {
 
-      if (!proyecto) {
-        sails.log.warn('⚠️ IA DemoFlow: Proyecto runtime no encontrado.');
-        return res.notFound('Proyecto no encontrado');
-      }
-
-      if (!proyecto.puerto) {
-        sails.log.error('❌ IA DemoFlow: Proyecto sin puerto asignado.');
-        return res.serverError('El proyecto no tiene puerto asignado');
-      }
-
-      // =====================================
-      // HEALTH CHECK + AUTO RESTART IA
-      // =====================================
-
-      try {
-
-        sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime...');
-
-        let health = await RuntimeHealthService.revisarRuntime(proyecto);
+        sails.log.warn('⚠️ IA DemoFlow Runtime sin respuesta.');
+        sails.log.warn('🔄 Intentando reinicio automático...');
 
         // ============================
-        // SI ESTÁ ONLINE
+        // REINICIAR AUTOMÁTICAMENTE
         // ============================
 
-        if (health && health.ok) {
+        try {
 
-          sails.log.info('✅ IA DemoFlow Runtime:', health.mensaje);
+          if (
+            typeof DeployService !== 'undefined' &&
+            DeployService.reiniciarProyecto
+          ) {
 
-        } else {
+            sails.log.info('🚀 Reiniciando con reiniciarProyecto()');
 
-          sails.log.warn('⚠️ IA DemoFlow Runtime sin respuesta.');
-          sails.log.warn('🔄 Intentando reinicio automático...');
+            await DeployService.reiniciarProyecto(proyecto);
 
-          // ============================
-          // REINICIAR AUTOMÁTICAMENTE
-          // ============================
+          } else if (
+            typeof DeployService !== 'undefined' &&
+            DeployService.iniciarRuntime
+          ) {
 
-          try {
+            sails.log.info('🚀 Reiniciando con iniciarRuntime()');
 
-            if (
-              typeof DeployService !== 'undefined' &&
-              DeployService.reiniciarProyecto
-            ) {
+            await DeployService.iniciarRuntime(proyecto);
 
-              sails.log.info('🚀 Reiniciando con reiniciarProyecto()');
+          } else if (
+            typeof DeployService !== 'undefined' &&
+            DeployService.desplegar
+          ) {
 
-              await DeployService.reiniciarProyecto(proyecto);
+            sails.log.info('🚀 Reiniciando con desplegar()');
 
-            } else if (
-              typeof DeployService !== 'undefined' &&
-              DeployService.iniciarRuntime
-            ) {
-
-              sails.log.info('🚀 Reiniciando con iniciarRuntime()');
-
-              await DeployService.iniciarRuntime(proyecto);
-
-            } else if (
-              typeof DeployService !== 'undefined' &&
-              DeployService.desplegar
-            ) {
-
-              sails.log.info('🚀 Reiniciando con desplegar()');
-
-              await DeployService.desplegar(proyecto);
-
-            } else {
-
-              sails.log.warn('⚠️ No encontré función de reinicio en DeployService.');
-
-            }
-
-          } catch (restartError) {
-
-            sails.log.error('❌ Error reiniciando runtime automáticamente.');
-            sails.log.error(restartError);
-
-          }
-
-          // ============================
-          // ESPERAR UN POCO
-          // ============================
-
-          await new Promise(resolve => setTimeout(resolve, 5000));
-
-          // ============================
-          // REVISAR DE NUEVO
-          // ============================
-
-          health = await RuntimeHealthService.revisarRuntime(proyecto);
-
-          if (health && health.ok) {
-
-            sails.log.info('✅ Runtime revivido correctamente.');
+            await DeployService.desplegar(proyecto);
 
           } else {
 
-            sails.log.warn('⚠️ Runtime sigue apagado después del reinicio automático.');
+            sails.log.warn(
+              '⚠️ No encontré función de reinicio en DeployService.'
+            );
 
           }
 
+        } catch (restartError) {
+
+          sails.log.error(
+            '❌ Error reiniciando runtime automáticamente.'
+          );
+
+          sails.log.error(restartError);
+
         }
 
-      } catch (healthError) {
+        // ============================
+        // ESPERAR UN POCO
+        // ============================
 
-        sails.log.warn('⚠️ IA DemoFlow: Health check falló.');
-        sails.log.warn(healthError.message);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
+        // ============================
+        // REVISAR DE NUEVO
+        // ============================
+
+        health = await RuntimeHealthService.revisarRuntime(proyecto);
+
+        if (health && health.ok) {
+
+          sails.log.info(
+            '✅ Runtime revivido correctamente.'
+          );
+
+        } else {
+
+          sails.log.warn(
+            '⚠️ Runtime sigue apagado después del reinicio automático.'
+          );
+
+          // =====================================
+          // MOSTRAR PANTALLA DE ESPERA
+          // =====================================
+
+          return res.view('runtime/esperando', {
+            proyecto,
+            slug
+          });
+
+        }
 
       }
 
-      // =====================================
-      // PROXY RUNTIME
-      // =====================================
+    } catch (healthError) {
 
-      const target = `http://127.0.0.1:${proyecto.puerto}`;
+      sails.log.warn(
+        '⚠️ IA DemoFlow: Health check falló.'
+      );
 
-      req.url = req.url.replace(`/runtime/${slug}`, '');
+      sails.log.warn(healthError.message);
 
-      if (!req.url || req.url.trim() === '') {
-        req.url = '/';
-      }
-
-      sails.log.info('✅ IA DemoFlow: Proyecto encontrado:', proyecto.nombre);
-      sails.log.info('🔌 Puerto interno:', proyecto.puerto);
-      sails.log.info('🚀 Proxy hacia:', target + req.url);
-
-      return proxy.web(req, res, {
-        target,
-        changeOrigin: true,
-        ws: true,
-        proxyTimeout: 30000,
-        timeout: 30000
+      return res.view('runtime/esperando', {
+        proyecto,
+        slug
       });
 
-    } catch (error) {
-
-      sails.log.error('❌ IA DemoFlow: Error cargando runtime.');
-      sails.log.error(error);
-
-      return res.serverError('Error cargando runtime');
-
     }
+
+    // =====================================
+    // PROXY RUNTIME
+    // =====================================
+
+    const target = `http://127.0.0.1:${proyecto.puerto}`;
+
+    req.url = req.url.replace(
+      `/runtime/${slug}`,
+      ''
+    );
+
+    if (!req.url || req.url.trim() === '') {
+      req.url = '/';
+    }
+
+    sails.log.info(
+      '✅ IA DemoFlow: Proyecto encontrado:',
+      proyecto.nombre
+    );
+
+    sails.log.info(
+      '🔌 Puerto interno:',
+      proyecto.puerto
+    );
+
+    sails.log.info(
+      '🚀 Proxy hacia:',
+      target + req.url
+    );
+
+    return proxy.web(req, res, {
+      target,
+      changeOrigin: true,
+      ws: true,
+      proxyTimeout: 30000,
+      timeout: 30000
+    });
+
+  } catch (error) {
+
+    sails.log.error(
+      '❌ IA DemoFlow: Error cargando runtime.'
+    );
+
+    sails.log.error(error);
+
+    return res.view('runtime/esperando', {
+      proyecto: null,
+      slug: req.params.slug
+    });
+
   }
+}
 
 };
