@@ -291,8 +291,13 @@ if (formProyecto) {
     const archivoDemoInput = document.getElementById('archivoDemo');
 
     if (cargaBox) {
-      cargaBox.classList.remove('oculto');
-      cargaBox.style.display = 'block';
+       cargaBox.classList.remove('oculto');
+       cargaBox.style.display = 'block';
+
+       cargaBox.scrollIntoView({
+       behavior: 'smooth',
+       block: 'center'
+     });
     }
 
     if (barra) {
