@@ -1,0 +1,44 @@
+<link rel="stylesheet" href="/styles/runtime-esperando.css">
+
+<div class="runtime-wait-page">
+  <div class="runtime-card">
+    <div class="runtime-icon">🤖</div>
+
+    <h1>DemoFlow IA</h1>
+
+    <h2>🚀 Iniciando aplicación...</h2>
+
+    <p>
+      Esta demo está despertando en el servidor.
+    </p>
+
+    <p>
+      Los proyectos Sails.js o Node.js pueden tardar entre
+      <strong>1 y 5 minutos</strong> en iniciar completamente.
+    </p>
+
+    <div class="runtime-barra">
+      <div class="runtime-progreso"></div>
+    </div>
+
+    <p class="runtime-estado">
+      ⏳ Esperando respuesta del runtime...
+    </p>
+
+    <small>
+      Esta página se actualizará automáticamente cada 10 segundos.
+    </small>
+
+    <br>
+
+    <a href="/dashboard" class="runtime-btn">
+      Volver al dashboard
+    </a>
+  </div>
+</div>
+
+<script>
+  setTimeout(function () {
+    window.location.reload();
+  }, 10000);
+</script>
