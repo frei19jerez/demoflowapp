@@ -161,40 +161,40 @@ module.exports = {
 
         }
 
-        // ============================
-        // ESPERAR UN POCO
-        // ============================
+       // ============================
+// ESPERAR 1 SEGUNDO
+// ============================
 
-        await new Promise(resolve => setTimeout(resolve, 5000));
+await new Promise(resolve => setTimeout(resolve, 1000));
 
-        // ============================
-        // REVISAR DE NUEVO
-        // ============================
+// ============================
+// REVISAR DE NUEVO
+// ============================
 
-        health = await RuntimeHealthService.revisarRuntime(proyecto);
+health = await RuntimeHealthService.revisarRuntime(proyecto);
 
-        if (health && health.ok) {
+if (health && health.ok) {
 
-          sails.log.info(
-            '✅ Runtime revivido correctamente.'
-          );
+  sails.log.info(
+    '✅ Runtime revivido correctamente.'
+  );
 
-        } else {
+} else {
 
-          sails.log.warn(
-            '⚠️ Runtime sigue apagado después del reinicio automático.'
-          );
+  sails.log.warn(
+    '⚠️ Runtime sigue apagado después del reinicio automático.'
+  );
 
-          // =====================================
-          // MOSTRAR PANTALLA DE ESPERA
-          // =====================================
+  sails.log.info(
+    '🤖 IA DemoFlow: Mostrando pantalla de espera...'
+  );
 
-          return res.view('runtime/esperando', {
-            proyecto,
-            slug
-          });
+  return res.view('runtime/esperando', {
+    proyecto,
+    slug
+  });
 
-        }
+}
 
       }
 
