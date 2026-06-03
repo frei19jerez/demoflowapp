@@ -273,8 +273,11 @@ if (slugInput) {
   });
 }
 
+
 if (formProyecto) {
-  formProyecto.addEventListener('submit', async function (e) {
+
+  formProyecto.addEventListener('submit', function (e) {
+
     e.preventDefault();
 
     const form = e.target;
@@ -286,18 +289,23 @@ if (formProyecto) {
     const iaEstado = document.getElementById('iaEstado');
     const boton = document.getElementById('btnGuardarProyecto');
 
-    const tipoProyectoInput = document.getElementById('tipoProyecto');
-    const carpetaSails = document.getElementById('carpetaSails');
-    const archivoDemoInput = document.getElementById('archivoDemo');
+    const tipoProyectoInput =
+      document.getElementById('tipoProyecto');
+
+    const carpetaSails =
+      document.getElementById('carpetaSails');
+
+    const archivoDemoInput =
+      document.getElementById('archivoDemo');
 
     if (cargaBox) {
-       cargaBox.classList.remove('oculto');
-       cargaBox.style.display = 'block';
+      cargaBox.classList.remove('oculto');
+      cargaBox.style.display = 'block';
 
-       cargaBox.scrollIntoView({
-       behavior: 'smooth',
-       block: 'center'
-     });
+      cargaBox.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
     }
 
     if (barra) {
@@ -305,74 +313,21 @@ if (formProyecto) {
     }
 
     if (texto) {
-      texto.textContent = '🤖 IA DemoFlow preparando proyecto...';
+      texto.textContent =
+        '🤖 IA DemoFlow preparando proyecto...';
     }
 
     if (iaEstado) {
-      iaEstado.textContent = '🧠 IA analizando estructura del proyecto...';
+      iaEstado.textContent =
+        '🧠 IA analizando estructura del proyecto...';
     }
 
     if (boton) {
       boton.disabled = true;
       boton.textContent = 'Procesando con IA...';
-      boton.style.opacity = '0.7';
-      boton.style.cursor = 'not-allowed';
     }
 
-    try {
-      if (
-        tipoProyectoInput &&
-        tipoProyectoInput.value === 'sails' &&
-        carpetaSails &&
-        carpetaSails.files &&
-        carpetaSails.files.length > 0
-      ) {
-        if (texto) {
-          texto.textContent = '🤖 IA limpiando carpeta Sails...';
-        }
-
-        if (iaEstado) {
-          iaEstado.textContent =
-            '📁 IA ignorando node_modules, .git, .tmp, uploads y archivos pesados...';
-        }
-
-        if (typeof window.crearZipSailsLimpio !== 'function') {
-          throw new Error(
-            'No se encontró crearZipSailsLimpio. Revisa sails-folder-builder.js'
-          );
-        }
-
-        const zipLimpio = await window.crearZipSailsLimpio(
-          carpetaSails.files
-        );
-
-        formData.delete('archivoDemo');
-
-        formData.append(
-          'archivoDemo',
-          zipLimpio,
-          zipLimpio.name
-        );
-
-        if (texto) {
-          texto.textContent =
-            '✅ ZIP limpio creado. Subiendo solo lo necesario...';
-        }
-
-        if (iaEstado) {
-          iaEstado.textContent =
-            '📦 IA creó un ZIP limpio y optimizado para DemoFlow.';
-        }
-      }
-
-      else if (
-        archivoDemoInput &&
-        (!archivoDemoInput.files || archivoDemoInput.files.length === 0)
-      ) {
-        throw new Error(
-          'Debes subir un ZIP, un HTML o seleccionar una carpeta Sails.'
-        );
-      }
+    function iniciarSubida() {
 
       const xhr = new XMLHttpRequest();
       let procesandoIntervalo = null;
@@ -380,50 +335,52 @@ if (formProyecto) {
       xhr.open('POST', form.action, true);
 
       xhr.upload.onprogress = function (event) {
-        if (event.lengthComputable) {
-          const porcentaje = Math.round(
-            (event.loaded / event.total) * 100
-          );
 
-          if (barra) {
-            barra.style.width = porcentaje + '%';
-          }
+        if (!event.lengthComputable) {
+          return;
+        }
 
-          if (texto) {
-            texto.textContent =
-              '⬆️ IA subiendo archivo optimizado... ' + porcentaje + '%';
-          }
+        const porcentaje = Math.round(
+          (event.loaded / event.total) * 100
+        );
 
-          if (iaEstado) {
-            iaEstado.textContent =
-              '🚀 Enviando proyecto a DemoFlow... ' + porcentaje + '%';
-          }
+        if (barra) {
+          barra.style.width = porcentaje + '%';
+        }
 
-          if (porcentaje >= 100 && !procesandoIntervalo) {
-            if (texto) {
-              texto.textContent =
-                '✅ Subida completada. IA procesando proyecto...';
-            }
+        if (texto) {
+          texto.textContent =
+            '⬆️ IA subiendo proyecto... ' +
+            porcentaje +
+            '%';
+        }
 
-            if (iaEstado) {
-              iaEstado.textContent =
-                '🚀 IA preparando runtime, detectando tecnología y guardando proyecto...';
-            }
+        if (iaEstado) {
+          iaEstado.textContent =
+            '🚀 Enviando archivos a DemoFlow...';
+        }
 
-            let paso = 0;
+        if (
+          porcentaje >= 100 &&
+          !procesandoIntervalo
+        ) {
 
-            const mensajes = [
-              '📦 IA extrayendo archivos...',
-              '🧠 IA detectando tecnología...',
-              '⚙️ IA preparando runtime...',
-              '🚀 IA guardando proyecto...',
-              '✅ IA finalizando...'
-            ];
+          const mensajes = [
+            '📦 IA extrayendo archivos...',
+            '🧠 IA detectando tecnología...',
+            '⚙️ IA preparando runtime...',
+            '🚀 IA guardando proyecto...',
+            '✅ IA finalizando...'
+          ];
 
-            procesandoIntervalo = setInterval(function () {
+          let paso = 0;
+
+          procesandoIntervalo =
+            setInterval(function () {
+
               if (texto) {
                 texto.textContent =
-                  mensajes[paso] || '✅ IA finalizando...';
+                  mensajes[paso];
               }
 
               paso++;
@@ -431,102 +388,139 @@ if (formProyecto) {
               if (paso >= mensajes.length) {
                 paso = mensajes.length - 1;
               }
-            }, 1800);
-          }
+
+            }, 2000);
         }
       };
 
       xhr.onload = function () {
+
         if (procesandoIntervalo) {
           clearInterval(procesandoIntervalo);
         }
 
-        if (xhr.status >= 200 && xhr.status < 400) {
-          if (texto) {
-            texto.textContent = '✅ Proyecto creado correctamente';
-          }
-
-          if (iaEstado) {
-            iaEstado.textContent =
-              '🎉 IA DemoFlow terminó el proceso correctamente.';
-          }
+        if (
+          xhr.status >= 200 &&
+          xhr.status < 400
+        ) {
 
           if (barra) {
             barra.style.width = '100%';
           }
 
+          if (texto) {
+            texto.textContent =
+              '✅ Proyecto creado correctamente';
+          }
+
+          if (iaEstado) {
+            iaEstado.textContent =
+              '🎉 IA DemoFlow terminó el proceso.';
+          }
+
           setTimeout(function () {
-            window.location.href = '/dashboard';
-          }, 800);
+            window.location.href =
+              '/dashboard';
+          }, 1000);
 
           return;
         }
 
-        if (texto) {
-          texto.textContent = '❌ Error al crear proyecto';
-        }
-
-        if (iaEstado) {
-          iaEstado.textContent =
-            '⚠️ IA detectó un problema durante el procesamiento.';
-        }
-
         if (boton) {
           boton.disabled = false;
-          boton.textContent = 'Guardar proyecto';
-          boton.style.opacity = '1';
-          boton.style.cursor = 'pointer';
+          boton.textContent =
+            'Guardar proyecto';
         }
 
-        alert('Error del servidor:\n\n' + xhr.responseText);
+        alert(
+          'Error del servidor:\n\n' +
+          xhr.responseText
+        );
       };
 
       xhr.onerror = function () {
+
         if (procesandoIntervalo) {
           clearInterval(procesandoIntervalo);
         }
 
-        if (texto) {
-          texto.textContent = '❌ Error de conexión';
-        }
-
-        if (iaEstado) {
-          iaEstado.textContent =
-            '⚠️ IA no pudo completar la subida por error de conexión.';
-        }
-
         if (boton) {
           boton.disabled = false;
-          boton.textContent = 'Guardar proyecto';
-          boton.style.opacity = '1';
-          boton.style.cursor = 'pointer';
+          boton.textContent =
+            'Guardar proyecto';
         }
 
-        alert('No se pudo subir el proyecto. Revisa conexión o Render.');
+        alert(
+          'No se pudo subir el proyecto.'
+        );
       };
 
       xhr.send(formData);
+    }
+
+    try {
+
+      if (
+        tipoProyectoInput &&
+        tipoProyectoInput.value === 'sails' &&
+        carpetaSails &&
+        carpetaSails.files &&
+        carpetaSails.files.length > 0
+      ) {
+
+        if (texto) {
+          texto.textContent =
+            '🤖 IA limpiando carpeta Sails...';
+        }
+
+        window
+          .crearZipSailsLimpio(
+            carpetaSails.files
+          )
+          .then(function (zipLimpio) {
+
+            formData.delete(
+              'archivoDemo'
+            );
+
+            formData.append(
+              'archivoDemo',
+              zipLimpio,
+              zipLimpio.name
+            );
+
+            iniciarSubida();
+          })
+          .catch(function (error) {
+
+            if (boton) {
+              boton.disabled = false;
+              boton.textContent =
+                'Guardar proyecto';
+            }
+
+            alert(error.message);
+          });
+
+      } else {
+
+        iniciarSubida();
+
+      }
 
     } catch (error) {
-      if (texto) {
-        texto.textContent = '❌ Error preparando proyecto';
-      }
-
-      if (iaEstado) {
-        iaEstado.textContent =
-          '⚠️ IA no pudo preparar el proyecto antes de subirlo.';
-      }
 
       if (boton) {
         boton.disabled = false;
-        boton.textContent = 'Guardar proyecto';
-        boton.style.opacity = '1';
-        boton.style.cursor = 'pointer';
+        boton.textContent =
+          'Guardar proyecto';
       }
 
       alert(error.message);
     }
+
   });
+
 }
 
 window.addEventListener('load', function () {
