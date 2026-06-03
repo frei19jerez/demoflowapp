@@ -9,9 +9,13 @@ module.exports = async function(req, res, proceed) {
   // VALIDAR SESIÓN
   // =========================
 
-  if (!req.session.usuario) {
+  if (!req.session || !req.session.userId) {
 
-    return res.redirect('/login');
+    req.session.returnTo = req.originalUrl || req.url || '/dashboard';
+
+    return req.session.save(function() {
+      return res.redirect('/login');
+    });
   }
 
   // =========================
