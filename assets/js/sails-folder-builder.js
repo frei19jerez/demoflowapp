@@ -84,9 +84,9 @@ window.crearZipSailsLimpio = function (archivos) {
           return nombreLower.endsWith(ext);
         });
 
-        if (esPesado || archivo.size > 20 * 1024 * 1024) {
-          pesados++;
-          continue;
+        if (archivo.size > 100 * 1024 * 1024) {
+         pesados++;
+         continue;
         }
 
         var esCarpetaPermitida = carpetasPermitidas.some(function (carpeta) {
