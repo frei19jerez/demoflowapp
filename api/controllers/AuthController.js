@@ -135,65 +135,76 @@ module.exports = {
   },
 
   login: async function (req, res) {
-    try {
-      sails.log.info('🤖 IA AUTH: Intentando iniciar sesión...');
 
-      const email = limpiarEmail(req.body.email || req.body.correo);
-      const password = limpiarTexto(req.body.password || req.body.contrasena);
+  try {
 
-      if (!email || !password) {
-        guardarFlash(req, 'error', 'Correo y contraseña son obligatorios.');
-        return res.redirect('/login');
-      }
+    sails.log.info('🤖 IA AUTH: Intentando iniciar sesión...');
 
-      if (!validarEmail(email)) {
-        guardarFlash(req, 'error', 'El correo no tiene un formato válido.');
-        return res.redirect('/login');
-      }
+    const email = limpiarEmail(req.body.email || req.body.correo);
+    const password = limpiarTexto(req.body.password || req.body.contrasena);
 
-      const usuario = await Usuario.findOne({ email });
-
-      if (!usuario) {
-        guardarFlash(req, 'error', 'Correo no encontrado.');
-        return res.redirect('/login');
-      }
-
-      if (!usuario.activo) {
-        guardarFlash(req, 'error', 'Tu cuenta está desactivada.');
-        return res.redirect('/login');
-      }
-
-      const ok = await bcrypt.compare(password, usuario.password);
-
-      if (!ok) {
-        guardarFlash(req, 'error', 'Contraseña incorrecta.');
-        return res.redirect('/login');
-      }
-
-      sails.log.info('✅ IA AUTH: Login correcto:', usuario.email);
-
-      req.session.userId = usuario.id;
-      req.session.userName = usuario.nombre;
-      req.session.userEmail = usuario.email;
-
-      return req.session.save(function (err) {
-        if (err) {
-          sails.log.error('❌ IA AUTH: Error guardando sesión en login:', err);
-          return res.serverError('No se pudo guardar la sesión.');
-        }
-
-        return res.redirect('/dashboard');
-      });
-
-    } catch (err) {
-      sails.log.error('❌ IA AUTH: ERROR EN LOGIN');
-      sails.log.error(err);
-      sails.log.error('BODY RECIBIDO EN LOGIN:', req.body);
-
-      guardarFlash(req, 'error', 'Error al iniciar sesión.');
+    if (!email || !password) {
+      guardarFlash(req, 'error', 'Correo y contraseña son obligatorios.');
       return res.redirect('/login');
     }
-  },
+
+    if (!validarEmail(email)) {
+      guardarFlash(req, 'error', 'El correo no tiene un formato válido.');
+      return res.redirect('/login');
+    }
+
+    const usuario = await Usuario.findOne({ email });
+
+    if (!usuario) {
+      guardarFlash(req, 'error', 'Correo no encontrado.');
+      return res.redirect('/login');
+    }
+
+    if (!usuario.activo) {
+      guardarFlash(req, 'error', 'Tu cuenta está desactivada.');
+      return res.redirect('/login');
+    }
+
+    const ok = await bcrypt.compare(password, usuario.password);
+
+    if (!ok) {
+      guardarFlash(req, 'error', 'Contraseña incorrecta.');
+      return res.redirect('/login');
+    }
+
+    sails.log.info('✅ IA AUTH: Login correcto:', usuario.email);
+
+    req.session.userId = usuario.id;
+    req.session.userName = usuario.nombre;
+    req.session.userEmail = usuario.email;
+
+    return req.session.save(function (err) {
+
+      if (err) {
+        sails.log.error('❌ IA AUTH: Error guardando sesión en login:', err);
+        return res.serverError('No se pudo guardar la sesión.');
+      }
+
+      const returnTo = req.session.returnTo || '/dashboard';
+
+      delete req.session.returnTo;
+
+      return res.redirect(returnTo);
+
+    });
+
+  } catch (err) {
+
+    sails.log.error('❌ IA AUTH: ERROR EN LOGIN');
+    sails.log.error(err);
+    sails.log.error('BODY RECIBIDO EN LOGIN:', req.body);
+
+    guardarFlash(req, 'error', 'Error al iniciar sesión.');
+    return res.redirect('/login');
+
+  }
+
+},
 
   logout: function (req, res) {
     if (!req.session) {
