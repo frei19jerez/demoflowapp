@@ -140,24 +140,65 @@ function publicarHtmlEnRender(carpetaOrigen, carpetaDemoFinal) {
 }
 
 function limpiarCarpetaExtra(carpetaDestino) {
-  if (!fs.existsSync(carpetaDestino)) return;
 
-  const indexDirecto = path.join(carpetaDestino, 'index.html');
-  const appDirecto = path.join(carpetaDestino, 'app.js');
-  const packageDirecto = path.join(carpetaDestino, 'package.json');
+  if (!fs.existsSync(carpetaDestino)) {
+    return;
+  }
+
+  const indexDirecto = path.join(
+    carpetaDestino,
+    'index.html'
+  );
+
+  const appDirecto = path.join(
+    carpetaDestino,
+    'app.js'
+  );
+
+  const packageDirecto = path.join(
+    carpetaDestino,
+    'package.json'
+  );
+
+  // =========================
+  // YA ESTÁ EN LA RAÍZ
+  // =========================
 
   if (
     fs.existsSync(indexDirecto) ||
     fs.existsSync(appDirecto) ||
     fs.existsSync(packageDirecto)
   ) {
-    sails.log.info('✅ IA DemoFlow: Proyecto ya está en raíz:', carpetaDestino);
+
+    sails.log.info(
+      '✅ IA DemoFlow: Proyecto ya está en raíz:',
+      carpetaDestino
+    );
+
     return;
   }
 
-  const appEncontrado = buscarArchivoRecursivo(carpetaDestino, 'app.js');
-  const packageEncontrado = buscarArchivoRecursivo(carpetaDestino, 'package.json');
-  const indexEncontrado = buscarArchivoRecursivo(carpetaDestino, 'index.html');
+  // =========================
+  // BUSCAR ARCHIVO PRINCIPAL
+  // =========================
+
+  const appEncontrado =
+    buscarArchivoRecursivo(
+      carpetaDestino,
+      'app.js'
+    );
+
+  const packageEncontrado =
+    buscarArchivoRecursivo(
+      carpetaDestino,
+      'package.json'
+    );
+
+  const indexEncontrado =
+    buscarArchivoRecursivo(
+      carpetaDestino,
+      'index.html'
+    );
 
   const archivoBase =
     appEncontrado ||
@@ -165,27 +206,88 @@ function limpiarCarpetaExtra(carpetaDestino) {
     indexEncontrado;
 
   if (!archivoBase) {
-    sails.log.warn('⚠️ IA DemoFlow: No se encontró app.js, package.json ni index.html para limpiar carpeta.');
+
+    sails.log.warn(
+      '⚠️ IA DemoFlow: No se encontró app.js, package.json ni index.html.'
+    );
+
     return;
   }
 
-  const carpetaReal = path.dirname(archivoBase);
-  const carpetaTemporal = carpetaDestino + '_tmp_' + Date.now();
+  // =========================
+  // DETECTAR CARPETA REAL
+  // =========================
 
-  sails.log.info('🧹 IA DemoFlow: Corrigiendo carpeta anidada...');
-  sails.log.info('📁 Carpeta destino:', carpetaDestino);
-  sails.log.info('📁 Carpeta real detectada:', carpetaReal);
+  const carpetaReal =
+    path.dirname(archivoBase);
 
-  fs.renameSync(carpetaReal, carpetaTemporal);
+  sails.log.info(
+    '🧹 IA DemoFlow: Corrigiendo carpeta anidada...'
+  );
+
+  sails.log.info(
+    '📁 Carpeta destino:',
+    carpetaDestino
+  );
+
+  sails.log.info(
+    '📁 Carpeta real detectada:',
+    carpetaReal
+  );
+
+  // =========================
+  // SI SON LA MISMA
+  // NO HACER NADA
+  // =========================
+
+  if (
+    path.resolve(carpetaReal) ===
+    path.resolve(carpetaDestino)
+  ) {
+
+    sails.log.info(
+      '✅ IA DemoFlow: No hay carpeta anidada.'
+    );
+
+    return;
+  }
+
+  // =========================
+  // MOVER CONTENIDO
+  // =========================
+
+  const carpetaTemporal =
+    carpetaDestino +
+    '_tmp_' +
+    Date.now();
+
+  fs.renameSync(
+    carpetaReal,
+    carpetaTemporal
+  );
 
   eliminarCarpeta(carpetaDestino);
+
   crearCarpeta(carpetaDestino);
 
-  copiarCarpeta(carpetaTemporal, carpetaDestino);
+  copiarCarpeta(
+    carpetaTemporal,
+    carpetaDestino
+  );
 
-  eliminarCarpeta(carpetaTemporal);
+  eliminarCarpeta(
+    carpetaTemporal
+  );
 
-  sails.log.info('✅ IA DemoFlow: Carpeta anidada corregida correctamente.');
+  sails.log.info(
+    '✅ IA DemoFlow: Carpeta anidada corregida correctamente.'
+  );
+
+  sails.log.info(
+    '📦 Contenido final:',
+    fs.readdirSync(carpetaDestino)
+  );
+
 }
 
 function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRuntimeFinal) {
@@ -623,6 +725,13 @@ await ZipBuilderService.crearZipInteligente({
   carpetaOrigen: carpetaTemporalIA,
   nombreProyecto: slugFinal
 });
+
+limpiarCarpetaExtra(carpetaTemporalIA);
+
+sails.log.info(
+  '📁 IA TEMP después de limpiar:',
+  fs.readdirSync(carpetaTemporalIA)
+);
 
 // =====================================
 // 📁 COPIA LIMPIA AL RUNTIME
