@@ -151,22 +151,30 @@ function limpiarCarpetaExtra(carpetaDestino) {
     fs.existsSync(appDirecto) ||
     fs.existsSync(packageDirecto)
   ) {
+    sails.log.info('✅ IA DemoFlow: Proyecto ya está en raíz:', carpetaDestino);
     return;
   }
 
-  const indexEncontrado = buscarArchivoRecursivo(carpetaDestino, 'index.html');
   const appEncontrado = buscarArchivoRecursivo(carpetaDestino, 'app.js');
   const packageEncontrado = buscarArchivoRecursivo(carpetaDestino, 'package.json');
+  const indexEncontrado = buscarArchivoRecursivo(carpetaDestino, 'index.html');
 
   const archivoBase =
     appEncontrado ||
     packageEncontrado ||
     indexEncontrado;
 
-  if (!archivoBase) return;
+  if (!archivoBase) {
+    sails.log.warn('⚠️ IA DemoFlow: No se encontró app.js, package.json ni index.html para limpiar carpeta.');
+    return;
+  }
 
   const carpetaReal = path.dirname(archivoBase);
   const carpetaTemporal = carpetaDestino + '_tmp_' + Date.now();
+
+  sails.log.info('🧹 IA DemoFlow: Corrigiendo carpeta anidada...');
+  sails.log.info('📁 Carpeta destino:', carpetaDestino);
+  sails.log.info('📁 Carpeta real detectada:', carpetaReal);
 
   fs.renameSync(carpetaReal, carpetaTemporal);
 
@@ -174,7 +182,10 @@ function limpiarCarpetaExtra(carpetaDestino) {
   crearCarpeta(carpetaDestino);
 
   copiarCarpeta(carpetaTemporal, carpetaDestino);
+
   eliminarCarpeta(carpetaTemporal);
+
+  sails.log.info('✅ IA DemoFlow: Carpeta anidada corregida correctamente.');
 }
 
 function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRuntimeFinal) {
