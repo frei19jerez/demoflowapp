@@ -173,7 +173,7 @@ module.exports = {
     return await ejecutar(`curl -I http://127.0.0.1:${puerto}`, process.cwd());
   },
 
-  analizarProyectoIA: async function (carpeta) {
+   analizarProyectoIA: async function (carpeta) {
     const tipo = await this.detectarTipo(carpeta);
 
     return {
@@ -186,8 +186,51 @@ module.exports = {
     };
   },
 
+  reiniciarRuntime: async function (slug, puerto) {
+
+    const nombrePM2 = 'demoflow-' + slug;
+
+    this.iaLog('Reiniciando runtime por slug...', {
+      slug,
+      puerto,
+      nombrePM2
+    });
+
+    let resultado = await this.reiniciarPM2(nombrePM2);
+
+    if (!resultado.ok) {
+
+      this.iaLog(
+        'PM2 restart falló. Intentando iniciar runtime...',
+        resultado.stderr
+      );
+
+      const carpeta = this.rutaRuntime(slug);
+
+      if (!(await this.existe(carpeta))) {
+
+        return {
+          ok: false,
+          error: 'No existe la carpeta runtime.',
+          carpeta
+        };
+
+      }
+
+      resultado = await this.iniciarConPM2({
+        carpeta,
+        nombrePM2,
+        comando: 'node app.js',
+        puerto
+      });
+    }
+
+    return resultado;
+  },
+
   rutaRuntime: function (slug) {
     return path.join(process.cwd(), 'deploy_runtime', 'apps', slug);
   }
 
 };
+
