@@ -606,25 +606,49 @@ await ZipBuilderService.crearZipInteligente({
 
 copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
 
-          puertoFinal = generarPuerto();
+// =====================================
+// 🔍 DEBUG IA RUNTIME
+// Confirmar que realmente quedó copiado
+// =====================================
 
-          comandoInicioFinal =
-            comandoInicio ||
-            (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
+sails.log.info(
+  '✅ IA DemoFlow: Carpeta copiada al runtime:',
+  carpetaDestinoRuntime
+);
 
-          archivoEntradaFinal = archivoEntrada || 'app.js';
+sails.log.info(
+  '📁 IA DemoFlow: Existe carpeta runtime:',
+  fs.existsSync(carpetaDestinoRuntime)
+);
 
-          deployType = 'dynamic';
-          estadoDeploy = 'subido';
-          urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+if (fs.existsSync(carpetaDestinoRuntime)) {
+  sails.log.info(
+    '📦 IA DemoFlow: Archivos raíz en runtime:',
+    fs.readdirSync(carpetaDestinoRuntime)
+  );
+}
 
-          logDeploy =
-            `🤖 DemoFlow IA detectó proyecto ${tipoFinal} desde ZIP.\n` +
-            `✅ Runtime preparado\n` +
-            `✅ Puerto asignado: ${puertoFinal}\n` +
-            `✅ URL runtime: ${urlDemoFinal}\n` +
-            `✅ Comando sugerido: ${comandoInicioFinal}\n` +
-            'Pendiente desplegar desde el panel.';
+puertoFinal = generarPuerto();
+
+comandoInicioFinal =
+  comandoInicio ||
+  (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
+
+archivoEntradaFinal = archivoEntrada || 'app.js';
+
+deployType = 'dynamic';
+estadoDeploy = 'subido';
+urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+
+logDeploy =
+  `🤖 DemoFlow IA detectó proyecto ${tipoFinal} desde carpeta/ZIP.\n` +
+  `✅ Runtime preparado: ${carpetaRuntimeFinal}\n` +
+  `✅ Carpeta runtime: ${carpetaDestinoRuntime}\n` +
+  `✅ Puerto asignado: ${puertoFinal}\n` +
+  `✅ URL runtime: ${urlDemoFinal}\n` +
+  `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+  `✅ Archivo de entrada: ${archivoEntradaFinal}\n` +
+  'Pendiente desplegar desde el panel.';
         }
 
         eliminarCarpeta(carpetaTemporalIA);
