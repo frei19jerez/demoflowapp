@@ -93,118 +93,115 @@ module.exports = {
 
     try {
 
-      sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime...');
+  sails.log.info('🤖 IA DemoFlow: Verificando salud del runtime...');
 
-      let health = await RuntimeHealthService.revisarRuntime(proyecto);
+  let health = await RuntimeHealthService.revisarRuntime(proyecto);
 
-      // ============================
-      // SI ESTÁ ONLINE
-      // ============================
+  // ============================
+  // SI ESTÁ ONLINE
+  // ============================
 
-      if (health && health.ok) {
+  if (health && health.ok) {
 
-        sails.log.info('✅ IA DemoFlow Runtime:', health.mensaje);
+    sails.log.info('✅ IA DemoFlow Runtime:', health.mensaje);
+
+  } else {
+
+    sails.log.warn('⚠️ IA DemoFlow Runtime sin respuesta.');
+    sails.log.warn('🔄 Intentando reinicio automático...');
+
+    // ============================
+    // REINICIAR AUTOMÁTICAMENTE
+    // ============================
+
+    try {
+
+      if (
+        typeof DeployService !== 'undefined' &&
+        DeployService.reiniciarRuntime
+      ) {
+
+        sails.log.info('🚀 Reiniciando con reiniciarRuntime()');
+
+        await DeployService.reiniciarRuntime(
+          proyecto.slug || proyecto.carpetaRuntime || slug,
+          proyecto.puerto
+        );
+
+      } else if (
+        typeof DeployService !== 'undefined' &&
+        DeployService.reiniciarProyecto
+      ) {
+
+        sails.log.info('🚀 Reiniciando con reiniciarProyecto()');
+
+        await DeployService.reiniciarProyecto(proyecto);
+
+      } else if (
+        typeof DeployService !== 'undefined' &&
+        DeployService.iniciarRuntime
+      ) {
+
+        sails.log.info('🚀 Reiniciando con iniciarRuntime()');
+
+        await DeployService.iniciarRuntime(proyecto);
+
+      } else if (
+        typeof DeployService !== 'undefined' &&
+        DeployService.desplegar
+      ) {
+
+        sails.log.info('🚀 Reiniciando con desplegar()');
+
+        await DeployService.desplegar(proyecto);
 
       } else {
 
-        sails.log.warn('⚠️ IA DemoFlow Runtime sin respuesta.');
-        sails.log.warn('🔄 Intentando reinicio automático...');
-
-        // ============================
-        // REINICIAR AUTOMÁTICAMENTE
-        // ============================
-
-        try {
-
-          if (
-            typeof DeployService !== 'undefined' &&
-            DeployService.reiniciarProyecto
-          ) {
-
-            sails.log.info('🚀 Reiniciando con reiniciarProyecto()');
-
-            await DeployService.reiniciarProyecto(proyecto);
-
-          } else if (
-            typeof DeployService !== 'undefined' &&
-            DeployService.iniciarRuntime
-          ) {
-
-            sails.log.info('🚀 Reiniciando con iniciarRuntime()');
-
-            await DeployService.iniciarRuntime(proyecto);
-
-          } else if (
-            typeof DeployService !== 'undefined' &&
-            DeployService.desplegar
-          ) {
-
-            sails.log.info('🚀 Reiniciando con desplegar()');
-
-            await DeployService.desplegar(proyecto);
-
-          } else {
-
-            sails.log.warn(
-              '⚠️ No encontré función de reinicio en DeployService.'
-            );
-
-          }
-
-        } catch (restartError) {
-
-          sails.log.error(
-            '❌ Error reiniciando runtime automáticamente.'
-          );
-
-          sails.log.error(restartError);
-
-        }
-
-       // ============================
-// ESPERAR 1 SEGUNDO
-// ============================
-
-await new Promise(resolve => setTimeout(resolve, 1000));
-
-// ============================
-// REVISAR DE NUEVO
-// ============================
-
-health = await RuntimeHealthService.revisarRuntime(proyecto);
-
-if (health && health.ok) {
-
-  sails.log.info(
-    '✅ Runtime revivido correctamente.'
-  );
-
-} else {
-
-  sails.log.warn(
-    '⚠️ Runtime sigue apagado después del reinicio automático.'
-  );
-
-  sails.log.info(
-    '🤖 IA DemoFlow: Mostrando pantalla de espera...'
-  );
-
-  return res.view('runtime/esperando', {
-    proyecto,
-    slug
-  });
-
-}
+        sails.log.warn(
+          '⚠️ No encontré función de reinicio en DeployService.'
+        );
 
       }
 
-    } catch (healthError) {
+    } catch (restartError) {
 
-      sails.log.warn(
-        '⚠️ IA DemoFlow: Health check falló.'
+      sails.log.error(
+        '❌ Error reiniciando runtime automáticamente.'
       );
 
-      sails.log.warn(healthError.message);
+      sails.log.error(restartError);
+
+    }
+
+    // ============================
+    // ESPERAR 3 SEGUNDOS
+    // ============================
+
+    await new Promise(function (resolve) {
+      setTimeout(resolve, 3000);
+    });
+
+    // ============================
+    // REVISAR DE NUEVO
+    // ============================
+
+    health = await RuntimeHealthService.revisarRuntime(proyecto);
+
+    if (health && health.ok) {
+
+      sails.log.info(
+        '✅ Runtime revivido correctamente.'
+      );
+
+    } else {
+
+      sails.log.warn(
+        '⚠️ Runtime sigue apagado después del reinicio automático.'
+      );
+
+      sails.log.info(
+        '🤖 IA DemoFlow: Mostrando pantalla de espera...'
+      );
 
       return res.view('runtime/esperando', {
         proyecto,
@@ -212,6 +209,23 @@ if (health && health.ok) {
       });
 
     }
+
+  }
+
+} catch (healthError) {
+
+  sails.log.warn(
+    '⚠️ IA DemoFlow: Health check falló.'
+  );
+
+  sails.log.warn(healthError.message);
+
+  return res.view('runtime/esperando', {
+    proyecto,
+    slug
+  });
+
+}
 
     // =====================================
     // PROXY RUNTIME
