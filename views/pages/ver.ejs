@@ -8,7 +8,9 @@
     proyecto.tipoProyecto === 'sails';
 
   const runtimeActivo =
-    proyecto.estadoDeploy === 'activo';
+    typeof runtimeOnline !== 'undefined'
+      ? runtimeOnline
+      : proyecto.estadoDeploy === 'activo';
 
   const demoUrl =
     proyecto.urlDemo &&

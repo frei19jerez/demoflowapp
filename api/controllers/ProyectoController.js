@@ -1143,43 +1143,70 @@ analizarIA: async function(req, res) {
 },
 
   ver: async function (req, res) {
+  try {
+    const valor = req.params.id;
+    let proyecto = null;
+
     try {
-      const valor = req.params.id;
-      let proyecto = null;
-
-      try {
-        if (!isNaN(valor)) {
-          proyecto = await Proyecto.findOne({ id: Number(valor) });
-        } else {
-          proyecto = await Proyecto.findOne({ slug: valor });
-        }
-      } catch (e) {
-        console.log('================ ERROR CONSULTANDO PROYECTO ================');
-        console.error(e.stack || e);
-        console.log('============================================================');
+      if (!isNaN(valor)) {
+        proyecto = await Proyecto.findOne({ id: Number(valor) });
+      } else {
+        proyecto = await Proyecto.findOne({ slug: valor });
       }
-
-      if (!proyecto) {
-        return res.notFound('Proyecto no encontrado.');
-      }
-
-      return res.view('pages/ver', {
-        titulo: proyecto.nombre,
-        proyecto,
-        usuario: req.session.userId ? {
-          id: req.session.userId,
-          nombre: req.session.userName,
-          email: req.session.userEmail
-        } : null
-      });
-
-    } catch (err) {
-      console.log('================ ERROR VER PROYECTO ================');
-      console.error(err.stack || err);
-      console.log('====================================================');
-      return res.serverError('Error al ver proyecto');
+    } catch (e) {
+      console.log('================ ERROR CONSULTANDO PROYECTO ================');
+      console.error(e.stack || e);
+      console.log('============================================================');
     }
-  },
+
+    if (!proyecto) {
+      return res.notFound('Proyecto no encontrado.');
+    }
+
+    // =====================================
+    // 👤 USUARIO COMPLETO PARA NAVBAR / VISTA
+    // =====================================
+
+    let usuario = null;
+
+    if (req.session && req.session.userId) {
+      usuario = await Usuario.findOne({
+        id: req.session.userId
+      });
+    }
+
+    // =====================================
+    // ⚡ VERIFICAR RUNTIME REAL EN TIEMPO REAL
+    // =====================================
+
+    let runtimeOnline = false;
+
+    if (proyecto && proyecto.puerto) {
+      try {
+        const health = await RuntimeHealthService.revisarRuntime(proyecto);
+        runtimeOnline = !!(health && health.ok);
+      } catch (healthError) {
+        sails.log.warn('⚠️ IA DemoFlow: No se pudo verificar runtime en detalle.');
+        sails.log.warn(healthError.message);
+        runtimeOnline = false;
+      }
+    }
+
+    return res.view('pages/ver', {
+      titulo: proyecto.nombre,
+      proyecto,
+      usuario,
+      runtimeOnline
+    });
+
+  } catch (err) {
+    console.log('================ ERROR VER PROYECTO ================');
+    console.error(err.stack || err);
+    console.log('====================================================');
+    return res.serverError('Error al ver proyecto');
+  }
+},
+
 
   eliminar: async function (req, res) {
   try {
