@@ -367,26 +367,40 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
 module.exports = {
 
   index: async function (req, res) {
-    try {
-      const proyectos = await Proyecto.find({ activo: true }).sort('id DESC');
+  try {
 
-      return res.view('pages/homepage', {
-        titulo: 'Inicio',
-        proyectos,
-        usuario: req.session.userId ? {
-          id: req.session.userId,
-          nombre: req.session.userName,
-          email: req.session.userEmail
-        } : null
+    const proyectos = await Proyecto.find({
+      activo: true
+    }).sort('id DESC');
+
+    // =====================================
+    // 👤 USUARIO COMPLETO PARA NAVBAR
+    // =====================================
+
+    let usuario = null;
+
+    if (req.session && req.session.userId) {
+      usuario = await Usuario.findOne({
+        id: req.session.userId
       });
-
-    } catch (err) {
-      console.log('================ ERROR INDEX ================');
-      console.error(err.stack || err);
-      console.log('============================================');
-      return res.serverError('Error al cargar inicio');
     }
-  },
+
+    return res.view('pages/homepage', {
+      titulo: 'Inicio',
+      proyectos,
+      usuario
+    });
+
+  } catch (err) {
+
+    console.log('================ ERROR INDEX ================');
+    console.error(err.stack || err);
+    console.log('============================================');
+
+    return res.serverError('Error al cargar inicio');
+  }
+},
+
 
   dashboard: async function (req, res) {
   try {
