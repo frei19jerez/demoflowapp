@@ -143,14 +143,29 @@ function limpiarCarpetaExtra(carpetaDestino) {
   if (!fs.existsSync(carpetaDestino)) return;
 
   const indexDirecto = path.join(carpetaDestino, 'index.html');
+  const appDirecto = path.join(carpetaDestino, 'app.js');
+  const packageDirecto = path.join(carpetaDestino, 'package.json');
 
-  if (fs.existsSync(indexDirecto)) return;
+  if (
+    fs.existsSync(indexDirecto) ||
+    fs.existsSync(appDirecto) ||
+    fs.existsSync(packageDirecto)
+  ) {
+    return;
+  }
 
   const indexEncontrado = buscarArchivoRecursivo(carpetaDestino, 'index.html');
+  const appEncontrado = buscarArchivoRecursivo(carpetaDestino, 'app.js');
+  const packageEncontrado = buscarArchivoRecursivo(carpetaDestino, 'package.json');
 
-  if (!indexEncontrado) return;
+  const archivoBase =
+    appEncontrado ||
+    packageEncontrado ||
+    indexEncontrado;
 
-  const carpetaReal = path.dirname(indexEncontrado);
+  if (!archivoBase) return;
+
+  const carpetaReal = path.dirname(archivoBase);
   const carpetaTemporal = carpetaDestino + '_tmp_' + Date.now();
 
   fs.renameSync(carpetaReal, carpetaTemporal);
