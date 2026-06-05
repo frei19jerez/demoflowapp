@@ -291,12 +291,16 @@ function limpiarCarpetaExtra(carpetaDestino) {
 }
 
 function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRuntimeFinal) {
-  const carpetaDestinoRuntime = path.resolve(
-    sails.config.appPath,
-    'deploy_runtime',
-    'apps',
-    carpetaRuntimeFinal
-  );
+  const carpetaDestinoRuntime =
+    typeof DeployService !== 'undefined' &&
+    DeployService.rutaRuntime
+      ? DeployService.rutaRuntime(carpetaRuntimeFinal)
+      : path.join(
+          process.env.DEMOFLOW_STORAGE || sails.config.appPath,
+          'deploy_runtime',
+          'apps',
+          carpetaRuntimeFinal
+        );
 
   eliminarCarpeta(carpetaDestinoRuntime);
   crearCarpeta(carpetaDestinoRuntime);
@@ -310,7 +314,8 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
     logDeploy:
       '🤖 DemoFlow inició clonación desde Git.\n' +
       `Repositorio: ${urlRepositorio}\n` +
-      `Rama: ${rama}\n`
+      `Rama: ${rama}\n` +
+      `Carpeta runtime: ${carpetaDestinoRuntime}\n`
   }).exec(() => {});
 
   exec(comando, async function (error, stdout, stderr) {
@@ -324,12 +329,15 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
         estadoDeploy: 'fallido',
         logDeploy:
           '❌ Error clonando repositorio Git.\n' +
+          `Carpeta runtime: ${carpetaDestinoRuntime}\n` +
           log +
           `\n${error.message}`
       });
 
       return;
     }
+
+    limpiarCarpetaExtra(carpetaDestinoRuntime);
 
     const tipoDetectado = detectarTipoIA(carpetaDestinoRuntime, 'node');
 
@@ -356,6 +364,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
       logDeploy:
         '✅ Repositorio Git clonado correctamente.\n' +
         `Tipo detectado: ${tipoDetectado}\n` +
+        `Carpeta runtime: ${carpetaDestinoRuntime}\n` +
         `Puerto asignado: ${puertoAsignado}\n` +
         `URL DemoFlow: /runtime/${carpetaRuntimeFinal}\n` +
         'Listo para iniciar deploy desde el panel.\n' +
@@ -363,6 +372,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
     });
   });
 }
+
 
 module.exports = {
 
