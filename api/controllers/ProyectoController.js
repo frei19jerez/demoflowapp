@@ -1236,7 +1236,9 @@ analizarIA: async function(req, res) {
       return res.notFound('Proyecto no encontrado.');
     }
 
-    const usuarioLogueado = await Usuario.findOne({ id: req.session.userId });
+    const usuarioLogueado = await Usuario.findOne({
+      id: req.session.userId
+    });
 
     if (!usuarioLogueado) {
       return res.forbidden('Usuario no autorizado.');
@@ -1247,40 +1249,78 @@ analizarIA: async function(req, res) {
         ? proyecto.usuario.id
         : proyecto.usuario;
 
-    const esDueno = Number(propietarioId) === Number(req.session.userId);
-    const esAdmin = usuarioLogueado.rol === 'admin';
+    const esDueno =
+      Number(propietarioId) === Number(req.session.userId);
+
+    const esAdmin =
+      usuarioLogueado.rol === 'admin';
 
     if (!esDueno && !esAdmin) {
-      return res.forbidden('No tienes permiso para eliminar este proyecto.');
+      return res.forbidden(
+        'No tienes permiso para eliminar este proyecto.'
+      );
     }
 
-    // Detener PM2 si es runtime dinámico
-    const nombrePm2 = proyecto.carpetaRuntime || proyecto.slug;
+    // =====================================
+    // 🛑 DETENER PM2 SI ES RUNTIME DINÁMICO
+    // Nombre real: demoflow-slug
+    // =====================================
+
+    const slugRuntime =
+      proyecto.carpetaRuntime || proyecto.slug;
+
+    const nombrePm2 =
+      slugRuntime
+        ? 'demoflow-' + slugRuntime
+        : null;
 
     if (nombrePm2) {
       try {
         const { exec } = require('child_process');
 
         await new Promise((resolve) => {
-          exec(`pm2 delete "${nombrePm2}" || true`, function () {
-            return resolve();
-          });
+          exec(
+            `pm2 delete "${nombrePm2}" || true`,
+            function () {
+              return resolve();
+            }
+          );
         });
+
+        sails.log.info(
+          '✅ IA DemoFlow: PM2 eliminado:',
+          nombrePm2
+        );
+
       } catch (e) {
-        sails.log.warn('No se pudo detener PM2:', e.message);
+        sails.log.warn(
+          '⚠️ IA DemoFlow: No se pudo detener PM2:',
+          e.message
+        );
       }
     }
 
-    // Eliminar registros runtime relacionados
+    // =====================================
+    // 🧹 ELIMINAR REGISTROS RUNTIME
+    // =====================================
+
     try {
-      await ProyectoRuntime.destroy({
-        proyecto: proyecto.id
-      });
+      if (typeof ProyectoRuntime !== 'undefined') {
+        await ProyectoRuntime.destroy({
+          proyecto: proyecto.id
+        });
+      }
     } catch (e) {
-      sails.log.warn('No se pudo eliminar ProyectoRuntime:', e.message);
+      sails.log.warn(
+        '⚠️ IA DemoFlow: No se pudo eliminar ProyectoRuntime:',
+        e.message
+      );
     }
 
-    // Eliminar demo HTML
+    // =====================================
+    // 🗂️ ELIMINAR DEMO HTML
+    // =====================================
+
     if (proyecto.carpetaDemo) {
       const carpetaAssets = path.resolve(
         sails.config.appPath,
@@ -1301,19 +1341,38 @@ analizarIA: async function(req, res) {
       eliminarCarpeta(carpetaTmp);
     }
 
-    // Eliminar runtime dinámico
+    // =====================================
+    // 🧨 ELIMINAR RUNTIME DINÁMICO
+    // Usa ruta persistente si existe DEMOFLOW_STORAGE
+    // =====================================
+
     if (proyecto.carpetaRuntime) {
-      const carpetaRuntime = path.resolve(
-        sails.config.appPath,
-        'deploy_runtime',
-        'apps',
-        proyecto.carpetaRuntime
-      );
+      const carpetaRuntime =
+        typeof DeployService !== 'undefined' &&
+        DeployService.rutaRuntime
+          ? DeployService.rutaRuntime(proyecto.carpetaRuntime)
+          : path.join(
+              process.env.DEMOFLOW_STORAGE || sails.config.appPath,
+              'deploy_runtime',
+              'apps',
+              proyecto.carpetaRuntime
+            );
 
       eliminarCarpeta(carpetaRuntime);
+
+      sails.log.info(
+        '✅ IA DemoFlow: Carpeta runtime eliminada:',
+        carpetaRuntime
+      );
     }
 
-    await Proyecto.destroyOne({ id: proyecto.id });
+    // =====================================
+    // 🗑️ ELIMINAR PROYECTO DB
+    // =====================================
+
+    await Proyecto.destroyOne({
+      id: proyecto.id
+    });
 
     return res.redirect('/dashboard');
 
