@@ -484,10 +484,6 @@ module.exports = {
       return res.redirect('/login');
     }
 
-    // =====================================
-    // 🤖 IA DEMOFLOW: VALIDAR USUARIO
-    // =====================================
-
     const usuarioActual = await Usuario.findOne({
       id: req.session.userId
     });
@@ -497,13 +493,8 @@ module.exports = {
       return res.redirect('/login');
     }
 
-    // =====================================
-    // 💎 IA DEMOFLOW: VALIDAR CRÉDITOS
-    // =====================================
-
     if ((usuarioActual.creditos || 0) <= 0) {
       sails.log.warn('🚫 IA DemoFlow: Usuario sin créditos para publicar demo.');
-
       return res.redirect('/premium');
     }
 
@@ -598,9 +589,16 @@ module.exports = {
       if (tipoFinal === 'node' || tipoFinal === 'sails') {
         carpetaRuntimeFinal = slugFinal;
         puertoFinal = generarPuerto();
-        comandoInicioFinal = comandoInicio || (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
-        archivoEntradaFinal = archivoEntrada || 'app.js';
-        urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+
+        comandoInicioFinal =
+          comandoInicio ||
+          (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
+
+        archivoEntradaFinal =
+          archivoEntrada || 'app.js';
+
+        urlDemoFinal =
+          `/runtime/${carpetaRuntimeFinal}`;
 
         logDeploy =
           '🤖 IA DemoFlow registró repositorio Git dinámico.\n' +
@@ -633,7 +631,7 @@ module.exports = {
     }
 
     // =====================================
-    // 📦 ZIP / HTML
+    // 📦 ZIP / HTML / CARPETA SAILS
     // =====================================
 
     else if (metodoEntrada === 'zip') {
@@ -641,7 +639,9 @@ module.exports = {
 
       const archivos = await new Promise((resolve, reject) => {
         req.file('archivoDemo').upload(
-          { maxBytes: limiteSubida },
+          {
+            maxBytes: limiteSubida
+          },
           function (err, uploadedFiles) {
             if (err) return reject(err);
             return resolve(uploadedFiles || []);
@@ -729,85 +729,76 @@ module.exports = {
         else if (tipoFinal === 'node' || tipoFinal === 'sails') {
           carpetaRuntimeFinal = slugFinal;
 
-          const carpetaDestinoRuntime = path.resolve(
-            sails.config.appPath,
-            'deploy_runtime',
-            'apps',
-            carpetaRuntimeFinal
-          );
+          const carpetaDestinoRuntime =
+            typeof DeployService !== 'undefined' &&
+            DeployService.rutaRuntime
+              ? DeployService.rutaRuntime(carpetaRuntimeFinal)
+              : path.join(
+                  process.env.DEMOFLOW_STORAGE || sails.config.appPath,
+                  'deploy_runtime',
+                  'apps',
+                  carpetaRuntimeFinal
+                );
 
           eliminarCarpeta(carpetaDestinoRuntime);
-crearCarpeta(carpetaDestinoRuntime);
+          crearCarpeta(carpetaDestinoRuntime);
 
-// =====================================
-// 🤖 IA ZIP INTELIGENTE
-// Limpia y comprime el proyecto
-// sin node_modules, .git, .tmp, uploads
-// =====================================
+          await ZipBuilderService.crearZipInteligente({
+            carpetaOrigen: carpetaTemporalIA,
+            nombreProyecto: slugFinal
+          });
 
-await ZipBuilderService.crearZipInteligente({
-  carpetaOrigen: carpetaTemporalIA,
-  nombreProyecto: slugFinal
-});
+          limpiarCarpetaExtra(carpetaTemporalIA);
 
-limpiarCarpetaExtra(carpetaTemporalIA);
+          sails.log.info(
+            '📁 IA TEMP después de limpiar:',
+            fs.readdirSync(carpetaTemporalIA)
+          );
 
-sails.log.info(
-  '📁 IA TEMP después de limpiar:',
-  fs.readdirSync(carpetaTemporalIA)
-);
+          copiarCarpeta(
+            carpetaTemporalIA,
+            carpetaDestinoRuntime
+          );
 
-// =====================================
-// 📁 COPIA LIMPIA AL RUNTIME
-// copiarCarpeta ya ignora node_modules,
-// .git, .tmp, .vscode y uploads
-// =====================================
+          sails.log.info(
+            '✅ IA DemoFlow: Carpeta copiada al runtime:',
+            carpetaDestinoRuntime
+          );
 
-copiarCarpeta(carpetaTemporalIA, carpetaDestinoRuntime);
+          sails.log.info(
+            '📁 IA DemoFlow: Existe carpeta runtime:',
+            fs.existsSync(carpetaDestinoRuntime)
+          );
 
-// =====================================
-// 🔍 DEBUG IA RUNTIME
-// Confirmar que realmente quedó copiado
-// =====================================
+          if (fs.existsSync(carpetaDestinoRuntime)) {
+            sails.log.info(
+              '📦 IA DemoFlow: Archivos raíz en runtime:',
+              fs.readdirSync(carpetaDestinoRuntime)
+            );
+          }
 
-sails.log.info(
-  '✅ IA DemoFlow: Carpeta copiada al runtime:',
-  carpetaDestinoRuntime
-);
+          puertoFinal = generarPuerto();
 
-sails.log.info(
-  '📁 IA DemoFlow: Existe carpeta runtime:',
-  fs.existsSync(carpetaDestinoRuntime)
-);
+          comandoInicioFinal =
+            comandoInicio ||
+            (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
 
-if (fs.existsSync(carpetaDestinoRuntime)) {
-  sails.log.info(
-    '📦 IA DemoFlow: Archivos raíz en runtime:',
-    fs.readdirSync(carpetaDestinoRuntime)
-  );
-}
+          archivoEntradaFinal =
+            archivoEntrada || 'app.js';
 
-puertoFinal = generarPuerto();
+          deployType = 'dynamic';
+          estadoDeploy = 'subido';
+          urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
 
-comandoInicioFinal =
-  comandoInicio ||
-  (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
-
-archivoEntradaFinal = archivoEntrada || 'app.js';
-
-deployType = 'dynamic';
-estadoDeploy = 'subido';
-urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
-
-logDeploy =
-  `🤖 DemoFlow IA detectó proyecto ${tipoFinal} desde carpeta/ZIP.\n` +
-  `✅ Runtime preparado: ${carpetaRuntimeFinal}\n` +
-  `✅ Carpeta runtime: ${carpetaDestinoRuntime}\n` +
-  `✅ Puerto asignado: ${puertoFinal}\n` +
-  `✅ URL runtime: ${urlDemoFinal}\n` +
-  `✅ Comando sugerido: ${comandoInicioFinal}\n` +
-  `✅ Archivo de entrada: ${archivoEntradaFinal}\n` +
-  'Pendiente desplegar desde el panel.';
+          logDeploy =
+            `🤖 DemoFlow IA detectó proyecto ${tipoFinal} desde carpeta/ZIP.\n` +
+            `✅ Runtime preparado: ${carpetaRuntimeFinal}\n` +
+            `✅ Carpeta runtime: ${carpetaDestinoRuntime}\n` +
+            `✅ Puerto asignado: ${puertoFinal}\n` +
+            `✅ URL runtime: ${urlDemoFinal}\n` +
+            `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+            `✅ Archivo de entrada: ${archivoEntradaFinal}\n` +
+            'Pendiente desplegar desde el panel.';
         }
 
         eliminarCarpeta(carpetaTemporalIA);
@@ -844,10 +835,6 @@ logDeploy =
       activo: true,
       usuario: req.session.userId
     }).fetch();
-
-    // =====================================
-    // 💎 DESCONTAR CRÉDITO
-    // =====================================
 
     await Usuario.updateOne({
       id: usuarioActual.id
