@@ -48,6 +48,23 @@ module.exports = {
       .replace(/^-|-$/g, '');
   },
 
+  rutaBaseRuntime: function () {
+    const base = process.env.DEMOFLOW_STORAGE || process.cwd();
+
+    return path.join(
+      base,
+      'deploy_runtime',
+      'apps'
+    );
+  },
+
+  rutaRuntime: function (slug) {
+    return path.join(
+      this.rutaBaseRuntime(),
+      slug
+    );
+  },
+
   existe: async function (ruta) {
     try {
       await fsp.access(ruta);
@@ -160,7 +177,7 @@ module.exports = {
 
   detenerPM2: async function (nombrePM2) {
     this.iaLog('Deteniendo runtime PM2...', nombrePM2);
-    return await ejecutar(`pm2 delete ${nombrePM2}`, process.cwd());
+    return await ejecutar(`pm2 delete ${nombrePM2} || true`, process.cwd());
   },
 
   reiniciarPM2: async function (nombrePM2) {
@@ -173,7 +190,7 @@ module.exports = {
     return await ejecutar(`curl -I http://127.0.0.1:${puerto}`, process.cwd());
   },
 
-   analizarProyectoIA: async function (carpeta) {
+  analizarProyectoIA: async function (carpeta) {
     const tipo = await this.detectarTipo(carpeta);
 
     return {
@@ -187,7 +204,6 @@ module.exports = {
   },
 
   reiniciarRuntime: async function (slug, puerto) {
-
     const nombrePM2 = 'demoflow-' + slug;
 
     this.iaLog('Reiniciando runtime por slug...', {
@@ -198,39 +214,106 @@ module.exports = {
 
     let resultado = await this.reiniciarPM2(nombrePM2);
 
-    if (!resultado.ok) {
-
+    if (resultado && resultado.ok) {
       this.iaLog(
-        'PM2 restart falló. Intentando iniciar runtime...',
-        resultado.stderr
+        'Runtime reiniciado correctamente con PM2.',
+        nombrePM2
       );
 
-      const carpeta = this.rutaRuntime(slug);
+      return resultado;
+    }
 
-      if (!(await this.existe(carpeta))) {
+    this.iaLog(
+      'PM2 restart falló. Intentando iniciar runtime...',
+      resultado ? resultado.stderr : ''
+    );
+
+    const carpeta = this.rutaRuntime(slug);
+
+    if (!(await this.existe(carpeta))) {
+      this.iaError(
+        'No existe la carpeta runtime. No se puede reiniciar.',
+        carpeta
+      );
+
+      return {
+        ok: false,
+        error: 'No existe la carpeta runtime.',
+        carpeta
+      };
+    }
+
+    const packageJson = path.join(carpeta, 'package.json');
+    const nodeModules = path.join(carpeta, 'node_modules');
+
+    if (
+      await this.existe(packageJson) &&
+      !(await this.existe(nodeModules))
+    ) {
+      this.iaLog(
+        'node_modules no existe. Instalando dependencias...',
+        carpeta
+      );
+
+      const install = await this.instalarDependencias(carpeta);
+
+      if (!install.ok) {
+        this.iaError(
+          'Falló npm install al reiniciar runtime.',
+          install.stderr || install.stdout
+        );
 
         return {
           ok: false,
-          error: 'No existe la carpeta runtime.',
-          carpeta
+          error: 'Falló npm install.',
+          detalle: install.stderr || install.stdout
         };
-
       }
-
-      resultado = await this.iniciarConPM2({
-        carpeta,
-        nombrePM2,
-        comando: 'node app.js',
-        puerto
-      });
     }
 
-    return resultado;
-  },
+    let comando = 'node app.js';
 
-  rutaRuntime: function (slug) {
-    return path.join(process.cwd(), 'deploy_runtime', 'apps', slug);
+    try {
+      const detectado = await this.detectarTipo(carpeta);
+
+      if (detectado && detectado.comando) {
+        comando = detectado.comando;
+      }
+    } catch (e) {
+      this.iaLog(
+        'No se pudo detectar comando. Usando node app.js',
+        e.message
+      );
+    }
+
+    resultado = await this.iniciarConPM2({
+      carpeta,
+      nombrePM2,
+      comando,
+      puerto
+    });
+
+    if (!resultado.ok) {
+      this.iaError(
+        'No se pudo iniciar runtime con PM2.',
+        resultado.stderr || resultado.stdout
+      );
+
+      return resultado;
+    }
+
+    this.iaLog(
+      'Runtime iniciado correctamente con PM2.',
+      {
+        slug,
+        puerto,
+        nombrePM2,
+        carpeta,
+        comando
+      }
+    );
+
+    return resultado;
   }
 
 };
-
