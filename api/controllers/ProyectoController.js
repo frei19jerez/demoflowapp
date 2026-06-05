@@ -942,16 +942,15 @@ analizarIA: async function(req, res) {
 
     if (proyecto.carpetaRuntime) {
 
-      rutaProyecto = path.resolve(
-
-        sails.config.appPath,
-
+      rutaProyecto =
+  typeof DeployService !== 'undefined' &&
+  DeployService.rutaRuntime
+    ? DeployService.rutaRuntime(proyecto.carpetaRuntime)
+    : path.join(
+        process.env.DEMOFLOW_STORAGE || sails.config.appPath,
         'deploy_runtime',
-
         'apps',
-
         proyecto.carpetaRuntime
-
       );
 
     }
