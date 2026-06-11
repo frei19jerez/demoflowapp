@@ -13,62 +13,155 @@ module.exports.routes = {
   // ===============================
   // PROYECTOS
   // ===============================
-  'GET /proyecto/nuevo': 'ProyectoController.nuevo',
-  'POST /proyecto/crear': 'ProyectoController.crear',
+  'GET /proyecto/nuevo': {
+    controller: 'ProyectoController',
+    action: 'nuevo'
+  },
 
-  'GET /proyecto/:id': 'ProyectoController.ver',
+  'POST /proyecto/crear': {
+    controller: 'ProyectoController',
+    action: 'crear'
+  },
 
-  'POST /proyecto/:id/analizar-ia': 'ProyectoController.analizarIA',
+  'GET /proyecto/:id': {
+    controller: 'ProyectoController',
+    action: 'ver'
+  },
 
-  'POST /proyecto/:id/eliminar': 'ProyectoController.eliminar',
-  'GET /proyecto/:id/eliminar': 'ProyectoController.eliminar',
+  'POST /proyecto/:id/analizar-ia': {
+    controller: 'ProyectoController',
+    action: 'analizarIA'
+  },
+
+  'POST /proyecto/:id/eliminar': {
+    controller: 'ProyectoController',
+    action: 'eliminar'
+  },
+
+  'GET /proyecto/:id/eliminar': {
+    controller: 'ProyectoController',
+    action: 'eliminar'
+  },
 
   // ===============================
   // DEPLOY
   // ===============================
-  'GET /deploy/lista': 'ProyectoController.listaDeploys',
-  'GET /deploy/estado/:id': 'ProyectoController.estadoDeploy',
+  'GET /deploy/lista': {
+    controller: 'ProyectoController',
+    action: 'listaDeploys'
+  },
 
-  'GET /deploy/:id': 'DeployController.estado',
-  'GET /deploy/:id/logs': 'DeployController.logs',
+  'GET /deploy/estado/:id': {
+    controller: 'ProyectoController',
+    action: 'estadoDeploy'
+  },
 
-  'GET /deploy/:id/desplegar': 'DeployController.desplegar',
-  'GET /deploy/:id/detener': 'DeployController.detener',
-  'GET /deploy/:id/reiniciar': 'DeployController.reiniciar',
+  'GET /deploy/:id': {
+    controller: 'DeployController',
+    action: 'estado'
+  },
+
+  'GET /deploy/:id/logs': {
+    controller: 'DeployController',
+    action: 'logs'
+  },
+
+  'GET /deploy/:id/desplegar': {
+    controller: 'DeployController',
+    action: 'desplegar'
+  },
+
+  'GET /deploy/:id/detener': {
+    controller: 'DeployController',
+    action: 'detener'
+  },
+
+  'GET /deploy/:id/reiniciar': {
+    controller: 'DeployController',
+    action: 'reiniciar'
+  },
+
+  'GET /deploy/:id/log-json': {
+    controller: 'DeployController',
+    action: 'logJson'
+  },
 
   // ===============================
   // DEMOS
   // ===============================
-  'GET /demo/:slug': 'DemoController.ver',
-  'GET /demo-check/:slug': 'DemoController.check',
+  'GET /demo/:slug': {
+    controller: 'DemoController',
+    action: 'ver'
+  },
+
+  'GET /demo-check/:slug': {
+    controller: 'DemoController',
+    action: 'check'
+  },
 
   // ===============================
   // AUTENTICACIÓN USUARIOS
   // ===============================
-  'GET /register': 'AuthController.registerPage',
-  'POST /register': 'AuthController.register',
+  'GET /register': {
+    controller: 'AuthController',
+    action: 'registerPage'
+  },
 
-  'GET /login': 'AuthController.loginPage',
-  'POST /login': 'AuthController.login',
+  'POST /register': {
+    controller: 'AuthController',
+    action: 'register'
+  },
 
-  'GET /logout': 'AuthController.logout',
+  'GET /login': {
+    controller: 'AuthController',
+    action: 'loginPage'
+  },
+
+  'POST /login': {
+    controller: 'AuthController',
+    action: 'login'
+  },
+
+  'GET /logout': {
+    controller: 'AuthController',
+    action: 'logout'
+  },
 
   // ===============================
   // ADMIN AUTH
   // ===============================
-  'GET /admin/login': 'AdminController.loginPage',
-  'POST /admin/login': 'AdminController.login',
+  'GET /admin/login': {
+    controller: 'AdminController',
+    action: 'loginPage'
+  },
 
-  'GET /admin/register': 'AdminController.registerPage',
-  'POST /admin/register': 'AdminController.register',
+  'POST /admin/login': {
+    controller: 'AdminController',
+    action: 'login'
+  },
 
-  'GET /admin/logout': 'AdminController.logout',
-  'GET /deploy/:id/log-json': 'DeployController.logJson',
+  'GET /admin/register': {
+    controller: 'AdminController',
+    action: 'registerPage'
+  },
+
+  'POST /admin/register': {
+    controller: 'AdminController',
+    action: 'register'
+  },
+
+  'GET /admin/logout': {
+    controller: 'AdminController',
+    action: 'logout'
+  },
 
   // ===============================
   // ADMIN PANEL
   // ===============================
-  'GET /admin': 'AdminController.dashboard',
+  'GET /admin': {
+    controller: 'AdminController',
+    action: 'dashboard'
+  },
 
   // ===============================
   // RUNTIME
@@ -88,29 +181,52 @@ module.exports.routes = {
   // ===============================
   // DASHBOARD
   // ===============================
-  'GET /dashboard': 'ProyectoController.dashboard',
+  'GET /dashboard': {
+    controller: 'ProyectoController',
+    action: 'dashboard'
+  },
 
   // ===============================
   // PREMIUM / PAGOS
   // ===============================
-  'GET /pricing': 'PremiumController.pricing',
-  'GET /premium': 'PremiumController.premium',
+  'GET /pricing': {
+    controller: 'PremiumController',
+    action: 'pricing'
+  },
 
-  'POST /pago/crear': 'PagoController.crear',
+  'GET /premium': {
+    controller: 'PremiumController',
+    action: 'premium'
+  },
+
+  'POST /pago/crear': {
+    controller: 'PagoController',
+    action: 'crear'
+  },
 
   // ===============================
   // IA DEMOFLOW
   // ===============================
-  'POST /ia/analizar-proyecto': 'IAController.analizarProyecto',
-  'POST /ia/sugerir-descripcion': 'IAController.sugerirDescripcion',
-  'POST /ia/analizar-dashboard': 'IAController.analizarDashboard',
+  'POST /ia/analizar-proyecto': {
+    controller: 'IAController',
+    action: 'analizarProyecto'
+  },
+
+  'POST /ia/sugerir-descripcion': {
+    controller: 'IAController',
+    action: 'sugerirDescripcion'
+  },
+
+  'POST /ia/analizar-dashboard': {
+    controller: 'IAController',
+    action: 'analizarDashboard'
+  },
 
   // ===============================
   // ANALYTICS
   // ===============================
   'GET /analytics': async function(req, res) {
     try {
-
       const totalProyectos = await Proyecto.count();
 
       const demosActivas = await Proyecto.count({
@@ -118,7 +234,6 @@ module.exports.routes = {
       });
 
       const totalUsuarios = await Usuario.count();
-
       const totalPagos = await Pago.count();
 
       return res.view('pages/analytics', {
@@ -136,7 +251,6 @@ module.exports.routes = {
       });
 
     } catch (err) {
-
       sails.log.error('❌ IA DemoFlow: Error cargando analytics.');
       sails.log.error(err);
 
