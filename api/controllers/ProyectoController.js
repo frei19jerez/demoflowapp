@@ -129,6 +129,10 @@ function publicarHtmlEnRender(carpetaOrigen, carpetaDemoFinal) {
     carpetaDemoFinal
   );
 
+  sails.log.info('📦 IA DemoFlow: Publicando HTML desde:', carpetaOrigen);
+  sails.log.info('📦 IA DemoFlow: Publicando HTML hacia assets:', destinoAssets);
+  sails.log.info('📦 IA DemoFlow: Publicando HTML hacia tmp:', destinoTmp);
+
   eliminarCarpeta(destinoAssets);
   eliminarCarpeta(destinoTmp);
 
@@ -137,6 +141,8 @@ function publicarHtmlEnRender(carpetaOrigen, carpetaDemoFinal) {
 
   copiarCarpeta(carpetaOrigen, destinoAssets);
   copiarCarpeta(carpetaOrigen, destinoTmp);
+
+  sails.log.info('✅ IA DemoFlow: HTML publicado correctamente:', carpetaDemoFinal);
 }
 
 function limpiarCarpetaExtra(carpetaDestino) {
@@ -339,7 +345,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
 
     limpiarCarpetaExtra(carpetaDestinoRuntime);
 
-    const tipoDetectado = detectarTipoIA(carpetaDestinoRuntime, 'node');
+    const tipoDetectado = detectarTipoIA(carpetaDestinoRuntime, 'html');
 
     let urlDemoFinal = null;
     let deployTypeFinal = 'dynamic';
@@ -353,10 +359,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
     if (tipoDetectado === 'html') {
       carpetaDemoFinal = carpetaRuntimeFinal;
 
-      publicarHtmlEnRender(
-        carpetaDestinoRuntime,
-        carpetaDemoFinal
-      );
+      publicarHtmlEnRender(carpetaDestinoRuntime, carpetaDemoFinal);
 
       urlDemoFinal = `/demos/${carpetaDemoFinal}/index.html`;
       deployTypeFinal = 'static';
