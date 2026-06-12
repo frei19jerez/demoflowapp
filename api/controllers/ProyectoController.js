@@ -315,7 +315,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
       '🤖 DemoFlow inició clonación desde Git.\n' +
       `Repositorio: ${urlRepositorio}\n` +
       `Rama: ${rama}\n` +
-      `Carpeta runtime: ${carpetaDestinoRuntime}\n`
+      `Carpeta destino: ${carpetaDestinoRuntime}\n`
   }).exec(() => {});
 
   exec(comando, async function (error, stdout, stderr) {
@@ -329,7 +329,7 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
         estadoDeploy: 'fallido',
         logDeploy:
           '❌ Error clonando repositorio Git.\n' +
-          `Carpeta runtime: ${carpetaDestinoRuntime}\n` +
+          `Carpeta destino: ${carpetaDestinoRuntime}\n` +
           log +
           `\n${error.message}`
       });
@@ -341,38 +341,69 @@ function clonarGitEnSegundoPlano(proyectoId, urlRepositorio, ramaGit, carpetaRun
 
     const tipoDetectado = detectarTipoIA(carpetaDestinoRuntime, 'node');
 
-    const puertoAsignado = generarPuerto();
+    let urlDemoFinal = null;
+    let deployTypeFinal = 'dynamic';
+    let estadoDeployFinal = 'subido';
+    let carpetaDemoFinal = null;
+    let carpetaRuntimeGuardar = carpetaRuntimeFinal;
+    let puertoAsignado = null;
+    let comandoInicio = null;
+    let archivoEntrada = null;
 
-    const comandoInicio =
-      tipoDetectado === 'sails'
-        ? 'node app.js'
-        : tipoDetectado === 'node'
-          ? 'npm start'
-          : null;
+    if (tipoDetectado === 'html') {
+      carpetaDemoFinal = carpetaRuntimeFinal;
+
+      publicarHtmlEnRender(
+        carpetaDestinoRuntime,
+        carpetaDemoFinal
+      );
+
+      urlDemoFinal = `/demos/${carpetaDemoFinal}/index.html`;
+      deployTypeFinal = 'static';
+      estadoDeployFinal = 'activo';
+      carpetaRuntimeGuardar = null;
+    }
+
+    if (tipoDetectado === 'node' || tipoDetectado === 'sails') {
+      puertoAsignado = generarPuerto();
+
+      comandoInicio =
+        tipoDetectado === 'sails'
+          ? 'node app.js'
+          : 'npm start';
+
+      archivoEntrada = 'app.js';
+
+      urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+      deployTypeFinal = 'dynamic';
+      estadoDeployFinal = 'subido';
+    }
 
     await Proyecto.updateOne({ id: proyectoId }).set({
       tipoProyecto: tipoDetectado,
-      carpetaRuntime: carpetaRuntimeFinal,
+      carpetaDemo: carpetaDemoFinal,
+      carpetaRuntime: carpetaRuntimeGuardar,
       puerto: puertoAsignado,
-      deployType: tipoDetectado === 'html' ? 'static' : 'dynamic',
-      estadoDeploy: tipoDetectado === 'html' ? 'activo' : 'subido',
-      urlDemo: tipoDetectado === 'html'
-        ? `/demo/${carpetaRuntimeFinal}`
-        : `/runtime/${carpetaRuntimeFinal}`,
+      deployType: deployTypeFinal,
+      estadoDeploy: estadoDeployFinal,
+      urlDemo: urlDemoFinal,
       comandoInicio,
-      archivoEntrada: tipoDetectado === 'sails' || tipoDetectado === 'node' ? 'app.js' : null,
+      archivoEntrada,
       logDeploy:
         '✅ Repositorio Git clonado correctamente.\n' +
         `Tipo detectado: ${tipoDetectado}\n` +
-        `Carpeta runtime: ${carpetaDestinoRuntime}\n` +
-        `Puerto asignado: ${puertoAsignado}\n` +
-        `URL DemoFlow: /runtime/${carpetaRuntimeFinal}\n` +
-        'Listo para iniciar deploy desde el panel.\n' +
+        `Carpeta clonada: ${carpetaDestinoRuntime}\n` +
+        `URL DemoFlow: ${urlDemoFinal}\n` +
+        (
+          tipoDetectado === 'html'
+            ? `✅ HTML publicado en /demos/${carpetaDemoFinal}/index.html\n`
+            : `✅ Puerto asignado: ${puertoAsignado}\n✅ Comando sugerido: ${comandoInicio}\n`
+        ) +
+        'Listo.\n' +
         log
     });
   });
 }
-
 
 module.exports = {
 
