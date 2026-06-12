@@ -61,13 +61,25 @@ window.crearZipSailsLimpio = function (archivos) {
       for (var i = 0; i < archivos.length; i++) {
         var archivo = archivos[i];
 
-        var ruta = (
+        var rutaOriginal = (
           archivo.webkitRelativePath ||
           archivo.name
         ).replace(/\\/g, '/');
 
-        var partes = ruta.split('/');
+        var partes = rutaOriginal.split('/');
+
+        if (partes.length > 1) {
+          partes.shift();
+        }
+
+        var ruta = partes.join('/');
         var nombreArchivo = partes[partes.length - 1];
+
+        if (!ruta || !nombreArchivo) {
+          ignorados++;
+          continue;
+        }
+
         var rutaLower = ruta.toLowerCase();
         var nombreLower = nombreArchivo.toLowerCase();
 
@@ -84,17 +96,17 @@ window.crearZipSailsLimpio = function (archivos) {
           return nombreLower.endsWith(ext);
         });
 
-        if (archivo.size > 100 * 1024 * 1024) {
-         pesados++;
-         continue;
+        if (esPesado || archivo.size > 100 * 1024 * 1024) {
+          pesados++;
+          continue;
         }
 
         var esCarpetaPermitida = carpetasPermitidas.some(function (carpeta) {
-          return rutaLower.indexOf(carpeta.toLowerCase()) !== -1;
+          return rutaLower.indexOf(carpeta.toLowerCase()) === 0;
         });
 
         var esArchivoRaizPermitido = archivosPermitidos.some(function (permitido) {
-          return nombreArchivo === permitido;
+          return ruta === permitido;
         });
 
         if (!esCarpetaPermitida && !esArchivoRaizPermitido) {
