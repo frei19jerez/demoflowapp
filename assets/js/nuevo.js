@@ -31,15 +31,9 @@ function cambiarMetodoEntrada() {
       <option value="sails">Aplicación Sails.js</option>
     `;
 
-    if (
-      tipoActual === 'html' ||
-      tipoActual === 'node' ||
-      tipoActual === 'sails'
-    ) {
-      tipoSelect.value = tipoActual;
-    } else {
-      tipoSelect.value = 'html';
-    }
+    tipoSelect.value = ['html', 'node', 'sails'].includes(tipoActual)
+      ? tipoActual
+      : 'html';
   }
 
   if (metodo === 'git') {
@@ -51,15 +45,9 @@ function cambiarMetodoEntrada() {
       <option value="html">Página HTML</option>
     `;
 
-    if (
-      tipoActual === 'node' ||
-      tipoActual === 'sails' ||
-      tipoActual === 'html'
-    ) {
-      tipoSelect.value = tipoActual;
-    } else {
-      tipoSelect.value = 'node';
-    }
+    tipoSelect.value = ['node', 'sails', 'html'].includes(tipoActual)
+      ? tipoActual
+      : 'node';
   }
 
   if (metodo === 'externo') {
@@ -76,23 +64,13 @@ function cambiarMetodoEntrada() {
 }
 
 function cambiarTipoProyecto() {
-
   const tipo = document.getElementById('tipoProyecto').value;
 
-  const bloqueRuntime =
-    document.getElementById('bloqueRuntime');
-
-  const bloqueCarpetaDemo =
-    document.getElementById('bloqueCarpetaDemo');
-
-  const ayudaArchivo =
-    document.getElementById('ayudaArchivo');
-
-  const tecnologia =
-    document.getElementById('tecnologia');
-
-  const selectorCarpetaSails =
-    document.getElementById('selectorCarpetaSails');
+  const bloqueRuntime = document.getElementById('bloqueRuntime');
+  const bloqueCarpetaDemo = document.getElementById('bloqueCarpetaDemo');
+  const ayudaArchivo = document.getElementById('ayudaArchivo');
+  const tecnologia = document.getElementById('tecnologia');
+  const selectorCarpetaSails = document.getElementById('selectorCarpetaSails');
 
   if (bloqueRuntime) {
     bloqueRuntime.classList.add('oculto');
@@ -108,50 +86,30 @@ function cambiarTipoProyecto() {
     selectorCarpetaSails.style.display = 'none';
   }
 
-  // HTML
-
   if (tipo === 'html') {
-
-    if (bloqueCarpetaDemo) {
-      bloqueCarpetaDemo.style.display = 'block';
-    }
-
-    if (tecnologia) {
-      tecnologia.value =
-        'HTML + CSS + JavaScript';
-    }
-
+    if (bloqueCarpetaDemo) bloqueCarpetaDemo.style.display = 'block';
+    if (tecnologia) tecnologia.value = 'HTML + CSS + JavaScript';
     if (ayudaArchivo) {
       ayudaArchivo.innerHTML =
         'Sube un archivo <strong>.html</strong> o un <strong>.zip</strong> con tu proyecto estático.';
     }
-
   }
 
-  // NODE
-
   if (tipo === 'node') {
-
     if (bloqueRuntime) {
       bloqueRuntime.classList.remove('oculto');
       bloqueRuntime.style.display = 'block';
     }
 
-    if (tecnologia) {
-      tecnologia.value = 'Node.js';
-    }
+    if (tecnologia) tecnologia.value = 'Node.js';
 
     if (ayudaArchivo) {
       ayudaArchivo.innerHTML =
         'Sube un archivo <strong>.zip</strong> del proyecto Node.js.';
     }
-
   }
 
-  // SAILS
-
   if (tipo === 'sails') {
-
     if (bloqueRuntime) {
       bloqueRuntime.classList.remove('oculto');
       bloqueRuntime.style.display = 'block';
@@ -162,38 +120,24 @@ function cambiarTipoProyecto() {
       selectorCarpetaSails.style.display = 'block';
     }
 
-    if (tecnologia) {
-      tecnologia.value =
-        'Sails.js + Node.js + PostgreSQL';
-    }
+    if (tecnologia) tecnologia.value = 'Sails.js + Node.js + PostgreSQL';
 
     if (ayudaArchivo) {
       ayudaArchivo.innerHTML =
         'Sube un archivo <strong>.zip</strong> del proyecto Sails.js o selecciona una carpeta completa.';
     }
-
   }
-
-  // EXTERNO
 
   if (tipo === 'externo') {
-
-    if (tecnologia) {
-      tecnologia.value =
-        'Demo externa';
-    }
-
+    if (tecnologia) tecnologia.value = 'Demo externa';
   }
-
 }
 
 function mostrarNombreArchivo() {
   const input = document.getElementById('archivoDemo');
   const box = document.getElementById('nombreArchivoSeleccionado');
 
-  if (!input || !box) {
-    return;
-  }
+  if (!input || !box) return;
 
   if (input.files && input.files[0]) {
     const archivo = input.files[0];
@@ -223,13 +167,7 @@ function mostrarNombreArchivo() {
 
     const lower = archivo.name.toLowerCase();
 
-    if (
-      tipoSelect &&
-      (
-        lower.endsWith('.html') ||
-        lower.endsWith('.htm')
-      )
-    ) {
+    if (tipoSelect && (lower.endsWith('.html') || lower.endsWith('.htm'))) {
       tipoSelect.value = 'html';
     }
 
@@ -258,10 +196,7 @@ if (archivoDemo) {
 
 if (nombreInput) {
   nombreInput.addEventListener('input', function () {
-    if (
-      slugInput &&
-      !slugInput.dataset.editadoManualmente
-    ) {
+    if (slugInput && !slugInput.dataset.editadoManualmente) {
       slugInput.value = slugify(this.value);
     }
   });
@@ -273,11 +208,8 @@ if (slugInput) {
   });
 }
 
-
 if (formProyecto) {
-
   formProyecto.addEventListener('submit', function (e) {
-
     e.preventDefault();
 
     const form = e.target;
@@ -299,14 +231,8 @@ if (formProyecto) {
     }
 
     if (barra) barra.style.width = '0%';
-
-    if (texto) {
-      texto.textContent = '🤖 IA DemoFlow preparando proyecto...';
-    }
-
-    if (iaEstado) {
-      iaEstado.textContent = '🧠 IA analizando estructura del proyecto...';
-    }
+    if (texto) texto.textContent = '🤖 IA DemoFlow preparando proyecto...';
+    if (iaEstado) iaEstado.textContent = '🧠 IA analizando estructura del proyecto...';
 
     if (boton) {
       boton.disabled = true;
@@ -320,15 +246,13 @@ if (formProyecto) {
       }
     }
 
-    function iniciarSubida() {
-
+    function iniciarSubida(dataFinal) {
       const xhr = new XMLHttpRequest();
       let procesandoIntervalo = null;
 
       xhr.open('POST', form.action, true);
 
       xhr.upload.onprogress = function (event) {
-
         if (!event.lengthComputable) return;
 
         const porcentaje = Math.round((event.loaded / event.total) * 100);
@@ -344,7 +268,6 @@ if (formProyecto) {
         }
 
         if (porcentaje >= 100 && !procesandoIntervalo) {
-
           const mensajes = [
             '📦 IA extrayendo archivos...',
             '🧠 IA detectando tecnología...',
@@ -368,22 +291,12 @@ if (formProyecto) {
       };
 
       xhr.onload = function () {
-
-        if (procesandoIntervalo) {
-          clearInterval(procesandoIntervalo);
-        }
+        if (procesandoIntervalo) clearInterval(procesandoIntervalo);
 
         if (xhr.status >= 200 && xhr.status < 400) {
-
           if (barra) barra.style.width = '100%';
-
-          if (texto) {
-            texto.textContent = '✅ Proyecto creado correctamente';
-          }
-
-          if (iaEstado) {
-            iaEstado.textContent = '🎉 IA DemoFlow terminó el proceso.';
-          }
+          if (texto) texto.textContent = '✅ Proyecto creado correctamente';
+          if (iaEstado) iaEstado.textContent = '🎉 IA DemoFlow terminó el proceso.';
 
           setTimeout(function () {
             window.location.href = '/dashboard';
@@ -394,24 +307,31 @@ if (formProyecto) {
 
         restaurarBoton();
 
+        if (texto) texto.textContent = '❌ Error al guardar proyecto';
+        if (iaEstado) iaEstado.textContent = '⚠️ El servidor rechazó la solicitud.';
+
         alert('Error del servidor:\n\n' + xhr.responseText);
       };
 
       xhr.onerror = function () {
-        if (procesandoIntervalo) {
-          clearInterval(procesandoIntervalo);
-        }
+        if (procesandoIntervalo) clearInterval(procesandoIntervalo);
 
         restaurarBoton();
+
+        if (texto) texto.textContent = '❌ Error de conexión';
+        if (iaEstado) iaEstado.textContent = '⚠️ No se pudo conectar con DemoFlow.';
 
         alert('No se pudo subir el proyecto.');
       };
 
-      xhr.send(formData);
+      xhr.send(dataFinal);
+    }
+
+    function subirNormal() {
+      iniciarSubida(formData);
     }
 
     try {
-
       const esSailsLocal =
         tipoProyectoInput &&
         tipoProyectoInput.value === 'sails' &&
@@ -420,18 +340,17 @@ if (formProyecto) {
         carpetaSails.files.length > 0;
 
       if (esSailsLocal) {
+        if (texto) texto.textContent = '🤖 IA limpiando carpeta Sails...';
+        if (iaEstado) iaEstado.textContent = '🧹 Creando ZIP limpio desde carpeta local...';
 
-        if (texto) {
-          texto.textContent = '🤖 IA limpiando carpeta Sails...';
-        }
-
-        if (iaEstado) {
-          iaEstado.textContent = '🧹 Creando ZIP limpio desde carpeta local...';
+        if (typeof window.crearZipSailsLimpio !== 'function') {
+          console.warn('⚠️ crearZipSailsLimpio no existe. Subiendo normal.');
+          subirNormal();
+          return;
         }
 
         window.crearZipSailsLimpio(carpetaSails.files)
           .then(function (zipLimpio) {
-
             if (!zipLimpio || !(zipLimpio instanceof File || zipLimpio instanceof Blob)) {
               throw new Error('No se pudo crear el ZIP limpio de Sails.');
             }
@@ -450,29 +369,40 @@ if (formProyecto) {
             formData.set('archivoEntrada', 'app.js');
             formData.set('comandoInicio', 'node app.js');
 
-            console.log('===== DEMOFLOW FORMDATA FINAL =====');
-            for (const par of formData.entries()) {
-              console.log(par[0], par[1]);
-            }
-
-            iniciarSubida();
+            iniciarSubida(formData);
           })
           .catch(function (error) {
-            restaurarBoton();
-            alert(error.message);
+            console.error('❌ Error preparando proyecto Sails:', error);
+
+            if (texto) {
+              texto.textContent = '⚠️ IA no pudo preparar el ZIP, subiendo archivo normal...';
+            }
+
+            if (iaEstado) {
+              iaEstado.textContent = '🚀 Continuando subida sin preparación IA.';
+            }
+
+            subirNormal();
           });
 
       } else {
-        iniciarSubida();
+        subirNormal();
       }
 
     } catch (error) {
-      restaurarBoton();
-      alert(error.message);
+      console.error('❌ Error general preparando proyecto:', error);
+
+      if (texto) {
+        texto.textContent = '⚠️ IA falló, subiendo proyecto normal...';
+      }
+
+      if (iaEstado) {
+        iaEstado.textContent = '🚀 Continuando subida directa.';
+      }
+
+      subirNormal();
     }
-
   });
-
 }
 
 window.addEventListener('load', function () {
