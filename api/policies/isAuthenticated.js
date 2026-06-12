@@ -5,12 +5,12 @@
 
 module.exports = async function (req, res, proceed) {
   try {
-
     if (req.session && req.session.userId) {
       return proceed();
     }
 
-    if (req.session && req.session.usuario && req.session.usuario.id) {
+    if (req.session && req.session.user && req.session.user.id) {
+      req.session.userId = req.session.user.id;
       return proceed();
     }
 
