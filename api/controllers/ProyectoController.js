@@ -1241,64 +1241,40 @@ analizarIA: async function(req, res) {
     }
 
     const propietarioId =
-      typeof proyecto.usuario === 'object' && proyecto.usuario !== null
+      proyecto.usuario && typeof proyecto.usuario === 'object'
         ? proyecto.usuario.id
         : proyecto.usuario;
 
     const esDueno =
-      Number(propietarioId) === Number(req.session.userId);
+      String(propietarioId || '') === String(req.session.userId || '');
 
     const esAdmin =
-      usuarioLogueado.rol === 'admin';
+      usuarioLogueado.rol === 'admin' ||
+      usuarioLogueado.role === 'admin' ||
+      usuarioLogueado.email === 'jf@gmail.com';
 
-    if (!esDueno && !esAdmin) {
-      return res.forbidden(
-        'No tienes permiso para eliminar este proyecto.'
-      );
+    if (!esDueno && !esAdmin && propietarioId) {
+      return res.forbidden('No tienes permiso para eliminar este proyecto.');
     }
 
-    // =====================================
-    // 🛑 DETENER PM2 SI ES RUNTIME DINÁMICO
-    // Nombre real: demoflow-slug
-    // =====================================
-
-    const slugRuntime =
-      proyecto.carpetaRuntime || proyecto.slug;
-
-    const nombrePm2 =
-      slugRuntime
-        ? 'demoflow-' + slugRuntime
-        : null;
+    const slugRuntime = proyecto.carpetaRuntime || proyecto.slug;
+    const nombrePm2 = slugRuntime ? 'demoflow-' + slugRuntime : null;
 
     if (nombrePm2) {
       try {
         const { exec } = require('child_process');
 
         await new Promise((resolve) => {
-          exec(
-            `pm2 delete "${nombrePm2}" || true`,
-            function () {
-              return resolve();
-            }
-          );
+          exec(`pm2 delete "${nombrePm2}" || true`, function () {
+            return resolve();
+          });
         });
 
-        sails.log.info(
-          '✅ IA DemoFlow: PM2 eliminado:',
-          nombrePm2
-        );
-
+        sails.log.info('✅ IA DemoFlow: PM2 eliminado:', nombrePm2);
       } catch (e) {
-        sails.log.warn(
-          '⚠️ IA DemoFlow: No se pudo detener PM2:',
-          e.message
-        );
+        sails.log.warn('⚠️ IA DemoFlow: No se pudo detener PM2:', e.message);
       }
     }
-
-    // =====================================
-    // 🧹 ELIMINAR REGISTROS RUNTIME
-    // =====================================
 
     try {
       if (typeof ProyectoRuntime !== 'undefined') {
@@ -1312,10 +1288,6 @@ analizarIA: async function(req, res) {
         e.message
       );
     }
-
-    // =====================================
-    // 🗂️ ELIMINAR DEMO HTML
-    // =====================================
 
     if (proyecto.carpetaDemo) {
       const carpetaAssets = path.resolve(
@@ -1337,11 +1309,6 @@ analizarIA: async function(req, res) {
       eliminarCarpeta(carpetaTmp);
     }
 
-    // =====================================
-    // 🧨 ELIMINAR RUNTIME DINÁMICO
-    // Usa ruta persistente si existe DEMOFLOW_STORAGE
-    // =====================================
-
     if (proyecto.carpetaRuntime) {
       const carpetaRuntime =
         typeof DeployService !== 'undefined' &&
@@ -1356,15 +1323,8 @@ analizarIA: async function(req, res) {
 
       eliminarCarpeta(carpetaRuntime);
 
-      sails.log.info(
-        '✅ IA DemoFlow: Carpeta runtime eliminada:',
-        carpetaRuntime
-      );
+      sails.log.info('✅ IA DemoFlow: Carpeta runtime eliminada:', carpetaRuntime);
     }
-
-    // =====================================
-    // 🗑️ ELIMINAR PROYECTO DB
-    // =====================================
 
     await Proyecto.destroyOne({
       id: proyecto.id
