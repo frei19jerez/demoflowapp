@@ -150,11 +150,13 @@
                   action="/proyecto/<%= p.id %>/eliminar"
                   method="POST"
                   onsubmit="return confirm('¿Seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.');"
-                >
-                  <button type="submit" class="btn-danger">
+                  >
+                 <input type="hidden" name="_csrf" value="<%= _csrf %>">
+
+                 <button type="submit" class="btn-danger">
                     🗑️ Eliminar
-                  </button>
-                </form>
+                 </button>
+             </form>
 
               </div>
 
