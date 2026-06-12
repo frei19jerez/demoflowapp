@@ -204,116 +204,115 @@ module.exports = {
   },
 
   reiniciarRuntime: async function (slug, puerto) {
-    const nombrePM2 = 'demoflow-' + slug;
+  const nombrePM2 = 'demoflow-' + slug;
 
-    this.iaLog('Reiniciando runtime por slug...', {
-      slug,
-      puerto,
-      nombrePM2
-    });
+  this.iaLog('Reiniciando runtime por slug...', {
+    slug,
+    puerto,
+    nombrePM2
+  });
 
-    let resultado = await this.reiniciarPM2(nombrePM2);
+  let resultado = await this.reiniciarPM2(nombrePM2);
 
-    if (resultado && resultado.ok) {
-      this.iaLog(
-        'Runtime reiniciado correctamente con PM2.',
-        nombrePM2
-      );
+  if (resultado && resultado.ok) {
+    this.iaLog('Runtime reiniciado correctamente con PM2.', nombrePM2);
+    return resultado;
+  }
 
-      return resultado;
-    }
+  this.iaLog(
+    'PM2 restart falló. Intentando iniciar runtime...',
+    resultado ? resultado.stderr : ''
+  );
 
-    this.iaLog(
-      'PM2 restart falló. Intentando iniciar runtime...',
-      resultado ? resultado.stderr : ''
+  const carpeta = this.rutaRuntime(slug);
+
+  if (!(await this.existe(carpeta))) {
+    this.iaError(
+      'No existe la carpeta runtime. Se debe volver a publicar el proyecto.',
+      carpeta
     );
 
-    const carpeta = this.rutaRuntime(slug);
+    return {
+      ok: false,
+      error: 'No existe la carpeta runtime. Vuelve a publicar este proyecto desde ZIP o Git.',
+      carpeta
+    };
+  }
 
-    if (!(await this.existe(carpeta))) {
+  const detectado = await this.detectarTipo(carpeta);
+
+  if (!detectado || detectado.tipo === 'html' || detectado.tipo === 'externo') {
+    return {
+      ok: false,
+      error: 'Este proyecto no necesita runtime PM2.',
+      tipo: detectado ? detectado.tipo : 'desconocido'
+    };
+  }
+
+  const packageJson = path.join(carpeta, 'package.json');
+  const nodeModules = path.join(carpeta, 'node_modules');
+
+  if (
+    await this.existe(packageJson) &&
+    !(await this.existe(nodeModules))
+  ) {
+    this.iaLog('node_modules no existe. Instalando dependencias...', carpeta);
+
+    const install = await this.instalarDependencias(carpeta);
+
+    if (!install.ok) {
       this.iaError(
-        'No existe la carpeta runtime. No se puede reiniciar.',
-        carpeta
+        'Falló npm install al reiniciar runtime.',
+        install.stderr || install.stdout
       );
 
       return {
         ok: false,
-        error: 'No existe la carpeta runtime.',
-        carpeta
+        error: 'Falló npm install.',
+        detalle: install.stderr || install.stdout
       };
     }
+  }
 
-    const packageJson = path.join(carpeta, 'package.json');
-    const nodeModules = path.join(carpeta, 'node_modules');
+  const comando = detectado.comando || 'node app.js';
 
-    if (
-      await this.existe(packageJson) &&
-      !(await this.existe(nodeModules))
-    ) {
-      this.iaLog(
-        'node_modules no existe. Instalando dependencias...',
-        carpeta
-      );
+  resultado = await this.iniciarConPM2({
+    carpeta,
+    nombrePM2,
+    comando,
+    puerto
+  });
 
-      const install = await this.instalarDependencias(carpeta);
-
-      if (!install.ok) {
-        this.iaError(
-          'Falló npm install al reiniciar runtime.',
-          install.stderr || install.stdout
-        );
-
-        return {
-          ok: false,
-          error: 'Falló npm install.',
-          detalle: install.stderr || install.stdout
-        };
-      }
-    }
-
-    let comando = 'node app.js';
-
-    try {
-      const detectado = await this.detectarTipo(carpeta);
-
-      if (detectado && detectado.comando) {
-        comando = detectado.comando;
-      }
-    } catch (e) {
-      this.iaLog(
-        'No se pudo detectar comando. Usando node app.js',
-        e.message
-      );
-    }
-
-    resultado = await this.iniciarConPM2({
-      carpeta,
-      nombrePM2,
-      comando,
-      puerto
-    });
-
-    if (!resultado.ok) {
-      this.iaError(
-        'No se pudo iniciar runtime con PM2.',
-        resultado.stderr || resultado.stdout
-      );
-
-      return resultado;
-    }
-
-    this.iaLog(
-      'Runtime iniciado correctamente con PM2.',
-      {
-        slug,
-        puerto,
-        nombrePM2,
-        carpeta,
-        comando
-      }
+  if (!resultado.ok) {
+    this.iaError(
+      'No se pudo iniciar runtime con PM2.',
+      resultado.stderr || resultado.stdout
     );
 
-    return resultado;
+    return {
+      ok: false,
+      error: 'No se pudo iniciar runtime con PM2.',
+      detalle: resultado.stderr || resultado.stdout
+    };
   }
+
+  this.iaLog('Runtime iniciado correctamente con PM2.', {
+    slug,
+    puerto,
+    nombrePM2,
+    carpeta,
+    comando
+  });
+
+  return {
+    ok: true,
+    mensaje: 'Runtime iniciado correctamente.',
+    slug,
+    puerto,
+    nombrePM2,
+    carpeta,
+    comando
+  };
+}
 
 };
