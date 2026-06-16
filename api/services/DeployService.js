@@ -168,12 +168,38 @@ module.exports = {
   },
 
   iniciarConPM2: async function ({ carpeta, nombrePM2, comando, puerto }) {
-    const finalCommand = `PORT=${puerto} pm2 start ${comando} --name ${nombrePM2}`;
+  let finalCommand = '';
 
-    this.iaLog('Iniciando runtime con PM2...', finalCommand);
+  if (comando === 'node app.js') {
+    finalCommand =
+      `PORT=${puerto} pm2 start app.js ` +
+      `--name "${nombrePM2}" ` +
+      `--interpreter node ` +
+      `--update-env`;
+  } else if (comando === 'node server.js') {
+    finalCommand =
+      `PORT=${puerto} pm2 start server.js ` +
+      `--name "${nombrePM2}" ` +
+      `--interpreter node ` +
+      `--update-env`;
+  } else if (comando === 'node index.js') {
+    finalCommand =
+      `PORT=${puerto} pm2 start index.js ` +
+      `--name "${nombrePM2}" ` +
+      `--interpreter node ` +
+      `--update-env`;
+  } else {
+    finalCommand =
+      `PORT=${puerto} pm2 start npm ` +
+      `--name "${nombrePM2}" ` +
+      `-- start ` +
+      `--update-env`;
+  }
 
-    return await ejecutar(finalCommand, carpeta);
-  },
+  this.iaLog('Iniciando runtime con PM2...', finalCommand);
+
+  return await ejecutar(finalCommand, carpeta);
+},
 
   detenerPM2: async function (nombrePM2) {
     this.iaLog('Deteniendo runtime PM2...', nombrePM2);
