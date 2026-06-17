@@ -174,9 +174,13 @@ module.exports = {
 
     sails.log.info('✅ IA AUTH: Login correcto:', usuario.email);
 
+    const returnTo = req.session.returnTo || '/dashboard';
+
     req.session.userId = usuario.id;
     req.session.userName = usuario.nombre;
     req.session.userEmail = usuario.email;
+
+    delete req.session.returnTo;
 
     return req.session.save(function (err) {
 
@@ -184,10 +188,6 @@ module.exports = {
         sails.log.error('❌ IA AUTH: Error guardando sesión en login:', err);
         return res.serverError('No se pudo guardar la sesión.');
       }
-
-      const returnTo = req.session.returnTo || '/dashboard';
-
-      delete req.session.returnTo;
 
       return res.redirect(returnTo);
 
