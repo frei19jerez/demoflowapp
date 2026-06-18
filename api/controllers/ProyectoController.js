@@ -576,7 +576,7 @@ module.exports = {
     let estadoDeploy = 'pendiente';
     let logDeploy = '';
     let tipoFinal = tipoProyecto;
-    let descripcionFinal = descripcionIngresada || null;
+    let descripcionFinal= descripcionIngresada || null;
     let tecnologiaFinal = tecnologiaIngresada || null;
 
     // =====================================
@@ -848,27 +848,28 @@ module.exports = {
     // =====================================
 
     const proyectoCreado = await Proyecto.create({
-      nombre,
-      slug: slugFinal,
-      descripcion: descripcionFinal || null,
-      tecnologia: tecnologiaFinal || null,
-      urlDemo: urlDemoFinal || null,
-      urlRepositorio: urlRepositorio || null,
-      archivoZipOriginal: archivoZipOriginal || null,
-      carpetaDemo: carpetaDemoFinal || null,
-      carpetaRuntime: carpetaRuntimeFinal || null,
-      comandoInicio: comandoInicioFinal || null,
-      archivoEntrada: archivoEntradaFinal || null,
-      puerto: puertoFinal || null,
-      deployType,
-      estadoDeploy,
-      logDeploy,
-      tipoProyecto: tipoFinal,
-      estado: 'borrador',
-      destacado: false,
-      activo: true,
-      usuario: req.session.userId
-    }).fetch();
+  nombre,
+  slug: slugFinal,
+  descripcion: descripcionFinal || null,
+  tecnologia: tecnologiaFinal || null,
+  urlDemo: urlDemoFinal || null,
+  urlRepositorio: urlRepositorio || null,
+  ramaGit: ramaGit || 'main',
+  archivoZipOriginal: archivoZipOriginal || null,
+  carpetaDemo: carpetaDemoFinal || null,
+  carpetaRuntime: carpetaRuntimeFinal || null,
+  comandoInicio: comandoInicioFinal || null,
+  archivoEntrada: archivoEntradaFinal || null,
+  puerto: puertoFinal || null,
+  deployType,
+  estadoDeploy,
+  logDeploy,
+  tipoProyecto: tipoFinal,
+  estado: 'borrador',
+  destacado: false,
+  activo: true,
+  usuario: req.session.userId
+}).fetch();
 
     await Usuario.updateOne({
       id: usuarioActual.id
@@ -1434,6 +1435,60 @@ analizarIA: async function(req, res) {
       console.log('=====================================================');
       return res.serverError('Error al consultar estado del deploy.');
     }
+  },
+
+  actualizarGit: async function (req, res) {
+
+  try {
+
+    const proyecto = await Proyecto.findOne({
+      id: req.params.id,
+      usuario: req.session.userId
+    });
+
+    if (!proyecto) {
+      return res.notFound('Proyecto no encontrado.');
+    }
+
+    const resultado =
+      await DeployService.actualizarDesdeGit(proyecto);
+
+    if (!resultado.ok) {
+
+      await Proyecto.updateOne({
+        id: proyecto.id
+      }).set({
+        logDeploy:
+          (proyecto.logDeploy || '') +
+          '\n❌ Error actualizando desde Git:\n' +
+          (resultado.error || '')
+      });
+
+      return res.badRequest(
+        resultado.error || 'No se pudo actualizar.'
+      );
+    }
+
+    await Proyecto.updateOne({
+      id: proyecto.id
+    }).set({
+      logDeploy:
+        (proyecto.logDeploy || '') +
+        '\n✅ Proyecto actualizado desde Git correctamente.'
+    });
+
+    return res.redirect('/proyecto/' + proyecto.id);
+
+  } catch (err) {
+
+    sails.log.error(err);
+
+    return res.serverError(
+      err.message || err
+    );
   }
+
+},
+
 
 };
