@@ -50,19 +50,11 @@ module.exports = {
 
   rutaBaseRuntime: function () {
     const base = process.env.DEMOFLOW_STORAGE || process.cwd();
-
-    return path.join(
-      base,
-      'deploy_runtime',
-      'apps'
-    );
+    return path.join(base, 'deploy_runtime', 'apps');
   },
 
   rutaRuntime: function (slug) {
-    return path.join(
-      this.rutaBaseRuntime(),
-      slug
-    );
+    return path.join(this.rutaBaseRuntime(), slug);
   },
 
   existe: async function (ruta) {
@@ -72,6 +64,10 @@ module.exports = {
     } catch (err) {
       return false;
     }
+  },
+
+  obtenerPuertoProyecto: function (proyecto) {
+    return proyecto.puerto || proyecto.puertoInterno || proyecto.runtimePort || proyecto.port;
   },
 
   detectarTipo: async function (carpeta) {
@@ -88,8 +84,6 @@ module.exports = {
       const contenido = await fsp.readFile(packageJson, 'utf8');
 
       if (contenido.includes('sails') || await this.existe(routesJs)) {
-        this.iaLog('Tecnología detectada: Sails.js');
-
         return {
           tipo: 'sails',
           comando: 'node app.js',
@@ -99,8 +93,6 @@ module.exports = {
       }
 
       if (await this.existe(serverJs)) {
-        this.iaLog('Tecnología detectada: Node.js con server.js');
-
         return {
           tipo: 'node',
           comando: 'node server.js',
@@ -110,8 +102,6 @@ module.exports = {
       }
 
       if (await this.existe(appJs)) {
-        this.iaLog('Tecnología detectada: Node.js con app.js');
-
         return {
           tipo: 'node',
           comando: 'node app.js',
@@ -121,8 +111,6 @@ module.exports = {
       }
 
       if (await this.existe(indexJs)) {
-        this.iaLog('Tecnología detectada: Node.js con index.js');
-
         return {
           tipo: 'node',
           comando: 'node index.js',
@@ -130,8 +118,6 @@ module.exports = {
           ia: 'Proyecto Node.js detectado por IA'
         };
       }
-
-      this.iaLog('Proyecto Node.js detectado con npm start');
 
       return {
         tipo: 'node',
@@ -142,8 +128,6 @@ module.exports = {
     }
 
     if (await this.existe(indexHtml)) {
-      this.iaLog('Tecnología detectada: HTML estático');
-
       return {
         tipo: 'html',
         comando: '',
@@ -151,8 +135,6 @@ module.exports = {
         ia: 'Proyecto HTML estático detectado por IA'
       };
     }
-
-    this.iaLog('Tipo externo detectado');
 
     return {
       tipo: 'externo',
@@ -168,47 +150,30 @@ module.exports = {
   },
 
   iniciarConPM2: async function ({ carpeta, nombrePM2, comando, puerto }) {
-  let finalCommand = '';
+    let finalCommand = '';
 
-  if (comando === 'node app.js') {
-    finalCommand =
-      `PORT=${puerto} pm2 start app.js ` +
-      `--name "${nombrePM2}" ` +
-      `--interpreter node ` +
-      `--update-env`;
-  } else if (comando === 'node server.js') {
-    finalCommand =
-      `PORT=${puerto} pm2 start server.js ` +
-      `--name "${nombrePM2}" ` +
-      `--interpreter node ` +
-      `--update-env`;
-  } else if (comando === 'node index.js') {
-    finalCommand =
-      `PORT=${puerto} pm2 start index.js ` +
-      `--name "${nombrePM2}" ` +
-      `--interpreter node ` +
-      `--update-env`;
-  } else {
-    finalCommand =
-      `PORT=${puerto} pm2 start npm ` +
-      `--name "${nombrePM2}" ` +
-      `-- start ` +
-      `--update-env`;
-  }
+    if (comando === 'node app.js') {
+      finalCommand = `PORT=${puerto} pm2 start app.js --name "${nombrePM2}" --interpreter node --update-env`;
+    } else if (comando === 'node server.js') {
+      finalCommand = `PORT=${puerto} pm2 start server.js --name "${nombrePM2}" --interpreter node --update-env`;
+    } else if (comando === 'node index.js') {
+      finalCommand = `PORT=${puerto} pm2 start index.js --name "${nombrePM2}" --interpreter node --update-env`;
+    } else {
+      finalCommand = `PORT=${puerto} pm2 start npm --name "${nombrePM2}" -- start --update-env`;
+    }
 
-  this.iaLog('Iniciando runtime con PM2...', finalCommand);
-
-  return await ejecutar(finalCommand, carpeta);
-},
+    this.iaLog('Iniciando runtime con PM2...', finalCommand);
+    return await ejecutar(finalCommand, carpeta);
+  },
 
   detenerPM2: async function (nombrePM2) {
     this.iaLog('Deteniendo runtime PM2...', nombrePM2);
-    return await ejecutar(`pm2 delete ${nombrePM2} || true`, process.cwd());
+    return await ejecutar(`pm2 delete "${nombrePM2}" || true`, process.cwd());
   },
 
   reiniciarPM2: async function (nombrePM2) {
     this.iaLog('Reiniciando runtime PM2...', nombrePM2);
-    return await ejecutar(`pm2 restart ${nombrePM2}`, process.cwd());
+    return await ejecutar(`pm2 restart "${nombrePM2}" --update-env`, process.cwd());
   },
 
   verificarPuerto: async function (puerto) {
@@ -230,115 +195,316 @@ module.exports = {
   },
 
   reiniciarRuntime: async function (slug, puerto) {
-  const nombrePM2 = 'demoflow-' + slug;
+    const nombrePM2 = 'demoflow-' + slug;
 
-  this.iaLog('Reiniciando runtime por slug...', {
-    slug,
-    puerto,
-    nombrePM2
-  });
+    this.iaLog('Reiniciando runtime por slug...', {
+      slug,
+      puerto,
+      nombrePM2
+    });
 
-  let resultado = await this.reiniciarPM2(nombrePM2);
+    const carpeta = this.rutaRuntime(slug);
 
-  if (resultado && resultado.ok) {
-    this.iaLog('Runtime reiniciado correctamente con PM2.', nombrePM2);
-    return resultado;
-  }
+    if (!(await this.existe(carpeta))) {
+      return {
+        ok: false,
+        error: 'No existe la carpeta runtime. Vuelve a publicar este proyecto.',
+        carpeta
+      };
+    }
 
-  this.iaLog(
-    'PM2 restart falló. Intentando iniciar runtime...',
-    resultado ? resultado.stderr : ''
-  );
+    const detectado = await this.detectarTipo(carpeta);
 
-  const carpeta = this.rutaRuntime(slug);
+    if (!detectado || detectado.tipo === 'html' || detectado.tipo === 'externo') {
+      return {
+        ok: true,
+        mensaje: 'Proyecto HTML/externo no necesita PM2.',
+        tipo: detectado ? detectado.tipo : 'desconocido'
+      };
+    }
 
-  if (!(await this.existe(carpeta))) {
-    this.iaError(
-      'No existe la carpeta runtime. Se debe volver a publicar el proyecto.',
-      carpeta
-    );
+    let resultado = await this.reiniciarPM2(nombrePM2);
+
+    if (resultado && resultado.ok) {
+      this.iaLog('Runtime reiniciado correctamente con PM2.', nombrePM2);
+      return resultado;
+    }
+
+    this.iaLog('PM2 restart falló. Intentando iniciar runtime...', resultado ? resultado.stderr : '');
+
+    const packageJson = path.join(carpeta, 'package.json');
+    const nodeModules = path.join(carpeta, 'node_modules');
+
+    if (await this.existe(packageJson) && !(await this.existe(nodeModules))) {
+      const install = await this.instalarDependencias(carpeta);
+
+      if (!install.ok) {
+        return {
+          ok: false,
+          error: 'Falló npm install.',
+          detalle: install.stderr || install.stdout
+        };
+      }
+    }
+
+    const comando = detectado.comando || 'node app.js';
+
+    resultado = await this.iniciarConPM2({
+      carpeta,
+      nombrePM2,
+      comando,
+      puerto
+    });
+
+    if (!resultado.ok) {
+      return {
+        ok: false,
+        error: 'No se pudo iniciar runtime con PM2.',
+        detalle: resultado.stderr || resultado.stdout
+      };
+    }
 
     return {
-      ok: false,
-      error: 'No existe la carpeta runtime. Vuelve a publicar este proyecto desde ZIP o Git.',
-      carpeta
+      ok: true,
+      mensaje: 'Runtime iniciado correctamente.',
+      slug,
+      puerto,
+      nombrePM2,
+      carpeta,
+      comando
     };
-  }
+  },
 
-  const detectado = await this.detectarTipo(carpeta);
+  actualizarDesdeGit: async function (proyecto) {
+    try {
+      const slug = proyecto.slug;
+      const puerto = this.obtenerPuertoProyecto(proyecto);
+      const carpeta = this.rutaRuntime(slug);
+      const nombrePM2 = 'demoflow-' + slug;
 
-  if (!detectado || detectado.tipo === 'html' || detectado.tipo === 'externo') {
-    return {
-      ok: false,
-      error: 'Este proyecto no necesita runtime PM2.',
-      tipo: detectado ? detectado.tipo : 'desconocido'
-    };
-  }
+      this.iaLog('Actualizando proyecto desde Git...', {
+        slug,
+        puerto,
+        carpeta
+      });
 
-  const packageJson = path.join(carpeta, 'package.json');
-  const nodeModules = path.join(carpeta, 'node_modules');
+      if (!slug || !puerto) {
+        return {
+          ok: false,
+          error: 'El proyecto no tiene slug o puerto configurado.'
+        };
+      }
 
-  if (
-    await this.existe(packageJson) &&
-    !(await this.existe(nodeModules))
-  ) {
-    this.iaLog('node_modules no existe. Instalando dependencias...', carpeta);
+      if (!(await this.existe(carpeta))) {
+        return {
+          ok: false,
+          error: 'No existe la carpeta runtime del proyecto.',
+          detalle: carpeta
+        };
+      }
 
-    const install = await this.instalarDependencias(carpeta);
+      const gitFolder = path.join(carpeta, '.git');
 
-    if (!install.ok) {
-      this.iaError(
-        'Falló npm install al reiniciar runtime.',
-        install.stderr || install.stdout
-      );
+      if (!(await this.existe(gitFolder))) {
+        return {
+          ok: false,
+          error: 'Este proyecto no tiene carpeta .git. No se puede actualizar desde Git.'
+        };
+      }
+
+      await this.detenerPM2(nombrePM2);
+
+      const rama = proyecto.rama || proyecto.branch || 'main';
+
+      await ejecutar('git reset --hard HEAD', carpeta);
+      await ejecutar('git clean -fd', carpeta);
+
+      const fetch = await ejecutar('git fetch origin', carpeta);
+
+      if (!fetch.ok) {
+        return {
+          ok: false,
+          error: 'Error ejecutando git fetch.',
+          detalle: fetch.stderr || fetch.stdout
+        };
+      }
+
+      const reset = await ejecutar(`git reset --hard origin/${rama}`, carpeta);
+
+      if (!reset.ok) {
+        return {
+          ok: false,
+          error: `Error actualizando desde la rama ${rama}.`,
+          detalle: reset.stderr || reset.stdout
+        };
+      }
+
+      const packageJson = path.join(carpeta, 'package.json');
+
+      if (await this.existe(packageJson)) {
+        const install = await this.instalarDependencias(carpeta);
+
+        if (!install.ok) {
+          return {
+            ok: false,
+            error: 'Error ejecutando npm install.',
+            detalle: install.stderr || install.stdout
+          };
+        }
+      }
+
+      const reinicio = await this.reiniciarRuntime(slug, puerto);
+
+      if (!reinicio.ok) {
+        return {
+          ok: false,
+          error: 'El proyecto se actualizó, pero no pudo reiniciar el runtime.',
+          detalle: reinicio.detalle || reinicio.error
+        };
+      }
+
+      return {
+        ok: true,
+        mensaje: 'Proyecto actualizado desde Git correctamente.',
+        rama,
+        reinicio
+      };
+
+    } catch (error) {
+      this.iaError('Error actualizarDesdeGit', error);
 
       return {
         ok: false,
-        error: 'Falló npm install.',
-        detalle: install.stderr || install.stdout
+        error: error.message
+      };
+    }
+  },
+
+  reemplazarArchivos: async function (proyecto, carpetaNueva) {
+    let carpetaActual;
+    let carpetaBackup;
+
+    try {
+      const slug = proyecto.slug;
+      const puerto = this.obtenerPuertoProyecto(proyecto);
+      const nombrePM2 = 'demoflow-' + slug;
+
+      carpetaActual = this.rutaRuntime(slug);
+      carpetaBackup = carpetaActual + '_backup_' + Date.now();
+
+      this.iaLog('Reemplazando archivos del proyecto...', {
+        slug,
+        puerto,
+        carpetaActual,
+        carpetaNueva,
+        carpetaBackup
+      });
+
+      if (!slug || !puerto) {
+        return {
+          ok: false,
+          error: 'El proyecto no tiene slug o puerto configurado.'
+        };
+      }
+
+      if (!carpetaNueva || !(await this.existe(carpetaNueva))) {
+        return {
+          ok: false,
+          error: 'No existe la carpeta nueva para reemplazar archivos.'
+        };
+      }
+
+      await this.detenerPM2(nombrePM2);
+
+      if (await this.existe(carpetaActual)) {
+        await fsp.cp(carpetaActual, carpetaBackup, {
+          recursive: true,
+          force: true
+        });
+
+        await fsp.rm(carpetaActual, {
+          recursive: true,
+          force: true
+        });
+      }
+
+      await fsp.mkdir(path.dirname(carpetaActual), {
+        recursive: true
+      });
+
+      await fsp.cp(carpetaNueva, carpetaActual, {
+        recursive: true,
+        force: true
+      });
+
+      const detectado = await this.detectarTipo(carpetaActual);
+
+      const packageJson = path.join(carpetaActual, 'package.json');
+
+      if (
+        await this.existe(packageJson) &&
+        (detectado.tipo === 'node' || detectado.tipo === 'sails')
+      ) {
+        const install = await this.instalarDependencias(carpetaActual);
+
+        if (!install.ok) {
+          throw new Error('Error instalando dependencias: ' + (install.stderr || install.stdout));
+        }
+      }
+
+      const reinicio = await this.reiniciarRuntime(slug, puerto);
+
+      if (!reinicio.ok && detectado.tipo !== 'html') {
+        throw new Error(reinicio.detalle || reinicio.error || 'No se pudo reiniciar PM2.');
+      }
+
+      if (carpetaBackup && await this.existe(carpetaBackup)) {
+        await fsp.rm(carpetaBackup, {
+          recursive: true,
+          force: true
+        });
+      }
+
+      return {
+        ok: true,
+        mensaje: 'Archivos reemplazados correctamente.',
+        tipo: detectado.tipo,
+        reinicio
+      };
+
+    } catch (error) {
+      this.iaError('Error reemplazarArchivos', error);
+
+      try {
+        if (
+          carpetaActual &&
+          carpetaBackup &&
+          await this.existe(carpetaBackup)
+        ) {
+          await fsp.rm(carpetaActual, {
+            recursive: true,
+            force: true
+          });
+
+          await fsp.cp(carpetaBackup, carpetaActual, {
+            recursive: true,
+            force: true
+          });
+
+          await fsp.rm(carpetaBackup, {
+            recursive: true,
+            force: true
+          });
+        }
+      } catch (restoreError) {
+        this.iaError('Error restaurando backup', restoreError);
+      }
+
+      return {
+        ok: false,
+        error: error.message
       };
     }
   }
-
-  const comando = detectado.comando || 'node app.js';
-
-  resultado = await this.iniciarConPM2({
-    carpeta,
-    nombrePM2,
-    comando,
-    puerto
-  });
-
-  if (!resultado.ok) {
-    this.iaError(
-      'No se pudo iniciar runtime con PM2.',
-      resultado.stderr || resultado.stdout
-    );
-
-    return {
-      ok: false,
-      error: 'No se pudo iniciar runtime con PM2.',
-      detalle: resultado.stderr || resultado.stdout
-    };
-  }
-
-  this.iaLog('Runtime iniciado correctamente con PM2.', {
-    slug,
-    puerto,
-    nombrePM2,
-    carpeta,
-    comando
-  });
-
-  return {
-    ok: true,
-    mensaje: 'Runtime iniciado correctamente.',
-    slug,
-    puerto,
-    nombrePM2,
-    carpeta,
-    comando
-  };
-}
 
 };
