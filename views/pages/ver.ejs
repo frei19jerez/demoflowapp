@@ -119,30 +119,50 @@
 
       <div class="botones-box">
 
-        <% if (esDinamico && !runtimeActivo) { %>
+  <% if (esDinamico && !runtimeActivo) { %>
 
-          <a
-            href="/deploy/<%= proyecto.id %>/desplegar"
-            class="btn-demo btn-verde"
-          >
-            🚀 Iniciar deploy IA
-          </a>
+    <a
+      href="/deploy/<%= proyecto.id %>/desplegar"
+      class="btn-demo btn-verde"
+    >
+      🚀 Iniciar deploy IA
+    </a>
 
-        <% } %>
+  <% } %>
 
-        <% if (demoUrl) { %>
+  <% if (demoUrl) { %>
 
-          <a
-            href="<%= demoUrl %>"
-            target="_blank"
-            class="btn-demo btn-azul"
-          >
-            🌐 Ver aplicación
-          </a>
+    <a
+      href="<%= demoUrl %>"
+      target="_blank"
+      class="btn-demo btn-azul"
+    >
+      🌐 Ver aplicación
+    </a>
 
-        <% } %>
+  <% } %>
 
-      </div>
+  <% if (proyecto.urlRepositorio) { %>
+
+    <form
+      action="/proyecto/<%= proyecto.id %>/actualizar-git"
+      method="POST"
+      style="display:inline;"
+    >
+
+      <button
+        type="submit"
+        class="btn-demo btn-verde"
+        onclick="return confirm('¿Actualizar este proyecto desde Git sin descontar créditos?')"
+      >
+        🔄 Actualizar desde Git
+      </button>
+
+    </form>
+
+  <% } %>
+
+</div>
 
       <div class="ia-analyzer">
 
