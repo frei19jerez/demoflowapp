@@ -222,8 +222,15 @@ module.exports.routes = {
     action: 'analizarDashboard'
   },
 
-  'POST /proyecto/:id/actualizar-git':
-'ProyectoController.actualizarGit',
+  'POST /proyecto/:id/reemplazar-archivos': {
+  controller: 'ProyectoController',
+  action: 'reemplazarArchivos'
+},
+
+  'POST /proyecto/:id/actualizar-git': {
+    controller: 'ProyectoController',
+    action: 'actualizarGit'
+  },
   // ===============================
   // ANALYTICS
   // ===============================

@@ -144,23 +144,46 @@
 
   <% if (proyecto.urlRepositorio) { %>
 
-    <form
-      action="/proyecto/<%= proyecto.id %>/actualizar-git"
-      method="POST"
-      style="display:inline;"
+  <form
+    action="/proyecto/<%= proyecto.id %>/actualizar-git"
+    method="POST"
+    style="display:inline;"
+  >
+    <button
+      type="submit"
+      class="btn-demo btn-verde"
+      onclick="return confirm('¿Actualizar este proyecto desde Git sin descontar créditos?')"
+    >
+      🔄 Actualizar desde Git
+    </button>
+  </form>
+
+<% } else { %>
+
+  <form
+    action="/proyecto/<%= proyecto.id %>/reemplazar-archivos"
+    method="POST"
+    enctype="multipart/form-data"
+    style="display:inline;"
+  >
+    <input
+      type="file"
+      name="archivoDemo"
+      accept=".zip,.html,.htm"
+      required
+      style="display:block;margin-bottom:12px;color:white;"
     >
 
-      <button
-        type="submit"
-        class="btn-demo btn-verde"
-        onclick="return confirm('¿Actualizar este proyecto desde Git sin descontar créditos?')"
-      >
-        🔄 Actualizar desde Git
-      </button>
+    <button
+      type="submit"
+      class="btn-demo btn-verde"
+      onclick="return confirm('¿Actualizar este proyecto desde tu PC sin descontar créditos?')"
+    >
+      ⬆️ Actualizar desde mi PC
+    </button>
+  </form>
 
-    </form>
-
-  <% } %>
+<% } %>
 
 </div>
 

@@ -1437,6 +1437,72 @@ analizarIA: async function(req, res) {
     }
   },
 
+  reemplazarArchivos: async function (req, res) {
+
+  try {
+
+    const proyecto = await Proyecto.findOne({
+      id: req.params.id,
+      usuario: req.session.userId
+    });
+
+    if (!proyecto) {
+      return res.notFound('Proyecto no encontrado.');
+    }
+
+    const archivos = await new Promise((resolve, reject) => {
+
+      req.file('archivoDemo').upload({
+
+        maxBytes: 2 * 1024 * 1024 * 1024
+
+      }, function(err, uploadedFiles) {
+
+        if (err) {
+          return reject(err);
+        }
+
+        return resolve(uploadedFiles || []);
+
+      });
+
+    });
+
+    if (!archivos.length) {
+
+      return res.badRequest(
+        'Debes seleccionar un ZIP.'
+      );
+
+    }
+
+    return res.ok({
+
+      ok: true,
+
+      mensaje:
+        'ZIP recibido correctamente.',
+
+      archivo:
+        archivos[0].filename,
+
+      proyecto:
+        proyecto.nombre
+
+    });
+
+  } catch (err) {
+
+    sails.log.error(err);
+
+    return res.serverError(
+      err.message || err
+    );
+
+  }
+
+},
+
   actualizarGit: async function (req, res) {
 
   try {
