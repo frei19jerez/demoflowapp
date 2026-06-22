@@ -145,6 +145,31 @@ module.exports = {
       defaultsTo: true
     },
 
+    // ===============================
+    // CONFIG RUNTIME APP HIJA
+    // ===============================
+
+    databaseUrl: {
+      type: 'string',
+      columnName: 'database_url',
+      allowNull: true,
+      columnType: 'text'
+    },
+
+    sessionSecret: {
+      type: 'string',
+      columnName: 'session_secret',
+      allowNull: true,
+      maxLength: 255
+    },
+
+    runtimeEnv: {
+      type: 'string',
+      columnName: 'runtime_env',
+      allowNull: true,
+      columnType: 'text'
+    },
+
     usuario: {
       model: 'usuario',
       columnName: 'usuario_id'

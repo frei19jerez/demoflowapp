@@ -8,16 +8,27 @@ const fs = require('fs');
 const fsp = fs.promises;
 const { exec } = require('child_process');
 
-function ejecutar(comando, cwd) {
+function ejecutar(comando, cwd, envExtra = {}) {
   return new Promise((resolve) => {
-    exec(comando, { cwd, timeout: 300000 }, (error, stdout, stderr) => {
-      resolve({
-        ok: !error,
-        error,
-        stdout,
-        stderr
-      });
-    });
+    exec(
+      comando,
+      {
+        cwd,
+        timeout: 300000,
+        env: {
+          ...process.env,
+          ...envExtra
+        }
+      },
+      (error, stdout, stderr) => {
+        resolve({
+          ok: !error,
+          error,
+          stdout,
+          stderr
+        });
+      }
+    );
   });
 }
 
@@ -68,6 +79,43 @@ module.exports = {
 
   obtenerPuertoProyecto: function (proyecto) {
     return proyecto.puerto || proyecto.puertoInterno || proyecto.runtimePort || proyecto.port;
+  },
+
+  construirEnvRuntime: function (proyecto = {}, puerto) {
+    const envRuntime = {
+      PORT: String(puerto),
+      NODE_ENV: 'production'
+    };
+
+    if (proyecto.database_url) {
+      envRuntime.DATABASE_URL = proyecto.database_url;
+    } else if (process.env.DATABASE_URL) {
+      envRuntime.DATABASE_URL = process.env.DATABASE_URL;
+    }
+
+    if (proyecto.session_secret) {
+      envRuntime.SESSION_SECRET = proyecto.session_secret;
+    } else if (process.env.SESSION_SECRET) {
+      envRuntime.SESSION_SECRET = process.env.SESSION_SECRET;
+    } else {
+      envRuntime.SESSION_SECRET = 'demoflow-runtime-secret-' + (proyecto.slug || 'app');
+    }
+
+    if (proyecto.runtime_env) {
+      proyecto.runtime_env
+        .split('\n')
+        .map(linea => linea.trim())
+        .filter(Boolean)
+        .forEach(linea => {
+          const [key, ...resto] = linea.split('=');
+
+          if (key && resto.length) {
+            envRuntime[key.trim()] = resto.join('=').trim();
+          }
+        });
+    }
+
+    return envRuntime;
   },
 
   detectarTipo: async function (carpeta) {
@@ -149,21 +197,30 @@ module.exports = {
     return await ejecutar('npm install', carpeta);
   },
 
-  iniciarConPM2: async function ({ carpeta, nombrePM2, comando, puerto }) {
+  iniciarConPM2: async function ({ carpeta, nombrePM2, comando, puerto, proyecto }) {
     let finalCommand = '';
 
     if (comando === 'node app.js') {
-      finalCommand = `PORT=${puerto} pm2 start app.js --name "${nombrePM2}" --interpreter node --update-env`;
+      finalCommand = `pm2 start app.js --name "${nombrePM2}" --interpreter node --update-env`;
     } else if (comando === 'node server.js') {
-      finalCommand = `PORT=${puerto} pm2 start server.js --name "${nombrePM2}" --interpreter node --update-env`;
+      finalCommand = `pm2 start server.js --name "${nombrePM2}" --interpreter node --update-env`;
     } else if (comando === 'node index.js') {
-      finalCommand = `PORT=${puerto} pm2 start index.js --name "${nombrePM2}" --interpreter node --update-env`;
+      finalCommand = `pm2 start index.js --name "${nombrePM2}" --interpreter node --update-env`;
     } else {
-      finalCommand = `PORT=${puerto} pm2 start npm --name "${nombrePM2}" -- start --update-env`;
+      finalCommand = `pm2 start npm --name "${nombrePM2}" -- start --update-env`;
     }
 
-    this.iaLog('Iniciando runtime con PM2...', finalCommand);
-    return await ejecutar(finalCommand, carpeta);
+    const envRuntime = this.construirEnvRuntime(proyecto, puerto);
+
+    this.iaLog('Iniciando runtime con PM2...', {
+      comando: finalCommand,
+      puerto,
+      nombrePM2,
+      tieneDatabaseUrl: !!envRuntime.DATABASE_URL,
+      tieneSessionSecret: !!envRuntime.SESSION_SECRET
+    });
+
+    return await ejecutar(finalCommand, carpeta, envRuntime);
   },
 
   detenerPM2: async function (nombrePM2) {
@@ -171,9 +228,21 @@ module.exports = {
     return await ejecutar(`pm2 delete "${nombrePM2}" || true`, process.cwd());
   },
 
-  reiniciarPM2: async function (nombrePM2) {
-    this.iaLog('Reiniciando runtime PM2...', nombrePM2);
-    return await ejecutar(`pm2 restart "${nombrePM2}" --update-env`, process.cwd());
+  reiniciarPM2: async function (nombrePM2, proyecto, puerto, carpeta) {
+    const envRuntime = this.construirEnvRuntime(proyecto, puerto);
+
+    this.iaLog('Reiniciando runtime PM2...', {
+      nombrePM2,
+      puerto,
+      tieneDatabaseUrl: !!envRuntime.DATABASE_URL,
+      tieneSessionSecret: !!envRuntime.SESSION_SECRET
+    });
+
+    return await ejecutar(
+      `pm2 restart "${nombrePM2}" --update-env`,
+      carpeta || process.cwd(),
+      envRuntime
+    );
   },
 
   verificarPuerto: async function (puerto) {
@@ -194,7 +263,7 @@ module.exports = {
     };
   },
 
-  reiniciarRuntime: async function (slug, puerto) {
+  reiniciarRuntime: async function (slug, puerto, proyecto = {}) {
     const nombrePM2 = 'demoflow-' + slug;
 
     this.iaLog('Reiniciando runtime por slug...', {
@@ -223,7 +292,7 @@ module.exports = {
       };
     }
 
-    let resultado = await this.reiniciarPM2(nombrePM2);
+    let resultado = await this.reiniciarPM2(nombrePM2, proyecto, puerto, carpeta);
 
     if (resultado && resultado.ok) {
       this.iaLog('Runtime reiniciado correctamente con PM2.', nombrePM2);
@@ -253,7 +322,8 @@ module.exports = {
       carpeta,
       nombrePM2,
       comando,
-      puerto
+      puerto,
+      proyecto
     });
 
     if (!resultado.ok) {
@@ -353,7 +423,7 @@ module.exports = {
         }
       }
 
-      const reinicio = await this.reiniciarRuntime(slug, puerto);
+      const reinicio = await this.reiniciarRuntime(slug, puerto, proyecto);
 
       if (!reinicio.ok) {
         return {
@@ -452,7 +522,7 @@ module.exports = {
         }
       }
 
-      const reinicio = await this.reiniciarRuntime(slug, puerto);
+      const reinicio = await this.reiniciarRuntime(slug, puerto, proyecto);
 
       if (!reinicio.ok && detectado.tipo !== 'html') {
         throw new Error(reinicio.detalle || reinicio.error || 'No se pudo reiniciar PM2.');
