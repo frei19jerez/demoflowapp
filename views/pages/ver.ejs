@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/styles/ver.css">
+<link rel="stylesheet" href="/styles/ver.css?v=3">
 
 <%
   const esHtml = proyecto.tipoProyecto === 'html';
@@ -22,94 +22,185 @@
 
   const estadoTexto =
     runtimeActivo
-      ? '🟢 Runtime IA online'
-      : '🔴 Runtime IA offline';
+      ? 'Runtime online'
+      : 'Runtime offline';
 %>
 
 <div class="proyecto-page">
 
   <div class="proyecto-container">
 
-    <div class="proyecto-card">
+    <!-- HERO PROYECTO -->
+    <section class="project-hero">
 
-      <div class="proyecto-header">
+      <div class="project-hero-left">
 
-        <div>
+        <span class="<%= runtimeActivo ? 'status-pill online' : 'status-pill offline' %>">
+          <%= runtimeActivo ? '🟢' : '🔴' %> <%= estadoTexto %>
+        </span>
 
-          <h1 class="titulo-proyecto">
-            🚀 <%= proyecto.nombre %>
-          </h1>
+        <h1>
+          🚀 <%= proyecto.nombre %>
+        </h1>
 
-          <p class="subtitulo-proyecto">
-            Sistema administrado por DemoFlow IA
-          </p>
+        <p>
+          Aplicación administrada por DemoFlow IA, lista para publicar,
+          compartir, presentar o vender.
+        </p>
 
+        <div class="project-url-box">
+          <span>URL pública</span>
+          <strong><%= demoUrl || 'Sin URL disponible' %></strong>
         </div>
 
+      </div>
+
+      <div class="project-hero-actions">
+
         <% if (usuario) { %>
-
           <div class="creditos-box">
-
-            💎 Créditos IA:
-            <%= usuario.creditos || 0 %>
-
+            💎 Créditos IA: <%= usuario.creditos || 0 %>
           </div>
+        <% } %>
 
+        <% if (demoUrl) { %>
+          <a href="<%= demoUrl %>" target="_blank" class="btn-demo btn-azul">
+            🌐 Ver aplicación
+          </a>
+        <% } %>
+
+        <% if (esDinamico && !runtimeActivo) { %>
+          <a href="/deploy/<%= proyecto.id %>/desplegar" class="btn-demo btn-verde">
+            🚀 Iniciar deploy IA
+          </a>
         <% } %>
 
       </div>
 
-      <div class="info-grid">
+    </section>
 
-        <div class="info-card">
+    <!-- MÉTRICAS -->
+    <section class="info-grid">
 
-          <h3>📦 Tipo</h3>
-
-          <p>
-            <%= proyecto.tipoProyecto || '-' %>
-          </p>
-
-        </div>
-
-        <div class="info-card">
-
-          <h3>🧠 Tecnología</h3>
-
-          <p class="texto-azul">
-            <%= proyecto.tecnologia || '-' %>
-          </p>
-
-        </div>
-
-        <div class="info-card">
-
-          <h3>⚡ Estado IA</h3>
-
-          <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
-
-            <%= estadoTexto %>
-
-          </p>
-
-        </div>
-
-        <div class="info-card">
-
-          <h3>🌐 Puerto</h3>
-
-          <p>
-            <%= proyecto.puerto || 'No asignado' %>
-          </p>
-
-        </div>
-
+      <div class="info-card">
+        <span class="info-icon">📦</span>
+        <h3>Tipo</h3>
+        <p><%= proyecto.tipoProyecto || '-' %></p>
       </div>
+
+      <div class="info-card">
+        <span class="info-icon">🧠</span>
+        <h3>Tecnología</h3>
+        <p class="texto-azul"><%= proyecto.tecnologia || '-' %></p>
+      </div>
+
+      <div class="info-card">
+        <span class="info-icon">⚡</span>
+        <h3>Estado</h3>
+        <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
+          <%= runtimeActivo ? 'Activo' : 'Inactivo' %>
+        </p>
+      </div>
+
+      <div class="info-card">
+        <span class="info-icon">🌐</span>
+        <h3>Puerto</h3>
+        <p><%= proyecto.puerto || 'No asignado' %></p>
+      </div>
+
+    </section>
+
+    <!-- CENTRO DE CONTROL -->
+<section class="control-center">
+
+  <div class="section-top">
+    <div>
+      <h2>📊 Centro de control</h2>
+      <p>
+        Información rápida para administrar y presentar este proyecto.
+      </p>
+    </div>
+  </div>
+
+  <div class="control-grid">
+
+    <div class="control-item">
+      <span>🟢</span>
+      <div>
+        <h3>Runtime</h3>
+        <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
+          <%= runtimeActivo ? 'Online' : 'Offline' %>
+        </p>
+      </div>
+    </div>
+
+    <div class="control-item">
+      <span>🌐</span>
+      <div>
+        <h3>URL pública</h3>
+        <p class="control-url"><%= demoUrl || 'Sin URL' %></p>
+      </div>
+    </div>
+
+    <div class="control-item">
+      <span>🧠</span>
+      <div>
+        <h3>Tecnología</h3>
+        <p><%= proyecto.tecnologia || '-' %></p>
+      </div>
+    </div>
+
+    <div class="control-item">
+      <span>📦</span>
+      <div>
+        <h3>Tipo</h3>
+        <p><%= proyecto.tipoProyecto || '-' %></p>
+      </div>
+    </div>
+
+    <div class="control-item">
+      <span>🚀</span>
+      <div>
+        <h3>Estado deploy</h3>
+        <p><%= proyecto.estadoDeploy || proyecto.estado || 'borrador' %></p>
+      </div>
+    </div>
+
+    <div class="control-item">
+      <span>🔌</span>
+      <div>
+        <h3>Puerto</h3>
+        <p><%= proyecto.puerto || 'No asignado' %></p>
+      </div>
+    </div>
+
+  </div>
+
+  <% if (demoUrl) { %>
+    <div class="copy-box">
+      <input
+        id="demoUrlInput"
+        type="text"
+        value="<%= demoUrl %>"
+        readonly>
+
+      <button
+        type="button"
+        class="btn-demo btn-azul"
+        onclick="navigator.clipboard.writeText(document.getElementById('demoUrlInput').value); this.innerText='✅ Copiado';">
+        📋 Copiar URL
+      </button>
+    </div>
+  <% } %>
+
+</section>
+
+    <!-- DESCRIPCIÓN Y ACCIONES -->
+    <section class="project-main-grid">
 
       <div class="descripcion-box">
 
-        <h2>
-          📄 Descripción del proyecto
-        </h2>
+        <h2>📄 Descripción del proyecto</h2>
 
         <p>
           <%= proyecto.descripcion || 'Sin descripción.' %>
@@ -117,247 +208,207 @@
 
       </div>
 
-      <div class="botones-box">
+      <div class="actions-panel">
 
-  <% if (esDinamico && !runtimeActivo) { %>
+        <h2>⚙️ Acciones rápidas</h2>
 
-    <a
-      href="/deploy/<%= proyecto.id %>/desplegar"
-      class="btn-demo btn-verde"
-    >
-      🚀 Iniciar deploy IA
-    </a>
-
-  <% } %>
-
-  <% if (demoUrl) { %>
-
-    <a
-      href="<%= demoUrl %>"
-      target="_blank"
-      class="btn-demo btn-azul"
-    >
-      🌐 Ver aplicación
-    </a>
-
-  <% } %>
-
-  <% if (proyecto.urlRepositorio) { %>
-
-  <form
-    action="/proyecto/<%= proyecto.id %>/actualizar-git"
-    method="POST"
-    style="display:inline;"
-  >
-    <button
-      type="submit"
-      class="btn-demo btn-verde"
-      onclick="return confirm('¿Actualizar este proyecto desde Git sin descontar créditos?')"
-    >
-      🔄 Actualizar desde Git
-    </button>
-  </form>
-
-<% } else { %>
-
-  <form
-    action="/proyecto/<%= proyecto.id %>/reemplazar-archivos"
-    method="POST"
-    enctype="multipart/form-data"
-    style="display:inline;"
-  >
-    <input
-      type="file"
-      name="archivoDemo"
-      accept=".zip,.html,.htm"
-      required
-      style="display:block;margin-bottom:12px;color:white;"
-    >
-
-    <button
-      type="submit"
-      class="btn-demo btn-verde"
-      onclick="return confirm('¿Actualizar este proyecto desde tu PC sin descontar créditos?')"
-    >
-      ⬆️ Actualizar desde mi PC
-    </button>
-  </form>
-
-<% } %>
-
-</div>
-
-      <div class="ia-analyzer">
-
-        <h2 class="ia-title">
-          🤖 DemoFlow IA Analyzer
-        </h2>
-
-        <p class="ia-description">
-
-          DemoFlow IA analiza automáticamente
-          la estructura del proyecto,
-          detecta tecnologías,
-          verifica runtime
-          y evalúa potencial SaaS.
-
+        <p>
+          Administra este proyecto sin salir de DemoFlow.
         </p>
 
-        <div class="ia-grid">
+        <div class="botones-box">
 
-          <div class="ia-card">
+          <% if (demoUrl) { %>
+            <a href="<%= demoUrl %>" target="_blank" class="btn-demo btn-azul">
+              🌐 Ver aplicación
+            </a>
+          <% } %>
 
-            <h3>
-              🧠 IA Detectó
-            </h3>
+          <% if (proyecto.urlRepositorio) { %>
 
-            <p class="ia-detectado">
+            <form
+              action="/proyecto/<%= proyecto.id %>/actualizar-git"
+              method="POST">
 
-              <%= proyecto.tecnologia || 'Tecnología desconocida' %>
+              <button
+                type="submit"
+                class="btn-demo btn-verde"
+                onclick="return confirm('¿Actualizar este proyecto desde Git sin descontar créditos?')">
+                🔄 Actualizar desde Git
+              </button>
 
-            </p>
+            </form>
 
-          </div>
+          <% } else { %>
 
-          <div class="ia-card">
+            <form
+              action="/proyecto/<%= proyecto.id %>/reemplazar-archivos"
+              method="POST"
+              enctype="multipart/form-data">
 
-            <h3>
-              ⚡ Runtime IA
-            </h3>
+              <label class="upload-label">
+                ⬆️ Seleccionar archivo
+                <input
+                  type="file"
+                  name="archivoDemo"
+                  accept=".zip,.html,.htm"
+                  required>
+              </label>
 
-            <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
+              <button
+                type="submit"
+                class="btn-demo btn-verde"
+                onclick="return confirm('¿Actualizar este proyecto desde tu PC sin descontar créditos?')">
+                Actualizar desde mi PC
+              </button>
 
-              <%= estadoTexto %>
+            </form>
 
-            </p>
-
-          </div>
-
-          <div class="ia-card">
-
-            <h3>
-              📈 Potencial SaaS
-            </h3>
-
-            <p class="ia-saas">
-
-              Alto potencial comercial detectado por IA.
-
-            </p>
-
-          </div>
-
-        </div>
-
-        <!-- ================================= -->
-        <!-- 🤖 RESULTADO IA -->
-        <!-- ================================= -->
-
-        <div
-          id="resultadoIA"
-          class="resultado-ia"
-          style="display:none;"
-        >
-
-          <h3 class="resultado-title">
-            🤖 Resultado IA
-          </h3>
-
-          <div class="ia-live-box">
-
-            <div class="ia-live-top">
-
-              <div class="ia-spinner"></div>
-
-              <div>
-
-                <div
-                  id="iaTextoEstado"
-                  class="ia-estado-texto"
-                >
-                  DemoFlow IA iniciando análisis...
-                </div>
-
-                <div class="ia-subestado">
-                  Runtime inteligente procesando proyecto.
-                </div>
-
-              </div>
-
-            </div>
-
-            <div class="ia-progress">
-
-              <div
-                id="iaBarra"
-                class="ia-progress-bar"
-              ></div>
-
-            </div>
-
-            <div
-              id="iaLogs"
-              class="ia-logs"
-            >
-              🤖 DemoFlow IA esperando instrucciones...
-            </div>
-
-            <div
-              id="contenidoResultadoIA"
-              class="contenido-resultado-ia"
-            >
-              ⏳ Preparando análisis...
-            </div>
-
-          </div>
+          <% } %>
 
         </div>
 
-        <!-- ================================= -->
-        <!-- 🤖 BOTÓN IA -->
-        <!-- ================================= -->
+      </div>
+
+    </section>
+
+    <!-- VISTA PREVIA -->
+    <% if (demoUrl) { %>
+
+      <section class="preview-section">
+
+        <div class="section-top">
+          <div>
+            <h2>🖥️ Vista previa en vivo</h2>
+            <p>
+              Esta es la aplicación publicada dentro de DemoFlow.
+            </p>
+          </div>
+
+          <a href="<%= demoUrl %>" target="_blank" class="btn-demo btn-secondary">
+            Abrir en nueva pestaña
+          </a>
+        </div>
+
+        <div class="preview-frame-box">
+          <iframe
+            src="<%= demoUrl %>"
+            loading="lazy">
+          </iframe>
+        </div>
+
+      </section>
+
+    <% } %>
+
+    <!-- IA ANALYZER -->
+    <section class="ia-analyzer">
+
+      <div class="ia-analyzer-header">
+
+        <div>
+          <h2 class="ia-title">
+            🤖 DemoFlow IA Analyzer
+          </h2>
+
+          <p class="ia-description">
+            DemoFlow IA analiza automáticamente la estructura del proyecto,
+            detecta tecnologías, verifica runtime y evalúa su potencial comercial.
+          </p>
+        </div>
 
         <% if (usuario) { %>
 
-          <div class="box-boton-ia">
+          <button
+            id="btnAnalizarIA"
+            type="button"
+            class="btn-analizar-ia"
+            data-id="<%= proyecto.id %>"
+            data-nombre="<%= proyecto.nombre || '' %>"
+            data-tipo="<%= proyecto.tipoProyecto || '' %>"
+            data-tecnologia="<%= proyecto.tecnologia || '' %>"
+            data-repo="<%= proyecto.urlRepositorio || '' %>"
+            data-demo="<%= proyecto.urlDemo || '' %>"
+            data-archivo="<%= proyecto.archivoEntrada || '' %>"
+            data-comando="<%= proyecto.comandoInicio || '' %>">
 
-            <button
+            🤖 Analizar con IA
 
-              id="btnAnalizarIA"
-
-              type="button"
-
-              class="btn-analizar-ia"
-
-              data-id="<%= proyecto.id %>"
-
-              data-nombre="<%= proyecto.nombre || '' %>"
-
-              data-tipo="<%= proyecto.tipoProyecto || '' %>"
-
-              data-tecnologia="<%= proyecto.tecnologia || '' %>"
-
-              data-repo="<%= proyecto.urlRepositorio || '' %>"
-
-              data-demo="<%= proyecto.urlDemo || '' %>"
-
-              data-archivo="<%= proyecto.archivoEntrada || '' %>"
-
-              data-comando="<%= proyecto.comandoInicio || '' %>"
-
-            >
-
-              🤖 Analizar proyecto con IA
-
-            </button>
-
-          </div>
+          </button>
 
         <% } %>
 
       </div>
 
-    </div>
+      <div class="ia-grid">
+
+        <div class="ia-card">
+          <h3>🧠 IA detectó</h3>
+          <p class="ia-detectado">
+            <%= proyecto.tecnologia || 'Tecnología desconocida' %>
+          </p>
+        </div>
+
+        <div class="ia-card">
+          <h3>⚡ Runtime IA</h3>
+          <p class="<%= runtimeActivo ? 'ia-online' : 'ia-offline' %>">
+            <%= runtimeActivo ? 'Runtime online' : 'Runtime offline' %>
+          </p>
+        </div>
+
+        <div class="ia-card">
+          <h3>📈 Potencial SaaS</h3>
+          <p class="ia-saas">
+            Alto potencial comercial detectado por IA.
+          </p>
+        </div>
+
+      </div>
+
+      <!-- RESULTADO IA -->
+      <div id="resultadoIA" class="resultado-ia" style="display:none;">
+
+        <h3 class="resultado-title">
+          🤖 Resultado IA
+        </h3>
+
+        <div class="ia-live-box">
+
+          <div class="ia-live-top">
+
+            <div class="ia-spinner"></div>
+
+            <div>
+
+              <div id="iaTextoEstado" class="ia-estado-texto">
+                DemoFlow IA iniciando análisis...
+              </div>
+
+              <div class="ia-subestado">
+                Runtime inteligente procesando proyecto.
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="ia-progress">
+            <div id="iaBarra" class="ia-progress-bar"></div>
+          </div>
+
+          <div id="iaLogs" class="ia-logs">
+            🤖 DemoFlow IA esperando instrucciones...
+          </div>
+
+          <div id="contenidoResultadoIA" class="contenido-resultado-ia">
+            ⏳ Preparando análisis...
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
 
   </div>
 
