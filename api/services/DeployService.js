@@ -77,45 +77,83 @@ module.exports = {
     }
   },
 
-  obtenerPuertoProyecto: function (proyecto) {
+  obtenerPuertoProyecto: function (proyecto = {}) {
     return proyecto.puerto || proyecto.puertoInterno || proyecto.runtimePort || proyecto.port;
   },
 
+  parseRuntimeEnv: function (runtimeEnv) {
+    const env = {};
+
+    if (!runtimeEnv) {
+      return env;
+    }
+
+    if (typeof runtimeEnv === 'object') {
+      return runtimeEnv;
+    }
+
+    try {
+      const parsed = JSON.parse(runtimeEnv);
+
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
+      }
+    } catch (e) {
+      // Si no es JSON, se procesa como formato .env
+    }
+
+    String(runtimeEnv)
+      .split('\n')
+      .map((linea) => linea.trim())
+      .filter(Boolean)
+      .forEach((linea) => {
+        if (linea.startsWith('#')) return;
+
+        const index = linea.indexOf('=');
+        if (index === -1) return;
+
+        const key = linea.slice(0, index).trim();
+        const value = linea.slice(index + 1).trim();
+
+        if (key) {
+          env[key] = value;
+        }
+      });
+
+    return env;
+  },
+
   construirEnvRuntime: function (proyecto = {}, puerto) {
-    const envRuntime = {
+    const databaseUrl =
+      proyecto.databaseUrl ||
+      proyecto.database_url ||
+      process.env.DATABASE_URL;
+
+    const sessionSecret =
+      proyecto.sessionSecret ||
+      proyecto.session_secret ||
+      process.env.SESSION_SECRET ||
+      ('demoflow-runtime-secret-' + (proyecto.slug || proyecto.id || 'app'));
+
+    const runtimeEnv =
+      proyecto.runtimeEnv ||
+      proyecto.runtime_env ||
+      '';
+
+    const extras = this.parseRuntimeEnv(runtimeEnv);
+
+    return {
       PORT: String(puerto),
-      NODE_ENV: 'production'
+      NODE_ENV: 'production',
+
+      DATABASE_URL: databaseUrl,
+      SESSION_SECRET: sessionSecret,
+
+      DEMOFLOW_PROJECT_ID: proyecto.id ? String(proyecto.id) : '',
+      DEMOFLOW_PROJECT_SLUG: proyecto.slug || '',
+
+      ...extras
     };
-
-    if (proyecto.database_url) {
-      envRuntime.DATABASE_URL = proyecto.database_url;
-    } else if (process.env.DATABASE_URL) {
-      envRuntime.DATABASE_URL = process.env.DATABASE_URL;
-    }
-
-    if (proyecto.session_secret) {
-      envRuntime.SESSION_SECRET = proyecto.session_secret;
-    } else if (process.env.SESSION_SECRET) {
-      envRuntime.SESSION_SECRET = process.env.SESSION_SECRET;
-    } else {
-      envRuntime.SESSION_SECRET = 'demoflow-runtime-secret-' + (proyecto.slug || 'app');
-    }
-
-    if (proyecto.runtime_env) {
-      proyecto.runtime_env
-        .split('\n')
-        .map(linea => linea.trim())
-        .filter(Boolean)
-        .forEach(linea => {
-          const [key, ...resto] = linea.split('=');
-
-          if (key && resto.length) {
-            envRuntime[key.trim()] = resto.join('=').trim();
-          }
-        });
-    }
-
-    return envRuntime;
   },
 
   detectarTipo: async function (carpeta) {
@@ -207,7 +245,7 @@ module.exports = {
     } else if (comando === 'node index.js') {
       finalCommand = `pm2 start index.js --name "${nombrePM2}" --interpreter node --update-env`;
     } else {
-      finalCommand = `pm2 start npm --name "${nombrePM2}" -- start --update-env`;
+      finalCommand = `pm2 start npm --name "${nombrePM2}" --update-env -- start`;
     }
 
     const envRuntime = this.construirEnvRuntime(proyecto, puerto);
@@ -217,7 +255,8 @@ module.exports = {
       puerto,
       nombrePM2,
       tieneDatabaseUrl: !!envRuntime.DATABASE_URL,
-      tieneSessionSecret: !!envRuntime.SESSION_SECRET
+      tieneSessionSecret: !!envRuntime.SESSION_SECRET,
+      tieneRuntimeEnv: !!(proyecto.runtimeEnv || proyecto.runtime_env)
     });
 
     return await ejecutar(finalCommand, carpeta, envRuntime);
@@ -235,7 +274,8 @@ module.exports = {
       nombrePM2,
       puerto,
       tieneDatabaseUrl: !!envRuntime.DATABASE_URL,
-      tieneSessionSecret: !!envRuntime.SESSION_SECRET
+      tieneSessionSecret: !!envRuntime.SESSION_SECRET,
+      tieneRuntimeEnv: !!(proyecto.runtimeEnv || proyecto.runtime_env)
     });
 
     return await ejecutar(
