@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="/styles/homepage.css?v=2">
+<link rel="stylesheet" href="/styles/homepage.css?v=3">
 
 <div class="home-page">
 
@@ -8,7 +8,7 @@
     <div class="home-header">
       <div>
         <h1>🚀 DemoFlow</h1>
-        <p>Muestra tus apps en vivo a tus clientes antes de venderlas.</p>
+        <p>Publica, comparte y presenta tus aplicaciones al mundo.</p>
       </div>
 
       <a href="/proyecto/nuevo" class="btn-primary">
@@ -18,15 +18,98 @@
 
     <!-- HERO -->
     <section class="hero-card">
-      <h2>Comparte demos en vivo con tus clientes</h2>
+      <h2>Crea. Publica. Comparte. Impresiona.</h2>
+
       <p>
-        DemoFlow te permite guardar proyectos, mostrar enlaces en vivo, presentar páginas HTML,
-        apps en Sails, Node o cualquier tecnología, y dejar que el cliente vea el borrador antes de comprar.
+        DemoFlow es una plataforma para programadores, freelancers, estudiantes,
+        startups y empresas que necesitan mostrar sus aplicaciones en vivo.
+        Sube tu proyecto desde Git o desde tu computador, obtén un enlace público
+        y compártelo con clientes, amigos, profesores, empresas o inversionistas.
       </p>
 
-      <a href="/proyecto/nuevo" class="btn-white">
-        Crear mi primer demo
-      </a>
+      <div class="hero-actions">
+        <a href="/proyecto/nuevo" class="btn-white">
+          Crear mi primer demo
+        </a>
+
+        <a href="#video-demo" class="btn-outline-white">
+          Ver cómo funciona
+        </a>
+      </div>
+    </section>
+
+    <!-- VIDEO YOUTUBE -->
+    <section class="video-card" id="video-demo">
+
+      <div class="video-info">
+
+        <span class="mini-label">🎥 Video explicativo</span>
+
+        <h2>Aprende DemoFlow en pocos minutos</h2>
+
+        <p>
+          Mira este video donde explico cómo publicar una aplicación,
+          compartirla con clientes, empresas, profesores, amigos o inversionistas
+          y administrar todos tus proyectos desde DemoFlow.
+        </p>
+
+        <a href="/proyecto/nuevo" class="btn-primary">
+          Crear mi proyecto
+        </a>
+
+      </div>
+
+      <div class="video-player">
+        <iframe
+          src="https://www.youtube.com/embed/TU_VIDEO"
+          title="Video explicativo de DemoFlow"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+    </section>
+
+    <!-- COMO FUNCIONA -->
+    <section class="steps-card">
+
+      <div class="section-head">
+        <span class="mini-label">⚙️ Proceso simple</span>
+        <h2>¿Cómo funciona DemoFlow?</h2>
+        <p>
+          Publica una aplicación en pocos pasos y compártela con cualquier persona desde un enlace.
+        </p>
+      </div>
+
+      <div class="steps-grid">
+
+        <div class="step-card">
+          <span>1</span>
+          <h3>Sube tu proyecto</h3>
+          <p>Importa desde Git o sube tus archivos desde el computador.</p>
+        </div>
+
+        <div class="step-card">
+          <span>2</span>
+          <h3>DemoFlow IA analiza</h3>
+          <p>La plataforma detecta la tecnología y prepara el proyecto.</p>
+        </div>
+
+        <div class="step-card">
+          <span>3</span>
+          <h3>Se crea el runtime</h3>
+          <p>DemoFlow inicia tu aplicación con PM2 y genera una URL pública.</p>
+        </div>
+
+        <div class="step-card">
+          <span>4</span>
+          <h3>Comparte y vende</h3>
+          <p>Presenta tu app a clientes, empresas, profesores o inversionistas.</p>
+        </div>
+
+      </div>
+
     </section>
 
     <!-- IA DEMOFLOW -->
@@ -35,7 +118,7 @@
       <div class="ia-header">
         <div>
           <h2>🤖 DemoFlow IA</h2>
-          <p>Inteligencia artificial para analizar, optimizar y vender proyectos.</p>
+          <p>Inteligencia artificial para analizar, optimizar y presentar proyectos.</p>
         </div>
 
         <div class="ia-creditos">
@@ -59,24 +142,50 @@
         <div class="info-card">
           <h3>📈 Recomendación IA</h3>
           <p>
-            Agrega capturas, demos en vivo y enlaces GitHub para aumentar conversiones.
+            Agrega capturas, demos en vivo y enlaces GitHub para aumentar la confianza del cliente.
           </p>
         </div>
 
         <div class="info-card">
-          <h3>🔥 Potencial SaaS</h3>
+          <h3>🔥 Potencial comercial</h3>
           <p class="texto-azul">
-            Tu perfil tiene potencial comercial para vender software.
+            Tus aplicaciones pueden convertirse en productos, demos, portafolios o propuestas de venta.
           </p>
         </div>
 
         <div class="info-card">
-          <h3>🌐 Deploy Inteligente</h3>
+          <h3>🌐 Deploy inteligente</h3>
           <p>
-            DemoFlow IA detecta HTML, Node.js, Sails y React automáticamente.
+            DemoFlow IA detecta HTML, Node.js, Sails, React y otras tecnologías en crecimiento.
           </p>
         </div>
 
+      </div>
+
+    </section>
+
+    <!-- TECNOLOGÍAS -->
+    <section class="tech-card">
+
+      <div class="section-head">
+        <span class="mini-label">🧩 Tecnologías</span>
+        <h2>Una plataforma para diferentes tipos de proyectos</h2>
+        <p>
+          DemoFlow está pensado para crecer y soportar cada vez más tecnologías usadas por desarrolladores.
+        </p>
+      </div>
+
+      <div class="tech-grid">
+        <span>HTML</span>
+        <span>CSS</span>
+        <span>JavaScript</span>
+        <span>Node.js</span>
+        <span>Sails.js</span>
+        <span>Express</span>
+        <span>React</span>
+        <span>GitHub</span>
+        <span>PostgreSQL</span>
+        <span>PM2</span>
       </div>
 
     </section>
@@ -149,14 +258,15 @@
                 <form
                   action="/proyecto/<%= p.id %>/eliminar"
                   method="POST"
-                  onsubmit="return confirm('¿Seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.');"
-                  >
-                 <input type="hidden" name="_csrf" value="<%= _csrf %>">
+                  onsubmit="return confirm('¿Seguro que deseas eliminar este proyecto? Esta acción no se puede deshacer.');">
 
-                 <button type="submit" class="btn-danger">
+                  <input type="hidden" name="_csrf" value="<%= _csrf %>">
+
+                  <button type="submit" class="btn-danger">
                     🗑️ Eliminar
-                 </button>
-             </form>
+                  </button>
+
+                </form>
 
               </div>
 
@@ -173,7 +283,7 @@
       <div class="empty-card">
         <h3>Todavía no hay proyectos</h3>
         <p>
-          Empieza creando tu primer demo para mostrárselo a un cliente.
+          Empieza creando tu primer demo para compartirlo con el mundo.
         </p>
 
         <a href="/proyecto/nuevo" class="btn-primary">
