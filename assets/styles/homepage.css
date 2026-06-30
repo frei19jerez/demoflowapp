@@ -552,71 +552,61 @@ body{
 }
 
 /* ==========================================================
-   AJUSTE FINAL MOBILE - PROYECTOS
+   AJUSTE FINAL MOBILE - IA Y TECNOLOGÍAS
 ========================================================== */
 
 @media(max-width:600px){
 
-  .home-page{
-    padding-left:10px;
-    padding-right:10px;
-  }
-
-  .home-container{
-    width:100%;
-    max-width:100%;
-  }
-
-  .proyectos-grid{
-    grid-template-columns:1fr;
-    gap:22px;
-  }
-
-  .proyecto-card{
-    width:100%;
+  .ia-card,
+  .tech-card,
+  .steps-card,
+  .video-card{
     max-width:360px;
-    margin:0 auto;
+    margin-left:auto;
+    margin-right:auto;
   }
 
-  .proyecto-body{
-    padding:22px 18px;
+  .ia-header{
+    flex-direction:column;
+    align-items:center;
     text-align:center;
   }
 
-  .proyecto-body h3{
-    font-size:26px;
-    line-height:1.2;
+  .ia-header h2,
+  .ia-header p{
+    text-align:center;
   }
 
-  .descripcion{
-    font-size:16px;
-    line-height:1.7;
+  .ia-creditos{
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
   }
 
-  .acciones-card{
-    display:grid;
+  .ia-grid{
     grid-template-columns:1fr;
-    gap:12px;
-    width:100%;
+    justify-items:center;
   }
 
-  .acciones-card a,
-  .acciones-card button,
-  .acciones-card form{
+  .info-card{
     width:100%;
+    max-width:280px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
   }
 
-  .acciones-card .btn-primary,
-  .acciones-card .btn-secondary,
-  .acciones-card .btn-danger{
-    width:100%;
-    min-height:58px;
-    font-size:17px;
-    border-radius:14px;
+  .tech-card{
+    text-align:center;
   }
 
-  .preview-box{
-    height:220px;
+  .tech-grid{
+    justify-content:center;
+  }
+
+  .tech-grid span{
+    min-width:120px;
+    text-align:center;
   }
 
 }
