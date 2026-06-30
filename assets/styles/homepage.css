@@ -550,3 +550,73 @@ body{
     width:100%;
   }
 }
+
+/* ==========================================================
+   AJUSTE FINAL MOBILE - PROYECTOS
+========================================================== */
+
+@media(max-width:600px){
+
+  .home-page{
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .home-container{
+    width:100%;
+    max-width:100%;
+  }
+
+  .proyectos-grid{
+    grid-template-columns:1fr;
+    gap:22px;
+  }
+
+  .proyecto-card{
+    width:100%;
+    max-width:360px;
+    margin:0 auto;
+  }
+
+  .proyecto-body{
+    padding:22px 18px;
+    text-align:center;
+  }
+
+  .proyecto-body h3{
+    font-size:26px;
+    line-height:1.2;
+  }
+
+  .descripcion{
+    font-size:16px;
+    line-height:1.7;
+  }
+
+  .acciones-card{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+    width:100%;
+  }
+
+  .acciones-card a,
+  .acciones-card button,
+  .acciones-card form{
+    width:100%;
+  }
+
+  .acciones-card .btn-primary,
+  .acciones-card .btn-secondary,
+  .acciones-card .btn-danger{
+    width:100%;
+    min-height:58px;
+    font-size:17px;
+    border-radius:14px;
+  }
+
+  .preview-box{
+    height:220px;
+  }
+
+}
