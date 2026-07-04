@@ -1,127 +1,31 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-
-  <!-- ========================= -->
-  <!-- META -->
-  <!-- ========================= -->
-
-  <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>
-    DemoFlow IA | Freimel Jerez
-  </title>
-
-  <!-- ========================= -->
-  <!-- SEO -->
-  <!-- ========================= -->
-
-  <meta
-    name="description"
-    content="DemoFlow IA plataforma para demos y despliegues desarrollada por Freimel Jerez con Node.js, Sails.js y PostgreSQL."
-  >
-
-  <meta
-    name="keywords"
-    content="DemoFlow, IA, Freimel Jerez, Node.js, Sails.js, PostgreSQL, Deploy, HTML, CSS, JavaScript"
-  >
-
-  <meta
-    name="author"
-    content="Freimel Jerez"
-  >
-
-  <meta
-    name="robots"
-    content="index, follow"
-  >
-
-  <!-- ========================= -->
-  <!-- OPEN GRAPH -->
-  <!-- ========================= -->
-
-  <meta property="og:title" content="DemoFlow IA">
-  <meta property="og:description" content="Plataforma IA para demos y despliegues web.">
-  <meta property="og:type" content="website">
-
-  <!-- ========================= -->
-  <!-- BOOTSTRAP -->
-  <!-- ========================= -->
-
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  >
-
-  <!-- ========================= -->
-  <!-- ICONOS -->
-  <!-- ========================= -->
-
-  <link
-    rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-  >
-
-  <!-- ========================= -->
-  <!-- GOOGLE FONTS -->
-  <!-- ========================= -->
-
-  <link
-    rel="preconnect"
-    href="https://fonts.googleapis.com"
-  >
-
-  <link
-    rel="preconnect"
-    href="https://fonts.gstatic.com"
-    crossorigin
-  >
-
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
-
-</head>
-
-<body>
-
-<!-- ========================= -->
-<!-- NAVBAR -->
-<!-- ========================= -->
-
-<nav class="navbar navbar-expand-lg shadow-sm sticky-top">
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
 
   <div class="container">
 
-    <!-- LOGO -->
-    <a class="navbar-brand" href="/">
-
-      🚀 Demo<span>Flow</span>
-
+    <!-- Logo -->
+    <a class="navbar-brand fw-bold fs-3" href="/">
+      🚀 Demo<span class="text-primary">Flow</span>
     </a>
 
-    <!-- MOBILE -->
+    <!-- Botón móvil -->
     <button
       class="navbar-toggler"
       type="button"
       data-bs-toggle="collapse"
-      data-bs-target="#nav"
-    >
+      data-bs-target="#navbarDemoFlow"
+      aria-controls="navbarDemoFlow"
+      aria-expanded="false"
+      aria-label="Toggle navigation">
 
       <span class="navbar-toggler-icon"></span>
 
     </button>
 
-    <!-- MENU -->
-    <div class="collapse navbar-collapse" id="nav">
+    <div
+      class="collapse navbar-collapse"
+      id="navbarDemoFlow">
 
-      <!-- LINKS -->
+      <!-- Menú izquierdo -->
       <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
         <li class="nav-item">
@@ -154,29 +58,23 @@
 
       </ul>
 
-      <!-- DERECHA -->
-      <div class="d-flex gap-2 align-items-center flex-wrap">
+      <!-- Derecha -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
 
-        <!-- IA -->
-        <span class="ia-badge">
-
+        <span class="badge rounded-pill bg-primary px-3 py-2">
           🤖 IA DemoFlow
-
         </span>
 
         <% if (typeof usuario !== 'undefined' && usuario) { %>
 
-          <span class="text-dark fw-semibold">
-
+          <span class="fw-semibold">
             Hola,
             <%= usuario.nombre %>
-
           </span>
 
           <a
             href="/dashboard"
-            class="btn btn-outline-primary"
-          >
+            class="btn btn-outline-primary">
 
             <i class="bi bi-speedometer2"></i>
             Dashboard
@@ -185,8 +83,7 @@
 
           <a
             href="/logout"
-            class="btn btn-danger"
-          >
+            class="btn btn-danger">
 
             <i class="bi bi-box-arrow-right"></i>
             Salir
@@ -197,8 +94,7 @@
 
           <a
             href="/login"
-            class="btn btn-outline-primary"
-          >
+            class="btn btn-outline-primary">
 
             <i class="bi bi-person"></i>
             Login
@@ -207,8 +103,7 @@
 
           <a
             href="/register"
-            class="btn btn-primary"
-          >
+            class="btn btn-primary">
 
             <i class="bi bi-person-plus"></i>
             Registro
@@ -224,19 +119,3 @@
   </div>
 
 </nav>
-
-<!-- ========================= -->
-<!-- CONTENIDO -->
-<!-- ========================= -->
-
-<div class="container mt-4">
-
-  <% if (typeof mensaje !== 'undefined' && mensaje) { %>
-
-    <div class="alert alert-info">
-
-      <%= mensaje %>
-
-    </div>
-
-  <% } %>
