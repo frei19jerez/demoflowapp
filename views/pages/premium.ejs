@@ -1,44 +1,112 @@
 <div class="container py-5">
 
-  <h1 class="text-center mb-4">🚀 Activar DemoFlow Pro</h1>
+  <div class="text-center mb-5">
+    <span class="badge bg-primary rounded-pill px-3 py-2 mb-3">
+      👑 DemoFlow Premium
+    </span>
 
-  <div class="card shadow border-0 mx-auto" style="max-width: 650px;">
+    <h1 class="fw-bold">
+      Activa tu plan y recibe créditos IA
+    </h1>
+
+    <p class="text-muted">
+      Elige tu plan, selecciona el método de pago y DemoFlow registrará tu solicitud.
+    </p>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+
+    <div class="col-12 col-md-6 col-lg-5">
+      <div class="card border-0 shadow h-100 rounded-4">
+        <div class="card-body p-4">
+
+          <h3 class="fw-bold">🚀 Plan Pro</h3>
+
+          <h2 class="text-primary fw-bold my-3">
+            $30.000 COP
+          </h2>
+
+          <ul class="list-unstyled text-muted">
+            <li>✅ 300 créditos IA</li>
+            <li>✅ Hasta 50 proyectos</li>
+            <li>✅ Deploy desde Git</li>
+            <li>✅ Soporte DemoFlow</li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-md-6 col-lg-5">
+      <div class="card border-0 shadow h-100 rounded-4">
+        <div class="card-body p-4">
+
+          <h3 class="fw-bold">🏢 Plan Empresa</h3>
+
+          <h2 class="text-primary fw-bold my-3">
+            $120.000 COP
+          </h2>
+
+          <ul class="list-unstyled text-muted">
+            <li>✅ 1500 créditos IA</li>
+            <li>✅ Proyectos avanzados</li>
+            <li>✅ Deploy Node/Sails</li>
+            <li>✅ Soporte prioritario</li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card shadow border-0 mx-auto mt-5 rounded-4" style="max-width:720px;">
     <div class="card-body p-4">
 
-      <h3>💳 Métodos de pago</h3>
+      <h3 class="fw-bold">💳 Registrar pago</h3>
+
       <p class="text-muted">
-        Elige cómo deseas pagar tu plan Premium.
+        Selecciona tu plan y el método que vas a usar. Luego DemoFlow te mostrará las instrucciones.
       </p>
 
       <form method="POST" action="/pago/crear">
 
         <div class="mb-3">
-          <label class="form-label">Plan</label>
-          <select name="plan" class="form-select">
+          <label class="form-label fw-semibold">Plan</label>
+
+          <select name="plan" class="form-select" required>
             <option value="pro">Pro - $30.000 COP</option>
-            <option value="empresa">Empresa - $80.000 COP</option>
+            <option value="empresa">Empresa - $120.000 COP</option>
           </select>
         </div>
 
         <div class="mb-3">
-          <label class="form-label">Método de pago</label>
+          <label class="form-label fw-semibold">Método de pago</label>
+
           <select name="metodo" class="form-select" required>
-            <option value="">Seleccione</option>
+            <option value="">Seleccione un método</option>
             <option value="nequi">Nequi</option>
             <option value="paypal">PayPal</option>
             <option value="banco_bogota">Banco de Bogotá</option>
+            <option value="bbva">BBVA</option>
           </select>
         </div>
 
         <div class="alert alert-info">
-          Después de registrar el pago, envía el comprobante por WhatsApp para activar tu cuenta.
+          🤖 DemoFlow registrará el pago como pendiente. Después podrás validarlo y activar el plan.
         </div>
 
-        <button class="btn btn-primary w-100">
-          Registrar pago
+        <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">
+          💳 Continuar con el pago
         </button>
 
       </form>
+
+      <div class="text-center mt-3">
+        <a href="/pagos" class="text-decoration-none">
+          Ver historial de pagos
+        </a>
+      </div>
 
     </div>
   </div>

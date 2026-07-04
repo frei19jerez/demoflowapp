@@ -10,7 +10,7 @@ module.exports = {
   attributes: {
 
     // ======================
-    // PRIMES
+    // ID
     // ======================
 
     id: {
@@ -29,12 +29,26 @@ module.exports = {
     },
 
     // ======================
+    // PAGO
+    // ======================
+
+    pago: {
+      model: 'pago',
+      allowNull: true,
+      columnName: 'pago_id'
+    },
+
+    // ======================
     // PLAN
     // ======================
 
     plan: {
       type: 'string',
-      isIn: ['free', 'pro', 'empresa'],
+      isIn: [
+        'free',
+        'pro',
+        'empresa'
+      ],
       defaultsTo: 'free'
     },
 
@@ -44,7 +58,12 @@ module.exports = {
 
     estado: {
       type: 'string',
-      isIn: ['activa', 'pendiente', 'cancelada'],
+      isIn: [
+        'activa',
+        'pendiente',
+        'cancelada',
+        'vencida'
+      ],
       defaultsTo: 'pendiente'
     },
 
@@ -55,7 +74,13 @@ module.exports = {
     metodoPago: {
       type: 'string',
       allowNull: true,
-      isIn: ['nequi', 'paypal', 'banco_bogota'],
+      isIn: [
+        'manual',
+        'paypal',
+        'nequi',
+        'bbva',
+        'banco_bogota'
+      ],
       columnName: 'metodo_pago'
     },
 
@@ -74,7 +99,8 @@ module.exports = {
 
     referencia: {
       type: 'string',
-      allowNull: true
+      allowNull: true,
+      maxLength: 200
     },
 
     // ======================
