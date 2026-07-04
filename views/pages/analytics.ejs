@@ -1,45 +1,257 @@
 <div class="container py-5">
 
-  <h1 class="mb-4">📊 Analytics DemoFlow</h1>
+  <div class="text-center mb-5">
+
+    <span class="badge bg-primary rounded-pill px-3 py-2 mb-3">
+      📊 Analytics IA
+    </span>
+
+    <h1 class="fw-bold">
+      Panel de Analytics DemoFlow
+    </h1>
+
+    <p class="text-muted">
+      Visualiza el crecimiento de tu plataforma en tiempo real.
+    </p>
+
+  </div>
 
   <div class="row g-4">
 
-    <div class="col-md-3">
-      <div class="card shadow border-0">
+    <div class="col-lg-3 col-md-6">
+
+      <div class="card shadow border-0 rounded-4 h-100">
+
         <div class="card-body text-center">
-          <h6>Proyectos</h6>
-          <h2><%= totalProyectos || 0 %></h2>
+
+          <div class="display-5 mb-3">
+            📁
+          </div>
+
+          <h6 class="text-muted">
+            Proyectos
+          </h6>
+
+          <h2 class="fw-bold text-primary">
+            <%= totalProyectos || 0 %>
+          </h2>
+
         </div>
+
       </div>
+
     </div>
 
-    <div class="col-md-3">
-      <div class="card shadow border-0">
+    <div class="col-lg-3 col-md-6">
+
+      <div class="card shadow border-0 rounded-4 h-100">
+
         <div class="card-body text-center">
-          <h6>Demos activas</h6>
-          <h2><%= demosActivas || 0 %></h2>
+
+          <div class="display-5 mb-3">
+            🚀
+          </div>
+
+          <h6 class="text-muted">
+            Demos activas
+          </h6>
+
+          <h2 class="fw-bold text-success">
+            <%= demosActivas || 0 %>
+          </h2>
+
         </div>
+
       </div>
+
     </div>
 
-    <div class="col-md-3">
-      <div class="card shadow border-0">
+    <div class="col-lg-3 col-md-6">
+
+      <div class="card shadow border-0 rounded-4 h-100">
+
         <div class="card-body text-center">
-          <h6>Usuarios</h6>
-          <h2><%= totalUsuarios || 0 %></h2>
+
+          <div class="display-5 mb-3">
+            👤
+          </div>
+
+          <h6 class="text-muted">
+            Usuarios
+          </h6>
+
+          <h2 class="fw-bold text-info">
+            <%= totalUsuarios || 0 %>
+          </h2>
+
         </div>
+
       </div>
+
     </div>
 
-    <div class="col-md-3">
-      <div class="card shadow border-0">
+    <div class="col-lg-3 col-md-6">
+
+      <div class="card shadow border-0 rounded-4 h-100">
+
         <div class="card-body text-center">
-          <h6>Pagos</h6>
-          <h2><%= totalPagos || 0 %></h2>
+
+          <div class="display-5 mb-3">
+            💳
+          </div>
+
+          <h6 class="text-muted">
+            Pagos
+          </h6>
+
+          <h2 class="fw-bold text-warning">
+            <%= totalPagos || 0 %>
+          </h2>
+
         </div>
+
       </div>
+
+    </div>
+
+  </div>
+
+  <div class="row mt-5">
+
+    <div class="col-lg-6 mb-4">
+
+      <div class="card shadow border-0 rounded-4">
+
+        <div class="card-body">
+
+          <h4 class="mb-4">
+            📈 Proyectos por tecnología
+          </h4>
+
+          <canvas id="chartTecnologias" height="220"></canvas>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="col-lg-6 mb-4">
+
+      <div class="card shadow border-0 rounded-4">
+
+        <div class="card-body">
+
+          <h4 class="mb-4">
+            🚀 Estado de Deploys
+          </h4>
+
+          <canvas id="chartDeploys" height="220"></canvas>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="row mt-3">
+
+    <div class="col-lg-12">
+
+      <div class="card shadow border-0 rounded-4">
+
+        <div class="card-body">
+
+          <h4 class="mb-4">
+            ⚡ Accesos rápidos
+          </h4>
+
+          <div class="row g-3">
+
+            <div class="col-md-3">
+              <a href="/dashboard" class="btn btn-primary w-100">
+                🏠 Dashboard
+              </a>
+            </div>
+
+            <div class="col-md-3">
+              <a href="/proyecto/nuevo" class="btn btn-success w-100">
+                ➕ Nuevo proyecto
+              </a>
+            </div>
+
+            <div class="col-md-3">
+              <a href="/premium" class="btn btn-warning w-100">
+                💳 Premium
+              </a>
+            </div>
+
+            <div class="col-md-3">
+              <a href="/pagos" class="btn btn-dark w-100">
+                📋 Historial de pagos
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
 
   </div>
 
 </div>
+
+<script>
+
+if (typeof Chart !== 'undefined') {
+
+    new Chart(document.getElementById('chartTecnologias'), {
+
+        type: 'bar',
+
+        data: {
+
+            labels: ['HTML', 'Node', 'Sails'],
+
+            datasets: [{
+
+                label: 'Proyectos',
+
+                data: [12, 8, 5]
+
+            }]
+
+        }
+
+    });
+
+    new Chart(document.getElementById('chartDeploys'), {
+
+        type: 'doughnut',
+
+        data: {
+
+            labels: ['Activos', 'Detenidos'],
+
+            datasets: [{
+
+                data: [
+
+                    <%= demosActivas || 0 %>,
+                    <%= (totalProyectos || 0) - (demosActivas || 0) %>
+                ]
+
+            }]
+
+        }
+
+    });
+
+}
+
+</script>

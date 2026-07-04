@@ -14,7 +14,7 @@
     </p>
   </div>
 
-  <div class="row g-4 justify-content-center">
+  <div class="row g-4 justify-content-center mb-5">
 
     <div class="col-12 col-md-6 col-lg-5">
       <div class="card border-0 shadow h-100 rounded-4">
@@ -32,6 +32,13 @@
             <li>✅ Deploy desde Git</li>
             <li>✅ Soporte DemoFlow</li>
           </ul>
+
+          <button
+            type="button"
+            class="btn btn-outline-primary w-100 mt-3"
+            onclick="document.getElementById('plan').value='pro'; document.getElementById('formPago').scrollIntoView({behavior:'smooth'});">
+            Elegir Pro
+          </button>
 
         </div>
       </div>
@@ -54,27 +61,38 @@
             <li>✅ Soporte prioritario</li>
           </ul>
 
+          <button
+            type="button"
+            class="btn btn-outline-primary w-100 mt-3"
+            onclick="document.getElementById('plan').value='empresa'; document.getElementById('formPago').scrollIntoView({behavior:'smooth'});">
+            Elegir Empresa
+          </button>
+
         </div>
       </div>
     </div>
 
   </div>
 
-  <div class="card shadow border-0 mx-auto mt-5 rounded-4" style="max-width:720px;">
+  <div id="formPago" class="card shadow border-0 mx-auto rounded-4" style="max-width:720px;">
     <div class="card-body p-4">
 
       <h3 class="fw-bold">💳 Registrar pago</h3>
 
       <p class="text-muted">
-        Selecciona tu plan y el método que vas a usar. Luego DemoFlow te mostrará las instrucciones.
+        DemoFlow creará un pago pendiente y luego te mostrará las instrucciones.
       </p>
 
       <form method="POST" action="/pago/crear">
 
+        <% if (typeof _csrf !== 'undefined') { %>
+          <input type="hidden" name="_csrf" value="<%= _csrf %>">
+        <% } %>
+
         <div class="mb-3">
           <label class="form-label fw-semibold">Plan</label>
 
-          <select name="plan" class="form-select" required>
+          <select id="plan" name="plan" class="form-select" required>
             <option value="pro">Pro - $30.000 COP</option>
             <option value="empresa">Empresa - $120.000 COP</option>
           </select>
@@ -93,7 +111,7 @@
         </div>
 
         <div class="alert alert-info">
-          🤖 DemoFlow registrará el pago como pendiente. Después podrás validarlo y activar el plan.
+          🤖 El pago quedará pendiente hasta ser validado. Al aprobarse, DemoFlow activará tu plan y tus créditos IA.
         </div>
 
         <button type="submit" class="btn btn-primary w-100 py-3 fw-bold">
