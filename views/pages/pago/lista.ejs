@@ -1,0 +1,141 @@
+<div class="container py-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h1 class="fw-bold">
+                💳 Historial de Pagos
+            </h1>
+
+            <p class="text-muted">
+                Todos los pagos registrados en DemoFlow.
+            </p>
+        </div>
+
+        <a href="/premium" class="btn btn-primary">
+            ➕ Nuevo pago
+        </a>
+
+    </div>
+
+    <% if(!pagos || pagos.length===0){ %>
+
+        <div class="alert alert-info text-center">
+
+            No hay pagos registrados.
+
+        </div>
+
+    <% }else{ %>
+
+    <div class="table-responsive">
+
+        <table class="table table-hover align-middle">
+
+            <thead class="table-light">
+
+                <tr>
+
+                    <th>ID</th>
+
+                    <th>Referencia</th>
+
+                    <th>Plan</th>
+
+                    <th>Método</th>
+
+                    <th>Valor</th>
+
+                    <th>Estado</th>
+
+                    <th></th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                <% pagos.forEach(function(pago){ %>
+
+                <tr>
+
+                    <td>
+                        <%= pago.id %>
+                    </td>
+
+                    <td>
+                        <strong>
+                            <%= pago.referencia %>
+                        </strong>
+                    </td>
+
+                    <td>
+                        <%= pago.plan.toUpperCase() %>
+                    </td>
+
+                    <td>
+                        <%= pago.metodo %>
+                    </td>
+
+                    <td>
+
+                        $
+                        <%= Number(pago.valor).toLocaleString('es-CO') %>
+                        <%= pago.moneda || 'COP' %>
+
+                    </td>
+
+                    <td>
+
+                        <% if(pago.estado==='pendiente'){ %>
+
+                            <span class="badge bg-warning text-dark">
+                                Pendiente
+                            </span>
+
+                        <% } %>
+
+                        <% if(pago.estado==='aprobado'){ %>
+
+                            <span class="badge bg-success">
+                                Aprobado
+                            </span>
+
+                        <% } %>
+
+                        <% if(pago.estado==='rechazado'){ %>
+
+                            <span class="badge bg-danger">
+                                Rechazado
+                            </span>
+
+                        <% } %>
+
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="/pago/<%= pago.id %>"
+                            class="btn btn-outline-primary btn-sm">
+
+                            Ver
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                <% }) %>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    <% } %>
+
+</div>

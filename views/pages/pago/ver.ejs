@@ -1,0 +1,195 @@
+<div class="container py-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-lg-8">
+
+            <div class="card shadow border-0 rounded-4">
+
+                <div class="card-body p-5">
+
+                    <h2 class="fw-bold mb-4">
+
+                        💳 Detalle del pago
+
+                    </h2>
+
+                    <table class="table">
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <td>
+
+                                <%= pago.id %>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Referencia</th>
+
+                            <td>
+
+                                <%= pago.referencia %>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Plan</th>
+
+                            <td>
+
+                                <%= pago.plan.toUpperCase() %>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Método</th>
+
+                            <td>
+
+                                <%= pago.metodo %>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Valor</th>
+
+                            <td>
+
+                                $
+
+                                <%= Number(pago.valor).toLocaleString('es-CO') %>
+
+                                <%= pago.moneda || 'COP' %>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Créditos</th>
+
+                            <td>
+
+                                <%= pago.creditos || 0 %>
+
+                            </td>
+
+                        </tr>
+
+                        <tr>
+
+                            <th>Estado</th>
+
+                            <td>
+
+                                <% if(pago.estado==='pendiente'){ %>
+
+                                    <span class="badge bg-warning text-dark">
+
+                                        Pendiente
+
+                                    </span>
+
+                                <% } %>
+
+                                <% if(pago.estado==='aprobado'){ %>
+
+                                    <span class="badge bg-success">
+
+                                        Aprobado
+
+                                    </span>
+
+                                <% } %>
+
+                                <% if(pago.estado==='rechazado'){ %>
+
+                                    <span class="badge bg-danger">
+
+                                        Rechazado
+
+                                    </span>
+
+                                <% } %>
+
+                            </td>
+
+                        </tr>
+
+                    </table>
+
+                    <% if(pago.estado==='pendiente'){ %>
+
+                    <div class="alert alert-warning mt-4">
+
+                        ⏳ Tu pago está pendiente de validación por DemoFlow.
+
+                    </div>
+
+                    <% } %>
+
+                    <% if(pago.estado==='aprobado'){ %>
+
+                    <div class="alert alert-success mt-4">
+
+                        🎉 Tu suscripción ya está activa.
+
+                    </div>
+
+                    <% } %>
+
+                    <% if(pago.estado==='rechazado'){ %>
+
+                    <div class="alert alert-danger mt-4">
+
+                        ❌ Este pago fue rechazado.
+
+                    </div>
+
+                    <% } %>
+
+                    <div class="mt-4 d-flex gap-2">
+
+                        <a
+                            href="/pagos"
+                            class="btn btn-secondary">
+
+                            ← Volver
+
+                        </a>
+
+                        <a
+                            href="/premium"
+                            class="btn btn-primary">
+
+                            Nuevo pago
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
