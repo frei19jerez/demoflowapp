@@ -69,6 +69,24 @@ module.exports = {
     },
 
     // ======================
+    // DURACIÓN DEL PLAN
+    // ======================
+
+    dias: {
+      type: 'number',
+      defaultsTo: 30
+    },
+
+    // ======================
+    // CRÉDITOS IA
+    // ======================
+
+    creditos: {
+      type: 'number',
+      defaultsTo: 0
+    },
+
+    // ======================
     // LÍMITES
     // ======================
 

@@ -21,17 +21,19 @@ module.exports = {
     },
 
     // ======================
-    // MÉTODO
+    // MÉTODO DE PAGO
     // ======================
 
     metodo: {
       type: 'string',
       isIn: [
+        'manual',
         'nequi',
         'paypal',
+        'bbva',
         'banco_bogota'
       ],
-      required: true
+      defaultsTo: 'manual'
     },
 
     // ======================
@@ -58,6 +60,24 @@ module.exports = {
     },
 
     // ======================
+    // MONEDA
+    // ======================
+
+    moneda: {
+      type: 'string',
+      defaultsTo: 'COP'
+    },
+
+    // ======================
+    // CRÉDITOS IA
+    // ======================
+
+    creditos: {
+      type: 'number',
+      defaultsTo: 0
+    },
+
+    // ======================
     // REFERENCIA
     // ======================
 
@@ -79,6 +99,16 @@ module.exports = {
         'rechazado'
       ],
       defaultsTo: 'pendiente'
+    },
+
+    // ======================
+    // FECHA APROBACIÓN
+    // ======================
+
+    fechaAprobacion: {
+      type: 'number',
+      allowNull: true,
+      columnName: 'fecha_aprobacion'
     },
 
     // ======================

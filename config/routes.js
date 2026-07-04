@@ -187,23 +187,48 @@ module.exports.routes = {
   },
 
   // ===============================
-  // PREMIUM / PAGOS
-  // ===============================
-  'GET /pricing': {
-    controller: 'PremiumController',
-    action: 'pricing'
-  },
+ // ===============================
+// PREMIUM
+// ===============================
 
-  'GET /premium': {
-    controller: 'PremiumController',
-    action: 'premium'
-  },
+'GET /pricing': {
+  controller: 'PremiumController',
+  action: 'pricing'
+},
 
-  'POST /pago/crear': {
-    controller: 'PagoController',
-    action: 'crear'
-  },
+'GET /premium': {
+  controller: 'PremiumController',
+  action: 'premium'
+},
 
+// ===============================
+// PAGOS
+// ===============================
+
+'GET /pagos': {
+  controller: 'PagoController',
+  action: 'lista'
+},
+
+'GET /pago/:id': {
+  controller: 'PagoController',
+  action: 'ver'
+},
+
+'POST /pago/crear': {
+  controller: 'PagoController',
+  action: 'crear'
+},
+
+'GET /pago/:id/aprobar': {
+  controller: 'PagoController',
+  action: 'aprobar'
+},
+
+'GET /pago/:id/rechazar': {
+  controller: 'PagoController',
+  action: 'rechazar'
+},
   // ===============================
   // IA DEMOFLOW
   // ===============================
