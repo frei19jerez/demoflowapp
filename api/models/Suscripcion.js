@@ -28,15 +28,15 @@ module.exports = {
       columnName: 'usuario_id'
     },
 
+  
     // ======================
-    // PAGO
-    // ======================
+     // PAGO
+     // ======================
 
-    pago: {
-      model: 'pago',
-      allowNull: true,
-      columnName: 'pago_id'
-    },
+      pago: {
+       model: 'pago',
+       columnName: 'pago_id'
+      },
 
     // ======================
     // PLAN
