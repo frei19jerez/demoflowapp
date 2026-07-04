@@ -825,3 +825,125 @@ height:400px;
     color:#334155;
     background:#f8fafc;
 }
+
+/* ==========================================================
+   MOBILE EXTRA
+========================================================== */
+
+@media (max-width:600px){
+
+  .project-hero{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+    gap:25px;
+  }
+
+  .project-hero-left{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+
+  .project-hero-actions{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:15px;
+  }
+
+  .project-hero-actions .btn-demo{
+    width:100%;
+    max-width:320px;
+  }
+
+  .status-pill{
+    margin:0 auto;
+  }
+
+  .creditos-box{
+    margin:0 auto;
+  }
+
+  .control-grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+
+  .control-item{
+    width:100%;
+    max-width:320px;
+    margin:0 auto;
+    text-align:center;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .copy-box{
+    flex-direction:column;
+    align-items:center;
+  }
+
+  .copy-box input{
+    min-width:100%;
+  }
+
+  .copy-box button{
+    width:100%;
+    max-width:320px;
+  }
+
+}
+
+/* ==========================================================
+   HERO MOBILE - AJUSTE FINAL
+========================================================== */
+
+@media (max-width:600px){
+
+  .project-hero{
+    width:100%;
+    max-width:320px;
+    margin:0 auto 35px;
+    padding:28px 18px;
+    text-align:center;
+    overflow:hidden;
+  }
+
+  .project-hero-left{
+    min-width:0;
+    width:100%;
+  }
+
+  .project-hero h1{
+    font-size:34px;
+    line-height:1.2;
+    word-break:break-word;
+    overflow-wrap:anywhere;
+  }
+
+  .project-hero p{
+    font-size:16px;
+    word-break:break-word;
+  }
+
+  .project-url-box{
+    width:100%;
+    overflow:hidden;
+  }
+
+  .project-url-box strong{
+    display:block;
+    word-break:break-all;
+  }
+
+  .status-pill{
+    display:flex;
+    justify-content:center;
+    margin:0 auto 20px;
+  }
+
+}
