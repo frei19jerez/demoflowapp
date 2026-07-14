@@ -1,22 +1,40 @@
 /**
- * Policy Mappings
- * (sails.config.policies)
+ * Security Settings
+ * (sails.config.security)
  *
- * Policies are simple functions which run **before** your actions.
+ * Configuración temporal de seguridad DemoFlowApp.
  *
- * For more information on configuring policies, check out:
- * https://sailsjs.com/docs/concepts/policies
+ * CSRF permanecerá desactivado mientras actualizamos
+ * todos los formularios POST de la plataforma.
  */
 
-module.exports.policies = {
+module.exports.security = {
 
-  /***************************************************************************
-  *                                                                          *
-  * Default policy for all controllers and actions, unless overridden.       *
-  * (`true` allows public access)                                            *
-  *                                                                          *
-  ***************************************************************************/
+  // =========================================
+  // CORS
+  // =========================================
 
-  // '*': true,
+  cors: {
+    allRoutes: false,
+    allowOrigins: '*',
+    allowCredentials: false
+  },
+
+  // =========================================
+  // CSRF
+  // =========================================
+
+  /*
+   * Temporalmente desactivado.
+   *
+   * Más adelante lo activaremos y agregaremos el
+   * token _csrf a login, registro, pagos, proyectos,
+   * deploys y demás formularios POST.
+   *
+   * El webhook de Wompi seguirá protegido mediante
+   * la firma criptográfica del evento.
+   */
+
+  csrf: false
 
 };

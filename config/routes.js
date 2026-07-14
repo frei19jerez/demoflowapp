@@ -8,11 +8,16 @@ module.exports.routes = {
   // ===============================
   // HOME
   // ===============================
-  'GET /': 'ProyectoController.index',
+
+  'GET /': {
+    controller: 'ProyectoController',
+    action: 'index'
+  },
 
   // ===============================
   // PROYECTOS
   // ===============================
+
   'GET /proyecto/nuevo': {
     controller: 'ProyectoController',
     action: 'nuevo'
@@ -43,9 +48,20 @@ module.exports.routes = {
     action: 'eliminar'
   },
 
+  'POST /proyecto/:id/reemplazar-archivos': {
+    controller: 'ProyectoController',
+    action: 'reemplazarArchivos'
+  },
+
+  'POST /proyecto/:id/actualizar-git': {
+    controller: 'ProyectoController',
+    action: 'actualizarGit'
+  },
+
   // ===============================
   // DEPLOY
   // ===============================
+
   'GET /deploy/lista': {
     controller: 'ProyectoController',
     action: 'listaDeploys'
@@ -89,6 +105,7 @@ module.exports.routes = {
   // ===============================
   // DEMOS
   // ===============================
+
   'GET /demo/:slug': {
     controller: 'DemoController',
     action: 'ver'
@@ -102,6 +119,7 @@ module.exports.routes = {
   // ===============================
   // AUTENTICACIÓN USUARIOS
   // ===============================
+
   'GET /register': {
     controller: 'AuthController',
     action: 'registerPage'
@@ -130,6 +148,7 @@ module.exports.routes = {
   // ===============================
   // ADMIN AUTH
   // ===============================
+
   'GET /admin/login': {
     controller: 'AdminController',
     action: 'loginPage'
@@ -158,6 +177,7 @@ module.exports.routes = {
   // ===============================
   // ADMIN PANEL
   // ===============================
+
   'GET /admin': {
     controller: 'AdminController',
     action: 'dashboard'
@@ -166,6 +186,7 @@ module.exports.routes = {
   // ===============================
   // RUNTIME
   // ===============================
+
   'ALL /runtime/:slug': {
     controller: 'RuntimeController',
     action: 'proxy',
@@ -181,57 +202,99 @@ module.exports.routes = {
   // ===============================
   // DASHBOARD
   // ===============================
+
   'GET /dashboard': {
     controller: 'ProyectoController',
     action: 'dashboard'
   },
 
   // ===============================
- // ===============================
-// PREMIUM
-// ===============================
+  // PREMIUM
+  // ===============================
 
-'GET /pricing': {
-  controller: 'PremiumController',
-  action: 'pricing'
-},
+  'GET /pricing': {
+    controller: 'PremiumController',
+    action: 'pricing'
+  },
 
-'GET /premium': {
-  controller: 'PremiumController',
-  action: 'premium'
-},
+  'GET /premium': {
+    controller: 'PremiumController',
+    action: 'premium'
+  },
 
-// ===============================
-// PAGOS
-// ===============================
+  // ===============================
+  // PAGOS
+  // ===============================
 
-'GET /pagos': {
-  controller: 'PagoController',
-  action: 'lista'
-},
+  'GET /pagos': {
+    controller: 'PagoController',
+    action: 'lista'
+  },
 
-'GET /pago/:id': {
-  controller: 'PagoController',
-  action: 'ver'
-},
+  'POST /pago/crear': {
+    controller: 'PagoController',
+    action: 'crear'
+  },
 
-'POST /pago/crear': {
-  controller: 'PagoController',
-  action: 'crear'
-},
+  // ===============================
+  // WOMPI
+  // Estas rutas deben estar antes de GET /pago/:id
+  // ===============================
 
-'GET /pago/:id/aprobar': {
-  controller: 'PagoController',
-  action: 'aprobar'
-},
+  'GET /pago/:id/wompi': {
+    controller: 'PagoController',
+    action: 'wompi'
+  },
 
-'GET /pago/:id/rechazar': {
-  controller: 'PagoController',
-  action: 'rechazar'
-},
+  'GET /pago/wompi/resultado': {
+    controller: 'PagoController',
+    action: 'resultadoWompi'
+  },
+
+  'POST /webhooks/wompi': {
+    controller: 'WebhookController',
+    action: 'wompi'
+  },
+
+  // ===============================
+  // ADMINISTRACIÓN DE PAGOS
+  // ===============================
+
+  'POST /pago/:id/aprobar': {
+    controller: 'PagoController',
+    action: 'aprobar'
+  },
+
+  'POST /pago/:id/rechazar': {
+    controller: 'PagoController',
+    action: 'rechazar'
+  },
+
+  // Rutas GET temporales para no romper botones existentes.
+  // Las eliminaremos cuando actualicemos las vistas con formularios POST.
+
+  'GET /pago/:id/aprobar': {
+    controller: 'PagoController',
+    action: 'aprobar'
+  },
+
+  'GET /pago/:id/rechazar': {
+    controller: 'PagoController',
+    action: 'rechazar'
+  },
+
+  // Ruta general del pago.
+  // Debe permanecer después de las rutas específicas de Wompi.
+
+  'GET /pago/:id': {
+    controller: 'PagoController',
+    action: 'ver'
+  },
+
   // ===============================
   // IA DEMOFLOW
   // ===============================
+
   'POST /ia/analizar-proyecto': {
     controller: 'IAController',
     action: 'analizarProyecto'
@@ -247,20 +310,14 @@ module.exports.routes = {
     action: 'analizarDashboard'
   },
 
-  'POST /proyecto/:id/reemplazar-archivos': {
-  controller: 'ProyectoController',
-  action: 'reemplazarArchivos'
-},
-
-  'POST /proyecto/:id/actualizar-git': {
-    controller: 'ProyectoController',
-    action: 'actualizarGit'
-  },
   // ===============================
   // ANALYTICS
   // ===============================
-  'GET /analytics': async function(req, res) {
+
+  'GET /analytics': async function (req, res) {
+
     try {
+
       const totalProyectos = await Proyecto.count();
 
       const demosActivas = await Proyecto.count({
@@ -271,25 +328,39 @@ module.exports.routes = {
       const totalPagos = await Pago.count();
 
       return res.view('pages/analytics', {
+
         titulo: 'Analytics IA',
+
         totalProyectos,
         demosActivas,
         totalUsuarios,
         totalPagos,
 
-        usuario: req.session && req.session.userId ? {
-          id: req.session.userId,
-          nombre: req.session.userName,
-          email: req.session.userEmail
-        } : null
+        usuario:
+          req.session && req.session.userId
+            ? {
+                id: req.session.userId,
+                nombre: req.session.userName,
+                email: req.session.userEmail
+              }
+            : null
+
       });
 
     } catch (err) {
-      sails.log.error('❌ IA DemoFlow: Error cargando analytics.');
+
+      sails.log.error(
+        '❌ IA DemoFlow: Error cargando analytics.'
+      );
+
       sails.log.error(err);
 
-      return res.serverError('Error cargando analytics.');
+      return res.serverError(
+        'Error cargando analytics.'
+      );
+
     }
+
   }
 
 };

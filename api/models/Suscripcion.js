@@ -1,5 +1,6 @@
 /**
  * Suscripcion.js
+ * Modelo de suscripciones DemoFlow IA
  */
 
 module.exports = {
@@ -28,15 +29,14 @@ module.exports = {
       columnName: 'usuario_id'
     },
 
-  
     // ======================
-     // PAGO
-     // ======================
+    // PAGO
+    // ======================
 
-      pago: {
-       model: 'pago',
-       columnName: 'pago_id'
-      },
+    pago: {
+      model: 'pago',
+      columnName: 'pago_id'
+    },
 
     // ======================
     // PLAN
@@ -76,6 +76,7 @@ module.exports = {
       allowNull: true,
       isIn: [
         'manual',
+        'wompi',
         'paypal',
         'nequi',
         'bbva',

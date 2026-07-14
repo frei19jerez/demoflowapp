@@ -1,0 +1,447 @@
+<%
+  const datosCheckout =
+    typeof checkout !== 'undefined' && checkout
+      ? checkout
+      : {};
+
+  const datosPago =
+    typeof pago !== 'undefined' && pago
+      ? pago
+      : (
+          datosCheckout.pago ||
+          {}
+        );
+
+  const cliente =
+    datosCheckout.cliente ||
+    {};
+
+  const valorPago =
+    Number(
+      datosPago.valor ||
+      0
+    );
+
+  const monedaPago =
+    datosCheckout.moneda ||
+    datosPago.moneda ||
+    'COP';
+
+  const formatoMoneda =
+    new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: monedaPago,
+      minimumFractionDigits: 0
+    });
+
+  const checkoutConfigurado =
+    Boolean(
+      datosCheckout.checkoutUrl &&
+      datosCheckout.publicKey &&
+      datosCheckout.referencia &&
+      datosCheckout.firmaIntegridad &&
+      datosCheckout.montoCentavos
+    );
+%>
+
+<div class="container py-5">
+
+  <div class="row justify-content-center">
+
+    <div class="col-12 col-lg-8 col-xl-7">
+
+      <div class="card border-0 shadow-lg overflow-hidden">
+
+        <div class="card-header bg-dark text-white p-4">
+
+          <div
+            class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3"
+          >
+
+            <div>
+
+              <span class="badge bg-success mb-2">
+                Pago seguro
+              </span>
+
+              <h1 class="h3 mb-1">
+                Pagar con Wompi
+              </h1>
+
+              <p class="mb-0 text-white-50">
+                Visa, Mastercard, PSE y Nequi
+              </p>
+
+            </div>
+
+            <div class="text-md-end">
+
+              <div class="small text-white-50">
+                Total a pagar
+              </div>
+
+              <div class="h3 mb-0 fw-bold">
+                <%= formatoMoneda.format(valorPago) %>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="card-body p-4 p-md-5">
+
+          <% if (!checkoutConfigurado) { %>
+
+            <div
+              class="alert alert-danger"
+              role="alert"
+            >
+
+              <h2 class="h5 alert-heading">
+                Wompi todavía no está configurado
+              </h2>
+
+              <p class="mb-0">
+                No fue posible preparar este pago.
+                Revisa las variables de entorno de Wompi
+                y vuelve a intentarlo.
+              </p>
+
+            </div>
+
+            <div class="d-grid">
+
+              <a
+                href="/pricing"
+                class="btn btn-outline-secondary"
+              >
+                Volver a los planes
+              </a>
+
+            </div>
+
+          <% } else { %>
+
+            <div class="mb-4">
+
+              <h2 class="h5 mb-3">
+                Resumen de la compra
+              </h2>
+
+              <div
+                class="border rounded-3 p-3 bg-light"
+              >
+
+                <div
+                  class="d-flex justify-content-between gap-3 py-2 border-bottom"
+                >
+                  <span class="text-muted">
+                    Plan
+                  </span>
+
+                  <strong class="text-uppercase">
+                    <%= datosPago.plan || 'Pro' %>
+                  </strong>
+                </div>
+
+                <div
+                  class="d-flex justify-content-between gap-3 py-2 border-bottom"
+                >
+                  <span class="text-muted">
+                    Referencia
+                  </span>
+
+                  <strong class="text-break text-end">
+                    <%= datosCheckout.referencia %>
+                  </strong>
+                </div>
+
+                <div
+                  class="d-flex justify-content-between gap-3 py-2"
+                >
+                  <span class="text-muted">
+                    Valor
+                  </span>
+
+                  <strong>
+                    <%= formatoMoneda.format(valorPago) %>
+                  </strong>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div
+              class="alert alert-info d-flex gap-3"
+              role="alert"
+            >
+
+              <div
+                class="fs-4"
+                aria-hidden="true"
+              >
+                🔐
+              </div>
+
+              <div>
+
+                <strong>
+                  Tu pago será procesado por Wompi.
+                </strong>
+
+                <div class="small mt-1">
+                  DemoFlow no almacena los datos de tu
+                  tarjeta ni las claves de tu banco.
+                </div>
+
+              </div>
+
+            </div>
+
+            <form
+              action="<%= datosCheckout.checkoutUrl %>"
+              method="GET"
+              id="wompiCheckoutForm"
+            >
+
+              <!-- CAMPOS OBLIGATORIOS -->
+
+              <input
+                type="hidden"
+                name="public-key"
+                value="<%= datosCheckout.publicKey %>"
+              >
+
+              <input
+                type="hidden"
+                name="currency"
+                value="<%= datosCheckout.moneda %>"
+              >
+
+              <input
+                type="hidden"
+                name="amount-in-cents"
+                value="<%= datosCheckout.montoCentavos %>"
+              >
+
+              <input
+                type="hidden"
+                name="reference"
+                value="<%= datosCheckout.referencia %>"
+              >
+
+              <input
+                type="hidden"
+                name="signature:integrity"
+                value="<%= datosCheckout.firmaIntegridad %>"
+              >
+
+              <!-- REDIRECCIÓN INFORMATIVA -->
+
+              <input
+                type="hidden"
+                name="redirect-url"
+                value="<%= datosCheckout.redirectUrl %>"
+              >
+
+              <!-- DATOS OPCIONALES DEL CLIENTE -->
+
+              <% if (cliente.email) { %>
+
+                <input
+                  type="hidden"
+                  name="customer-data:email"
+                  value="<%= cliente.email %>"
+                >
+
+              <% } %>
+
+              <% if (cliente.nombre) { %>
+
+                <input
+                  type="hidden"
+                  name="customer-data:full-name"
+                  value="<%= cliente.nombre %>"
+                >
+
+              <% } %>
+
+              <% if (cliente.telefono) { %>
+
+                <input
+                  type="hidden"
+                  name="customer-data:phone-number"
+                  value="<%= cliente.telefono %>"
+                >
+
+                <input
+                  type="hidden"
+                  name="customer-data:phone-number-prefix"
+                  value="+57"
+                >
+
+              <% } %>
+
+              <% if (cliente.documento) { %>
+
+                <input
+                  type="hidden"
+                  name="customer-data:legal-id"
+                  value="<%= cliente.documento %>"
+                >
+
+                <input
+                  type="hidden"
+                  name="customer-data:legal-id-type"
+                  value="<%= cliente.tipoDocumento || 'CC' %>"
+                >
+
+              <% } %>
+
+              <div class="d-grid gap-3">
+
+                <button
+                  type="submit"
+                  class="btn btn-success btn-lg fw-bold"
+                  id="btnPagarWompi"
+                >
+                  Continuar con Wompi
+                </button>
+
+                <a
+                  href="/pago/<%= datosPago.id %>"
+                  class="btn btn-outline-secondary"
+                >
+                  Volver al pago
+                </a>
+
+              </div>
+
+            </form>
+
+            <div class="mt-4">
+
+              <div class="row g-3 text-center">
+
+                <div class="col-6 col-md-3">
+
+                  <div
+                    class="border rounded-3 p-3 h-100"
+                  >
+                    <div class="fs-4">
+                      💳
+                    </div>
+                    <div class="small fw-semibold mt-1">
+                      Visa
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="col-6 col-md-3">
+
+                  <div
+                    class="border rounded-3 p-3 h-100"
+                  >
+                    <div class="fs-4">
+                      💳
+                    </div>
+                    <div class="small fw-semibold mt-1">
+                      Mastercard
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="col-6 col-md-3">
+
+                  <div
+                    class="border rounded-3 p-3 h-100"
+                  >
+                    <div class="fs-4">
+                      🏦
+                    </div>
+                    <div class="small fw-semibold mt-1">
+                      PSE
+                    </div>
+                  </div>
+
+                </div>
+
+                <div class="col-6 col-md-3">
+
+                  <div
+                    class="border rounded-3 p-3 h-100"
+                  >
+                    <div class="fs-4">
+                      📱
+                    </div>
+                    <div class="small fw-semibold mt-1">
+                      Nequi
+                    </div>
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <% if (datosCheckout.sandbox) { %>
+
+              <div
+                class="alert alert-warning mt-4 mb-0"
+                role="alert"
+              >
+                <strong>Modo de pruebas:</strong>
+                esta transacción está usando el ambiente
+                Sandbox de Wompi.
+              </div>
+
+            <% } %>
+
+          <% } %>
+
+        </div>
+
+        <div class="card-footer bg-white text-center py-3">
+
+          <small class="text-muted">
+            La suscripción se activará automáticamente
+            cuando Wompi confirme el pago.
+          </small>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const formulario = document.getElementById(
+      'wompiCheckoutForm'
+    );
+
+    const boton = document.getElementById(
+      'btnPagarWompi'
+    );
+
+    if (!formulario || !boton) {
+      return;
+    }
+
+    formulario.addEventListener('submit', function () {
+      boton.disabled = true;
+      boton.textContent =
+        'Abriendo pago seguro...';
+    });
+  });
+</script>
