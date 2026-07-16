@@ -1,0 +1,1306 @@
+<link rel="stylesheet" href="/styles/ia-demoflow.css">
+
+<%
+  const usuarioActual =
+    typeof usuario !== 'undefined' && usuario
+      ? usuario
+      : {};
+
+  const accesoIA = Boolean(
+    usuarioActual.accesoIA === true ||
+    usuarioActual.acceso_ia === true ||
+    usuarioActual.premium === true ||
+    usuarioActual.esPremium === true ||
+    String(
+      usuarioActual.estadoPremium || ''
+    ).toLowerCase() === 'activo'
+  );
+
+  const diamantes = Math.max(
+    0,
+    Number(
+      usuarioActual.creditos || 0
+    )
+  );
+
+  const plan = String(
+    usuarioActual.plan || 'free'
+  ).toUpperCase();
+
+  const listaProyectos =
+    Array.isArray(proyectos)
+      ? proyectos
+      : [];
+%>
+
+<style>
+  .centro-ia-page {
+    max-width: 1450px;
+    margin: 0 auto;
+    padding: 30px 15px 60px;
+  }
+
+  .centro-ia-hero {
+    border: 0;
+    border-radius: 24px;
+    background:
+      radial-gradient(
+        circle at top right,
+        rgba(13, 110, 253, 0.18),
+        transparent 38%
+      ),
+      linear-gradient(
+        135deg,
+        #ffffff,
+        #f4f8ff
+      );
+  }
+
+  .centro-ia-title {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 800;
+    letter-spacing: -1px;
+  }
+
+  .centro-ia-subtitle {
+    max-width: 760px;
+    color: #667085;
+    font-size: 1.08rem;
+  }
+
+  .centro-ia-saldo {
+    border-radius: 999px;
+    padding: 13px 20px;
+    font-size: 1rem;
+  }
+
+  .herramienta-ia {
+    height: 100%;
+    border: 1px solid #e7ecf3;
+    border-radius: 22px;
+    background: #ffffff;
+    padding: 25px;
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease,
+      border-color 0.2s ease;
+  }
+
+  .herramienta-ia:hover {
+    transform: translateY(-4px);
+    border-color: rgba(13, 110, 253, 0.35);
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.09);
+  }
+
+  .herramienta-icono {
+    width: 58px;
+    height: 58px;
+    border-radius: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #edf4ff;
+    font-size: 1.7rem;
+    margin-bottom: 18px;
+  }
+
+  .herramienta-costo {
+    display: inline-block;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #0d6efd;
+    padding: 6px 12px;
+    font-weight: 700;
+  }
+
+  .centro-panel {
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .centro-panel-header {
+    padding: 20px 24px;
+    background: #111827;
+    color: #ffffff;
+  }
+
+  .centro-respuesta {
+    min-height: 230px;
+    max-height: 650px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.75;
+    font-size: 1rem;
+  }
+
+  .centro-textarea {
+    min-height: 190px;
+    resize: vertical;
+  }
+
+  .proyecto-selector {
+    min-height: 48px;
+  }
+
+  .boton-herramienta-activo {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.13);
+  }
+
+  .centro-vacio {
+    color: #98a2b3;
+    text-align: center;
+    padding: 55px 15px;
+  }
+
+  .centro-loader {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  @media (max-width: 768px) {
+    .centro-ia-page {
+      padding-top: 15px;
+    }
+
+    .centro-ia-hero .card-body {
+      padding: 25px !important;
+    }
+  }
+</style>
+
+<main class="centro-ia-page">
+
+  <!-- ==================================================
+  CABECERA
+  =================================================== -->
+
+  <section class="card shadow-sm centro-ia-hero mb-4">
+
+    <div class="card-body p-4 p-lg-5">
+
+      <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-4"
+      >
+
+        <div>
+
+          <span class="badge bg-primary-subtle text-primary mb-3">
+            Inteligencia artificial para desarrolladores
+          </span>
+
+          <h1 class="centro-ia-title mb-3">
+            🤖 Centro DemoFlow IA
+          </h1>
+
+          <p class="centro-ia-subtitle mb-0">
+            Analiza proyectos, explica errores, genera documentación,
+            revisa seguridad y descubre oportunidades comerciales
+            utilizando inteligencia artificial.
+          </p>
+
+        </div>
+
+        <div class="text-lg-end">
+
+          <div class="mb-2">
+
+            <span class="badge bg-primary centro-ia-saldo">
+              💎
+              <span id="diamantesCentroIA">
+                <%= diamantes %>
+              </span>
+              disponibles
+            </span>
+
+          </div>
+
+          <span class="badge bg-dark me-1">
+            Plan <%= plan %>
+          </span>
+
+          <% if (accesoIA) { %>
+
+            <span class="badge bg-success">
+              IA activa
+            </span>
+
+          <% } else { %>
+
+            <span class="badge bg-warning text-dark">
+              IA no activa
+            </span>
+
+          <% } %>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <% if (!accesoIA) { %>
+
+    <div class="alert alert-warning shadow-sm mb-4">
+
+      <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-3"
+      >
+
+        <div>
+          <strong>DemoFlow IA requiere un plan Premium.</strong>
+          Activa un plan para utilizar las herramientas avanzadas.
+        </div>
+
+        <a
+          href="/premium"
+          class="btn btn-dark"
+        >
+          Ver planes
+        </a>
+
+      </div>
+
+    </div>
+
+  <% } %>
+
+  <!-- ==================================================
+  MENSAJES
+  =================================================== -->
+
+  <div
+    id="alertaCentroIA"
+    class="alert d-none"
+    role="alert"
+  ></div>
+
+  <!-- ==================================================
+  HERRAMIENTAS
+  =================================================== -->
+
+  <section class="mb-4">
+
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-2 mb-3">
+
+      <div>
+
+        <h2 class="h3 fw-bold mb-1">
+          Herramientas IA
+        </h2>
+
+        <p class="text-muted mb-0">
+          Selecciona una herramienta y revisa su costo antes de usarla.
+        </p>
+
+      </div>
+
+    </div>
+
+    <div class="row g-4">
+
+      <!-- CHAT -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="chat"
+          data-titulo="Chat con DemoFlow IA"
+          data-costo="1"
+          data-placeholder="Escribe una pregunta sobre programación, deploy, ventas o DemoFlowApp..."
+          data-requiere-proyecto="false"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            💬
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Chat IA
+          </h3>
+
+          <p class="text-muted">
+            Consulta dudas técnicas, comerciales o relacionadas
+            con tus proyectos.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 1
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- ANALIZAR PROYECTO -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="analizar"
+          data-titulo="Analizar proyecto"
+          data-costo="2"
+          data-placeholder="Selecciona un proyecto. DemoFlow IA analizará sus archivos locales."
+          data-requiere-proyecto="true"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            📦
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Analizar proyecto
+          </h3>
+
+          <p class="text-muted">
+            Revisa tecnología, errores, seguridad, deploy,
+            rendimiento y oportunidades.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 2
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- EXPLICAR ERROR -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="error"
+          data-titulo="Explicar error"
+          data-costo="1"
+          data-placeholder="Pega aquí el error, log o mensaje que deseas solucionar..."
+          data-requiere-proyecto="false"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            🛠️
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Explicar error
+          </h3>
+
+          <p class="text-muted">
+            Comprende la causa y recibe una solución organizada
+            paso a paso.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 1
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- README -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="readme"
+          data-titulo="Generar README"
+          data-costo="2"
+          data-placeholder="Selecciona un proyecto para generar su README profesional."
+          data-requiere-proyecto="true"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            📝
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Generar README
+          </h3>
+
+          <p class="text-muted">
+            Genera documentación profesional para GitHub
+            y presentación comercial.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 2
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- SEGURIDAD -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="seguridad"
+          data-titulo="Revisión de seguridad"
+          data-costo="3"
+          data-placeholder="Pega código o configuración para realizar una revisión defensiva..."
+          data-requiere-proyecto="false"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            🔒
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Seguridad
+          </h3>
+
+          <p class="text-muted">
+            Detecta riesgos, secretos expuestos y fallas
+            de autenticación o validación.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 3
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- SEO -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="seo"
+          data-titulo="Análisis SEO"
+          data-costo="3"
+          data-placeholder="Pega HTML, descripción o una URL para analizar el SEO..."
+          data-requiere-proyecto="false"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            📈
+          </div>
+
+          <h3 class="h5 fw-bold">
+            SEO
+          </h3>
+
+          <p class="text-muted">
+            Revisa títulos, contenido, accesibilidad,
+            rendimiento y oportunidades de búsqueda.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 3
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- POTENCIAL -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="potencial"
+          data-titulo="Potencial comercial"
+          data-costo="3"
+          data-placeholder="Selecciona un proyecto para analizar su potencial comercial."
+          data-requiere-proyecto="true"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            💼
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Potencial comercial
+          </h3>
+
+          <p class="text-muted">
+            Identifica clientes, monetización, precios
+            y oportunidades de venta.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 3
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- ARQUITECTURA -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="arquitectura"
+          data-titulo="Analizar arquitectura"
+          data-costo="5"
+          data-placeholder="Pega la estructura, descripción o código principal del proyecto..."
+          data-requiere-proyecto="false"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            🧠
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Arquitectura
+          </h3>
+
+          <p class="text-muted">
+            Evalúa escalabilidad, responsabilidades,
+            seguridad y mantenimiento.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 5
+          </span>
+
+        </button>
+
+      </div>
+
+      <!-- DASHBOARD -->
+
+      <div class="col-md-6 col-xl-4">
+
+        <button
+          type="button"
+          class="herramienta-ia text-start w-100 herramienta-selector"
+          data-herramienta="dashboard"
+          data-titulo="Analizar portafolio"
+          data-costo="3"
+          data-placeholder="DemoFlow IA analizará todos tus proyectos publicados."
+          data-requiere-proyecto="false"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+
+          <div class="herramienta-icono">
+            📊
+          </div>
+
+          <h3 class="h5 fw-bold">
+            Analizar portafolio
+          </h3>
+
+          <p class="text-muted">
+            Evalúa fortalezas, tecnologías y próximos pasos
+            para conseguir clientes.
+          </p>
+
+          <span class="herramienta-costo">
+            💎 3
+          </span>
+
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ==================================================
+  PANEL DE TRABAJO
+  =================================================== -->
+
+  <section
+    id="panelTrabajoIA"
+    class="card shadow-sm centro-panel d-none"
+  >
+
+    <div class="centro-panel-header">
+
+      <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+      >
+
+        <div>
+
+          <h2
+            id="tituloHerramientaIA"
+            class="h4 mb-1"
+          >
+            DemoFlow IA
+          </h2>
+
+          <small>
+            El costo se descuenta cuando la solicitud se procesa.
+          </small>
+
+        </div>
+
+        <span
+          id="costoHerramientaIA"
+          class="badge bg-primary fs-6"
+        >
+          💎 0
+        </span>
+
+      </div>
+
+    </div>
+
+    <div class="card-body p-4">
+
+      <input
+        type="hidden"
+        id="herramientaSeleccionada"
+        value=""
+      >
+
+      <div
+        id="grupoProyectoIA"
+        class="mb-3 d-none"
+      >
+
+        <label
+          for="proyectoCentroIA"
+          class="form-label fw-semibold"
+        >
+          Proyecto
+        </label>
+
+        <select
+          id="proyectoCentroIA"
+          class="form-select proyecto-selector"
+        >
+
+          <option value="">
+            Selecciona un proyecto
+          </option>
+
+          <% listaProyectos.forEach(function (proyecto) { %>
+
+            <option value="<%= proyecto.id %>">
+              <%= proyecto.nombre || proyecto.slug || ('Proyecto ' + proyecto.id) %>
+            </option>
+
+          <% }); %>
+
+        </select>
+
+      </div>
+
+      <div
+        id="grupoEntradaIA"
+        class="mb-3"
+      >
+
+        <label
+          for="entradaCentroIA"
+          class="form-label fw-semibold"
+        >
+          Información para DemoFlow IA
+        </label>
+
+        <textarea
+          id="entradaCentroIA"
+          class="form-control centro-textarea"
+          placeholder="Escribe aquí..."
+        ></textarea>
+
+      </div>
+
+      <div class="d-flex flex-wrap gap-2">
+
+        <button
+          type="button"
+          id="btnEjecutarCentroIA"
+          class="btn btn-primary btn-lg"
+          <%= accesoIA ? '' : 'disabled' %>
+        >
+          🤖 Ejecutar herramienta
+        </button>
+
+        <button
+          type="button"
+          id="btnLimpiarCentroIA"
+          class="btn btn-outline-secondary btn-lg"
+        >
+          Limpiar
+        </button>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ==================================================
+  RESULTADO
+  =================================================== -->
+
+  <section
+    id="resultadoCentroIA"
+    class="card shadow-sm centro-panel mt-4 d-none"
+  >
+
+    <div class="card-header bg-success text-white p-3">
+
+      <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+      >
+
+        <strong>
+          ✅ Resultado de DemoFlow IA
+        </strong>
+
+        <small id="referenciaCentroIA"></small>
+
+      </div>
+
+    </div>
+
+    <div class="card-body">
+
+      <div
+        id="contenidoCentroIA"
+        class="centro-respuesta"
+      ></div>
+
+      <hr>
+
+      <div
+        class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+      >
+
+        <span class="text-muted">
+          Revisa siempre las recomendaciones antes de aplicarlas.
+        </span>
+
+        <span class="badge bg-primary fs-6">
+          Saldo:
+          💎
+          <strong id="saldoResultadoCentroIA">
+            <%= diamantes %>
+          </strong>
+        </span>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+  document.addEventListener(
+    'DOMContentLoaded',
+    function () {
+      const selectores =
+        document.querySelectorAll(
+          '.herramienta-selector'
+        );
+
+      const panel =
+        document.getElementById(
+          'panelTrabajoIA'
+        );
+
+      const titulo =
+        document.getElementById(
+          'tituloHerramientaIA'
+        );
+
+      const costo =
+        document.getElementById(
+          'costoHerramientaIA'
+        );
+
+      const herramientaInput =
+        document.getElementById(
+          'herramientaSeleccionada'
+        );
+
+      const grupoProyecto =
+        document.getElementById(
+          'grupoProyectoIA'
+        );
+
+      const grupoEntrada =
+        document.getElementById(
+          'grupoEntradaIA'
+        );
+
+      const proyecto =
+        document.getElementById(
+          'proyectoCentroIA'
+        );
+
+      const entrada =
+        document.getElementById(
+          'entradaCentroIA'
+        );
+
+      const ejecutar =
+        document.getElementById(
+          'btnEjecutarCentroIA'
+        );
+
+      const limpiar =
+        document.getElementById(
+          'btnLimpiarCentroIA'
+        );
+
+      const alerta =
+        document.getElementById(
+          'alertaCentroIA'
+        );
+
+      const resultado =
+        document.getElementById(
+          'resultadoCentroIA'
+        );
+
+      const contenido =
+        document.getElementById(
+          'contenidoCentroIA'
+        );
+
+      const saldoSuperior =
+        document.getElementById(
+          'diamantesCentroIA'
+        );
+
+      const saldoResultado =
+        document.getElementById(
+          'saldoResultadoCentroIA'
+        );
+
+      const referencia =
+        document.getElementById(
+          'referenciaCentroIA'
+        );
+
+      let requiereProyecto =
+        false;
+
+      function mostrarAlerta(
+        mensaje,
+        tipo
+      ) {
+        alerta.className =
+          `alert alert-${tipo}`;
+
+        alerta.textContent =
+          mensaje;
+
+        alerta.classList.remove(
+          'd-none'
+        );
+      }
+
+      function ocultarAlerta() {
+        alerta.classList.add(
+          'd-none'
+        );
+      }
+
+      function seleccionarHerramienta(
+        boton
+      ) {
+        selectores.forEach(
+          function (elemento) {
+            elemento.classList.remove(
+              'boton-herramienta-activo'
+            );
+          }
+        );
+
+        boton.classList.add(
+          'boton-herramienta-activo'
+        );
+
+        const herramienta =
+          boton.dataset.herramienta;
+
+        const tituloTexto =
+          boton.dataset.titulo;
+
+        const costoTexto =
+          boton.dataset.costo;
+
+        requiereProyecto =
+          boton.dataset
+            .requiereProyecto ===
+          'true';
+
+        herramientaInput.value =
+          herramienta;
+
+        titulo.textContent =
+          tituloTexto;
+
+        costo.textContent =
+          `💎 ${costoTexto}`;
+
+        entrada.placeholder =
+          boton.dataset.placeholder ||
+          'Escribe aquí...';
+
+        if (requiereProyecto) {
+          grupoProyecto.classList.remove(
+            'd-none'
+          );
+        } else {
+          grupoProyecto.classList.add(
+            'd-none'
+          );
+        }
+
+        const herramientasSinEntrada = [
+          'analizar',
+          'readme',
+          'potencial',
+          'dashboard'
+        ];
+
+        if (
+          herramientasSinEntrada
+            .includes(herramienta)
+        ) {
+          grupoEntrada.classList.add(
+            'd-none'
+          );
+        } else {
+          grupoEntrada.classList.remove(
+            'd-none'
+          );
+        }
+
+        panel.classList.remove(
+          'd-none'
+        );
+
+        resultado.classList.add(
+          'd-none'
+        );
+
+        ocultarAlerta();
+
+        panel.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+
+      selectores.forEach(
+        function (boton) {
+          boton.addEventListener(
+            'click',
+            function () {
+              seleccionarHerramienta(
+                boton
+              );
+            }
+          );
+        }
+      );
+
+      limpiar.addEventListener(
+        'click',
+        function () {
+          entrada.value = '';
+          proyecto.value = '';
+          resultado.classList.add(
+            'd-none'
+          );
+          ocultarAlerta();
+        }
+      );
+
+      ejecutar.addEventListener(
+        'click',
+        async function () {
+          ocultarAlerta();
+
+          const herramienta =
+            herramientaInput.value;
+
+          const proyectoId =
+            proyecto.value;
+
+          const texto =
+            entrada.value.trim();
+
+          if (!herramienta) {
+            mostrarAlerta(
+              'Selecciona una herramienta.',
+              'warning'
+            );
+            return;
+          }
+
+          if (
+            requiereProyecto &&
+            !proyectoId
+          ) {
+            mostrarAlerta(
+              'Selecciona un proyecto.',
+              'warning'
+            );
+            return;
+          }
+
+          const requiereTexto = [
+            'chat',
+            'error',
+            'seguridad',
+            'seo',
+            'arquitectura'
+          ].includes(herramienta);
+
+          if (
+            requiereTexto &&
+            !texto
+          ) {
+            mostrarAlerta(
+              'Escribe la información que deseas analizar.',
+              'warning'
+            );
+            return;
+          }
+
+          let url = '';
+          let body = {};
+
+          switch (herramienta) {
+            case 'chat':
+              url = '/ia/chat';
+              body = {
+                mensaje: texto,
+                proyectoId:
+                  proyectoId || null
+              };
+              break;
+
+            case 'analizar':
+              url =
+                `/ia/proyecto/${proyectoId}/analizar`;
+              body = {};
+              break;
+
+            case 'error':
+              url = '/ia/explicar-error';
+              body = {
+                error: texto,
+                proyectoId:
+                  proyectoId || null
+              };
+              break;
+
+            case 'readme':
+              url =
+                `/ia/proyecto/${proyectoId}/readme`;
+              body = {};
+              break;
+
+            case 'seguridad':
+              url =
+                '/ia/revisar-seguridad';
+              body = {
+                contenido: texto,
+                proyectoId:
+                  proyectoId || null
+              };
+              break;
+
+            case 'seo':
+              url = '/ia/analizar-seo';
+              body = {
+                contenido: texto,
+                proyectoId:
+                  proyectoId || null
+              };
+              break;
+
+            case 'potencial':
+              url =
+                `/ia/proyecto/${proyectoId}/potencial-comercial`;
+              body = {};
+              break;
+
+            case 'arquitectura':
+              url =
+                '/ia/analizar-arquitectura';
+              body = {
+                contenido: texto,
+                proyectoId:
+                  proyectoId || null
+              };
+              break;
+
+            case 'dashboard':
+              url =
+                '/ia/dashboard/analizar';
+              body = {};
+              break;
+
+            default:
+              mostrarAlerta(
+                'Herramienta no disponible.',
+                'danger'
+              );
+              return;
+          }
+
+          const textoOriginal =
+            ejecutar.innerHTML;
+
+          ejecutar.disabled = true;
+
+          ejecutar.innerHTML =
+            '<span class="spinner-border spinner-border-sm centro-loader me-2"></span>Procesando...';
+
+          try {
+            const respuesta =
+              await fetch(
+                url,
+                {
+                  method: 'POST',
+
+                  headers: {
+                    'Content-Type':
+                      'application/json',
+
+                    Accept:
+                      'application/json'
+                  },
+
+                  body:
+                    JSON.stringify(body)
+                }
+              );
+
+            let datos = {};
+
+            try {
+              datos =
+                await respuesta.json();
+            } catch (errorJson) {
+              throw new Error(
+                'DemoFlow IA devolvió una respuesta inválida.'
+              );
+            }
+
+            if (
+              !respuesta.ok ||
+              datos.ok !== true
+            ) {
+              throw new Error(
+                datos.mensaje ||
+                'No fue posible completar la solicitud.'
+              );
+            }
+
+            const textoResultado =
+              datos.respuesta ||
+              datos.analisis ||
+              datos.readme ||
+              datos.descripcion ||
+              (
+                datos.ia &&
+                datos.ia.respuesta
+              ) ||
+              'Solicitud completada correctamente.';
+
+            contenido.textContent =
+              textoResultado;
+
+            const nuevoSaldo =
+              typeof datos.saldo !==
+                'undefined'
+                ? Number(
+                    datos.saldo
+                  )
+                : (
+                    datos.ia &&
+                    typeof datos.ia.saldo !==
+                      'undefined'
+                      ? Number(
+                          datos.ia.saldo
+                        )
+                      : Number(
+                          saldoSuperior
+                            .textContent
+                        )
+                  );
+
+            saldoSuperior.textContent =
+              nuevoSaldo;
+
+            saldoResultado.textContent =
+              nuevoSaldo;
+
+            referencia.textContent =
+              datos.referencia
+                ? `Referencia: ${datos.referencia}`
+                : (
+                    datos.ia &&
+                    datos.ia.referencia
+                      ? `Referencia: ${datos.ia.referencia}`
+                      : ''
+                  );
+
+            resultado.classList.remove(
+              'd-none'
+            );
+
+            mostrarAlerta(
+              `Solicitud completada. Saldo actual: 💎 ${nuevoSaldo}.`,
+              'success'
+            );
+
+            resultado.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          } catch (error) {
+            mostrarAlerta(
+              error.message ||
+              'DemoFlow IA no pudo procesar la solicitud.',
+              'danger'
+            );
+          } finally {
+            ejecutar.disabled = false;
+
+            ejecutar.innerHTML =
+              textoOriginal;
+          }
+        }
+      );
+    }
+  );
+</script>

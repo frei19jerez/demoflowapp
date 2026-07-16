@@ -1,0 +1,453 @@
+<%
+  const datosPaypal =
+    typeof paypal !== 'undefined' && paypal
+      ? paypal
+      : (
+          typeof orden !== 'undefined' && orden
+            ? orden
+            : {}
+        );
+
+  const datosPago =
+    typeof pago !== 'undefined' && pago
+      ? pago
+      : (
+          datosPaypal.pago ||
+          {}
+        );
+
+  const moneda =
+    datosPaypal.moneda ||
+    datosPago.monedaPaypal ||
+    'USD';
+
+  const valor =
+    Number(
+      datosPaypal.valor ||
+      datosPago.valorPaypal ||
+      0
+    );
+
+  const urlAprobacion =
+    datosPaypal.approveUrl ||
+    datosPaypal.url ||
+    '';
+
+  const ordenId =
+    datosPaypal.ordenId ||
+    (
+      datosPaypal.orden &&
+      datosPaypal.orden.id
+        ? datosPaypal.orden.id
+        : ''
+    );
+
+  const referencia =
+    datosPaypal.referencia ||
+    datosPago.referencia ||
+    '';
+
+  const ambiente =
+    datosPaypal.ambiente ||
+    datosPaypal.environment ||
+    (
+      datosPaypal.sandbox
+        ? 'sandbox'
+        : 'live'
+    );
+
+  const esSandbox =
+    String(ambiente).toLowerCase() === 'sandbox' ||
+    String(ambiente).toLowerCase() === 'test';
+
+  const checkoutDisponible =
+    Boolean(
+      urlAprobacion &&
+      datosPago &&
+      datosPago.id
+    );
+
+  let valorFormateado;
+
+  try {
+    valorFormateado =
+      new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: moneda,
+        minimumFractionDigits: 2
+      }).format(valor);
+  } catch (error) {
+    valorFormateado =
+      `${moneda} ${valor.toFixed(2)}`;
+  }
+%>
+
+<div class="container py-5">
+
+  <div class="row justify-content-center">
+
+    <div class="col-12 col-lg-8 col-xl-7">
+
+      <div class="card border-0 shadow-lg overflow-hidden">
+
+        <!-- ===============================
+        CABECERA
+        ================================ -->
+
+        <div class="card-header bg-primary text-white p-4">
+
+          <div
+            class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3"
+          >
+
+            <div>
+
+              <span class="badge bg-light text-primary mb-2">
+                Pago internacional
+              </span>
+
+              <h1 class="h3 mb-1">
+                Pagar con PayPal
+              </h1>
+
+              <p class="mb-0 text-white-50">
+                Pago seguro para clientes internacionales
+              </p>
+
+            </div>
+
+            <div class="text-md-end">
+
+              <div class="small text-white-50">
+                Total a pagar
+              </div>
+
+              <div class="h3 mb-0 fw-bold">
+                <%= valorFormateado %>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- ===============================
+        CONTENIDO
+        ================================ -->
+
+        <div class="card-body p-4 p-md-5">
+
+          <% if (!checkoutDisponible) { %>
+
+            <div
+              class="alert alert-danger"
+              role="alert"
+            >
+
+              <h2 class="h5 alert-heading">
+                No fue posible preparar PayPal
+              </h2>
+
+              <p class="mb-0">
+                La orden no contiene un enlace de aprobación válido.
+                Revisa las credenciales, el precio internacional y la
+                configuración de PayPal.
+              </p>
+
+            </div>
+
+            <div class="d-grid gap-2">
+
+              <% if (datosPago && datosPago.id) { %>
+
+                <a
+                  href="/pago/<%= datosPago.id %>"
+                  class="btn btn-outline-secondary"
+                >
+                  Volver al pago
+                </a>
+
+              <% } %>
+
+              <a
+                href="/pricing"
+                class="btn btn-primary"
+              >
+                Ver planes
+              </a>
+
+            </div>
+
+          <% } else { %>
+
+            <!-- ===============================
+            RESUMEN
+            ================================ -->
+
+            <section class="mb-4">
+
+              <h2 class="h5 mb-3">
+                Resumen de la compra
+              </h2>
+
+              <div class="border rounded-3 bg-light p-3">
+
+                <div
+                  class="d-flex justify-content-between gap-3 py-2 border-bottom"
+                >
+                  <span class="text-muted">
+                    Plan
+                  </span>
+
+                  <strong class="text-uppercase text-end">
+                    <%= datosPago.plan || 'Pro' %>
+                  </strong>
+                </div>
+
+                <div
+                  class="d-flex justify-content-between gap-3 py-2 border-bottom"
+                >
+                  <span class="text-muted">
+                    Referencia
+                  </span>
+
+                  <strong class="text-break text-end">
+                    <%= referencia || 'No disponible' %>
+                  </strong>
+                </div>
+
+                <% if (ordenId) { %>
+
+                  <div
+                    class="d-flex justify-content-between gap-3 py-2 border-bottom"
+                  >
+                    <span class="text-muted">
+                      Orden PayPal
+                    </span>
+
+                    <strong class="text-break text-end">
+                      <%= ordenId %>
+                    </strong>
+                  </div>
+
+                <% } %>
+
+                <div
+                  class="d-flex justify-content-between gap-3 py-2"
+                >
+                  <span class="text-muted">
+                    Total
+                  </span>
+
+                  <strong>
+                    <%= valorFormateado %>
+                  </strong>
+                </div>
+
+              </div>
+
+            </section>
+
+            <!-- ===============================
+            AVISO DE SEGURIDAD
+            ================================ -->
+
+            <div
+              class="alert alert-info d-flex gap-3"
+              role="alert"
+            >
+
+              <div
+                class="fs-4"
+                aria-hidden="true"
+              >
+                🔐
+              </div>
+
+              <div>
+
+                <strong>
+                  Pago procesado directamente por PayPal
+                </strong>
+
+                <div class="small mt-1">
+                  DemoFlow no recibe ni almacena tu contraseña,
+                  datos bancarios o información de tarjeta.
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- ===============================
+            BENEFICIOS
+            ================================ -->
+
+            <div class="row g-3 mb-4">
+
+              <div class="col-12 col-md-4">
+
+                <div class="border rounded-3 p-3 h-100 text-center">
+
+                  <div class="fs-3 mb-2">
+                    🌎
+                  </div>
+
+                  <strong class="d-block">
+                    Pago internacional
+                  </strong>
+
+                  <small class="text-muted">
+                    Disponible para clientes de distintos países.
+                  </small>
+
+                </div>
+
+              </div>
+
+              <div class="col-12 col-md-4">
+
+                <div class="border rounded-3 p-3 h-100 text-center">
+
+                  <div class="fs-3 mb-2">
+                    ⚡
+                  </div>
+
+                  <strong class="d-block">
+                    Activación automática
+                  </strong>
+
+                  <small class="text-muted">
+                    Premium se activa cuando el pago sea confirmado.
+                  </small>
+
+                </div>
+
+              </div>
+
+              <div class="col-12 col-md-4">
+
+                <div class="border rounded-3 p-3 h-100 text-center">
+
+                  <div class="fs-3 mb-2">
+                    🤖
+                  </div>
+
+                  <strong class="d-block">
+                    Créditos IA
+                  </strong>
+
+                  <small class="text-muted">
+                    Los créditos del plan se agregan automáticamente.
+                  </small>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            <!-- ===============================
+            ACCIONES
+            ================================ -->
+
+            <div class="d-grid gap-3">
+
+              <a
+                href="<%= urlAprobacion %>"
+                class="btn btn-primary btn-lg fw-bold"
+                id="btnContinuarPaypal"
+                rel="noopener noreferrer"
+              >
+                Continuar con PayPal
+              </a>
+
+              <a
+                href="/pago/<%= datosPago.id %>"
+                class="btn btn-outline-secondary"
+              >
+                Volver al detalle del pago
+              </a>
+
+            </div>
+
+            <!-- ===============================
+            AMBIENTE DE PRUEBAS
+            ================================ -->
+
+            <% if (esSandbox) { %>
+
+              <div
+                class="alert alert-warning mt-4 mb-0"
+                role="alert"
+              >
+
+                <strong>
+                  Modo Sandbox:
+                </strong>
+
+                esta orden utiliza el ambiente de pruebas de PayPal
+                y no cobrará dinero real.
+
+              </div>
+
+            <% } else { %>
+
+              <div
+                class="alert alert-success mt-4 mb-0"
+                role="alert"
+              >
+
+                <strong>
+                  PayPal Live:
+                </strong>
+
+                este pago utiliza el ambiente real de PayPal.
+
+              </div>
+
+            <% } %>
+
+          <% } %>
+
+        </div>
+
+        <!-- ===============================
+        PIE
+        ================================ -->
+
+        <div class="card-footer bg-white text-center py-3">
+
+          <small class="text-muted">
+            La suscripción se activará cuando DemoFlow reciba
+            la confirmación segura del pago.
+          </small>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const boton = document.getElementById(
+      'btnContinuarPaypal'
+    );
+
+    if (!boton) {
+      return;
+    }
+
+    boton.addEventListener('click', function () {
+      boton.classList.add('disabled');
+      boton.setAttribute('aria-disabled', 'true');
+      boton.textContent = 'Abriendo PayPal...';
+    });
+  });
+</script>

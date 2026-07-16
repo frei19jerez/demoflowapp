@@ -1,38 +1,114 @@
 <link rel="stylesheet" href="/styles/ia-demoflow.css">
 
-<!-- =========================
-🤖 IA DEMOFLOW
-========================= -->
+<%
+  /*
+   * Compatibilidad con los diferentes campos
+   * que ha utilizado DemoFlowApp para controlar
+   * el acceso Premium e IA.
+   */
+  const iaActiva = Boolean(
+    usuario &&
+    (
+      usuario.accesoIA === true ||
+      usuario.acceso_ia === true ||
+      usuario.premium === true ||
+      usuario.esPremium === true ||
+      String(usuario.estadoPremium || '').toLowerCase() === 'activo'
+    )
+  );
+
+  const diamantesDisponibles = Math.max(
+    0,
+    Number(
+      usuario && usuario.creditos
+        ? usuario.creditos
+        : 0
+    )
+  );
+
+  const planUsuario = String(
+    usuario && usuario.plan
+      ? usuario.plan
+      : 'free'
+  ).toUpperCase();
+
+  const totalProyectos = Number(
+    iaDashboard && iaDashboard.totalProyectos
+      ? iaDashboard.totalProyectos
+      : 0
+  );
+
+  const demosConUrl = Number(
+    iaDashboard && iaDashboard.demosConUrl
+      ? iaDashboard.demosConUrl
+      : 0
+  );
+
+  const proyectosSails = Number(
+    iaDashboard && iaDashboard.proyectosSails
+      ? iaDashboard.proyectosSails
+      : 0
+  );
+
+  const proyectosHtml = Number(
+    iaDashboard && iaDashboard.proyectosHtml
+      ? iaDashboard.proyectosHtml
+      : 0
+  );
+
+  const proyectosNode = Number(
+    iaDashboard && iaDashboard.proyectosNode
+      ? iaDashboard.proyectosNode
+      : 0
+  );
+%>
+
+<!-- ======================================================
+🤖 DEMOFLOW IA
+====================================================== -->
 
 <div class="card border-0 shadow-sm mb-4 ia-demoflow-card">
 
   <div class="card-body">
 
-    <!-- HEADER IA -->
+    <!-- ==================================================
+    CABECERA
+    =================================================== -->
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div
+      class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4"
+    >
 
       <div>
 
         <h4 class="mb-1 ia-demoflow-title">
-          🤖 IA DemoFlow Assistant
+          🤖 DemoFlow IA
         </h4>
 
         <p class="mb-0 ia-demoflow-subtitle">
           Inteligencia artificial para analizar tus demos,
-          detectar tecnologías y ayudarte a vender más.
+          detectar oportunidades y ayudarte a vender más.
         </p>
 
       </div>
 
-      <div class="d-flex gap-2 align-items-center">
+      <div class="d-flex flex-wrap gap-2 align-items-center">
 
-        <span class="badge bg-dark ia-badge">
-          💎 Créditos:
-          <%= usuario.creditos || 0 %>
+        <span class="badge bg-primary ia-badge">
+          💎 Diamantes:
+          <strong id="saldoDiamantesIA">
+            <%= diamantesDisponibles %>
+          </strong>
         </span>
 
-        <% if(usuario.acceso_ia){ %>
+        <span class="badge bg-dark ia-badge">
+          Plan:
+          <strong>
+            <%= planUsuario %>
+          </strong>
+        </span>
+
+        <% if (iaActiva) { %>
 
           <span class="badge bg-success ia-badge">
             🟢 IA ACTIVA
@@ -50,38 +126,76 @@
 
     </div>
 
-    <!-- ALERTA IA -->
+    <!-- ==================================================
+    ALERTA INFORMATIVA
+    =================================================== -->
 
-    <div class="alert ia-alert d-flex align-items-center gap-3 mb-4">
+    <div
+      class="alert ia-alert d-flex align-items-start gap-3 mb-4"
+      role="alert"
+    >
 
       <i class="bi bi-robot fs-5"></i>
 
       <div>
-        🤖 DemoFlow IA monitorea tus demos
-        y analiza proyectos en tiempo real.
+
+        <strong>DemoFlow analiza tu plataforma.</strong>
+
+        <div class="mt-1">
+          Las estadísticas locales son gratuitas.
+          El análisis avanzado con OpenAI consume
+          <strong>💎 3 diamantes</strong>.
+        </div>
+
       </div>
 
     </div>
 
-    <!-- BOTÓN IA -->
+    <!-- ==================================================
+    MENSAJES DEL ANÁLISIS
+    =================================================== -->
+
+    <div
+      id="mensajeIA"
+      class="alert d-none mb-4"
+      role="alert"
+    ></div>
+
+    <!-- ==================================================
+    ACCIONES IA
+    =================================================== -->
 
     <div class="mb-4">
 
-      <% if(usuario.acceso_ia){ %>
+      <% if (iaActiva) { %>
 
-        <form
-          action="/ia/analizar-dashboard"
-          method="POST"
-        >
+        <div class="d-flex flex-wrap gap-2">
 
           <button
-            type="submit"
+            type="button"
+            id="btnAnalizarDashboardIA"
             class="btn btn-primary btn-lg ia-premium-btn"
+            data-costo="3"
           >
-            🤖 Analizar mi plataforma con IA
+            🤖 Analizar mi portafolio
+            <span class="ms-1">
+              💎 3
+            </span>
           </button>
 
-        </form>
+          <a
+            href="/ia/centro"
+            class="btn btn-outline-primary btn-lg ia-premium-btn"
+          >
+            🧠 Centro DemoFlow IA
+          </a>
+
+        </div>
+
+        <small class="d-block text-muted mt-2">
+          Solo se descuentan diamantes cuando el análisis
+          avanzado termina correctamente.
+        </small>
 
       <% } else { %>
 
@@ -89,34 +203,101 @@
           href="/premium"
           class="btn btn-dark btn-lg ia-premium-btn"
         >
-          🚀 Mejorar a IA Premium
+          🚀 Activar DemoFlow IA
         </a>
+
+        <small class="d-block text-muted mt-2">
+          Activa un plan Premium para utilizar OpenAI y
+          las herramientas avanzadas.
+        </small>
 
       <% } %>
 
     </div>
 
-    <!-- GRID -->
+    <!-- ==================================================
+    RESULTADO AVANZADO DE OPENAI
+    =================================================== -->
+
+    <div
+      id="resultadoDashboardIA"
+      class="card border-primary shadow-sm mb-4 d-none"
+    >
+
+      <div class="card-header bg-primary text-white">
+
+        <div
+          class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+
+          <strong>
+            🤖 Análisis avanzado de tu portafolio
+          </strong>
+
+          <span
+            id="referenciaAnalisisIA"
+            class="small"
+          ></span>
+
+        </div>
+
+      </div>
+
+      <div class="card-body">
+
+        <div
+          id="contenidoResultadoIA"
+          class="ia-respuesta-contenido"
+          style="white-space: pre-wrap; line-height: 1.7;"
+        ></div>
+
+        <hr>
+
+        <div
+          class="d-flex justify-content-between align-items-center flex-wrap gap-2"
+        >
+
+          <small class="text-muted">
+            Resultado generado mediante DemoFlow IA.
+          </small>
+
+          <span class="badge bg-primary">
+            Saldo:
+            💎
+            <strong id="saldoResultadoIA">
+              <%= diamantesDisponibles %>
+            </strong>
+          </span>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ==================================================
+    ESTADÍSTICAS LOCALES GRATUITAS
+    =================================================== -->
 
     <div class="row">
 
       <!-- ESTADO -->
 
-      <div class="col-md-3 mb-3">
+      <div class="col-md-6 col-xl-3 mb-3">
 
-        <div class="ia-box">
+        <div class="ia-box h-100">
 
           <h6>
             🚀 Estado IA
           </h6>
 
-          <% if(usuario.acceso_ia){ %>
+          <% if (iaActiva) { %>
 
             <p class="text-success mb-0">
 
-              <%= iaDashboard
+              <%= iaDashboard && iaDashboard.estado
                 ? iaDashboard.estado
-                : 'IA activada correctamente.'
+                : 'DemoFlow IA está disponible.'
               %>
 
             </p>
@@ -135,19 +316,19 @@
 
       <!-- RECOMENDACIÓN -->
 
-      <div class="col-md-3 mb-3">
+      <div class="col-md-6 col-xl-3 mb-3">
 
-        <div class="ia-box">
+        <div class="ia-box h-100">
 
           <h6>
-            📈 Recomendación IA
+            📈 Recomendación
           </h6>
 
           <p class="mb-0 text-muted">
 
-            <%= iaDashboard
+            <%= iaDashboard && iaDashboard.recomendacion
               ? iaDashboard.recomendacion
-              : 'Agrega más screenshots y demos en vivo para aumentar conversiones.'
+              : 'Agrega capturas, descripciones comerciales y demos en vivo para aumentar las conversiones.'
             %>
 
           </p>
@@ -158,19 +339,19 @@
 
       <!-- POTENCIAL -->
 
-      <div class="col-md-3 mb-3">
+      <div class="col-md-6 col-xl-3 mb-3">
 
-        <div class="ia-box">
+        <div class="ia-box h-100">
 
           <h6>
-            🔥 Potencial de venta
+            🔥 Potencial comercial
           </h6>
 
           <p class="mb-0 text-primary">
 
-            <%= iaDashboard
+            <%= iaDashboard && iaDashboard.potencial
               ? iaDashboard.potencial
-              : 'Tu perfil tiene alto potencial SaaS comercial.'
+              : 'Tu portafolio tiene potencial comercial.'
             %>
 
           </p>
@@ -181,39 +362,46 @@
 
       <!-- ESTADÍSTICAS -->
 
-      <div class="col-md-3 mb-3">
+      <div class="col-md-6 col-xl-3 mb-3">
 
-        <div class="ia-box">
+        <div class="ia-box h-100">
 
           <h6>
-            📊 Estadísticas IA
+            📊 Estadísticas
           </h6>
 
           <p class="mb-1">
             Proyectos:
             <strong class="ia-stat-number">
-              <%= iaDashboard ? iaDashboard.totalProyectos : 0 %>
+              <%= totalProyectos %>
             </strong>
           </p>
 
           <p class="mb-1">
             Demos activas:
             <strong class="ia-stat-number">
-              <%= iaDashboard ? iaDashboard.demosConUrl : 0 %>
+              <%= demosConUrl %>
             </strong>
           </p>
 
           <p class="mb-1">
             Sails.js:
             <strong class="ia-stat-number">
-              <%= iaDashboard ? iaDashboard.proyectosSails : 0 %>
+              <%= proyectosSails %>
+            </strong>
+          </p>
+
+          <p class="mb-1">
+            Node.js:
+            <strong class="ia-stat-number">
+              <%= proyectosNode %>
             </strong>
           </p>
 
           <p class="mb-0">
             HTML:
             <strong class="ia-stat-number">
-              <%= iaDashboard ? iaDashboard.proyectosHtml : 0 %>
+              <%= proyectosHtml %>
             </strong>
           </p>
 
@@ -223,27 +411,40 @@
 
     </div>
 
-    <!-- IA INSIGHTS -->
+    <!-- ==================================================
+    INSIGHTS
+    =================================================== -->
 
     <div class="ia-insights mt-4">
 
       <h5 class="mb-3">
-        🧠 IA Insights
+        🧠 DemoFlow Insights
       </h5>
 
       <div class="row">
 
         <div class="col-md-4 mb-3">
 
-          <div class="ia-insight-box">
+          <div class="ia-insight-box h-100">
 
             <h6>
-              🚀 Sails.js
+              🚀 Tecnología
             </h6>
 
             <p class="text-muted mb-0">
-              Tus proyectos Sails.js tienen
-              alto potencial comercial.
+
+              <% if (proyectosSails > 0) { %>
+
+                Tus aplicaciones Sails.js pueden presentarse
+                como productos SaaS completos y demos dinámicas.
+
+              <% } else { %>
+
+                Publica proyectos HTML, Node.js o Sails.js para
+                ampliar tu portafolio tecnológico.
+
+              <% } %>
+
             </p>
 
           </div>
@@ -252,15 +453,26 @@
 
         <div class="col-md-4 mb-3">
 
-          <div class="ia-insight-box">
+          <div class="ia-insight-box h-100">
 
             <h6>
               🌐 Conversión
             </h6>
 
             <p class="text-muted mb-0">
-              Las demos con screenshots y links
-              en vivo convierten mucho más.
+
+              <% if (demosConUrl > 0) { %>
+
+                Ya tienes demos visibles. Agrega capturas y
+                llamados a la acción para conseguir más clientes.
+
+              <% } else { %>
+
+                Publica una demo en vivo para que los clientes
+                puedan comprobar el funcionamiento de tu proyecto.
+
+              <% } %>
+
             </p>
 
           </div>
@@ -269,15 +481,26 @@
 
         <div class="col-md-4 mb-3">
 
-          <div class="ia-insight-box">
+          <div class="ia-insight-box h-100">
 
             <h6>
-              💰 SaaS
+              💰 Monetización
             </h6>
 
             <p class="text-muted mb-0">
-              DemoFlow ya tiene estructura
-              para convertirse en SaaS.
+
+              <% if (totalProyectos >= 3) { %>
+
+                Tu portafolio ya puede organizarse por categorías,
+                precios y soluciones para diferentes clientes.
+
+              <% } else { %>
+
+                Agrega más proyectos para construir un portafolio
+                comercial sólido dentro de DemoFlow.
+
+              <% } %>
+
             </p>
 
           </div>
@@ -288,13 +511,17 @@
 
     </div>
 
-    <!-- ÚLTIMO ANÁLISIS -->
+    <!-- ==================================================
+    ÚLTIMO ANÁLISIS
+    =================================================== -->
 
     <div class="mt-4">
 
-      <p class="ia-last-analysis mb-0">
-        🤖 Último análisis IA:
-        hace unos minutos.
+      <p
+        id="ultimoAnalisisIA"
+        class="ia-last-analysis mb-0"
+      >
+        🤖 Estadísticas locales actualizadas.
       </p>
 
     </div>
@@ -303,50 +530,81 @@
 
 </div>
 
-<!-- IA ANALYTICS CHARTS -->
+<!-- ======================================================
+ANALYTICS IA
+====================================================== -->
 
 <div class="ia-insights mt-4">
 
   <h5 class="mb-4">
-    📊 Analytics IA DemoFlow
+    📊 Analytics DemoFlow
   </h5>
 
   <div
     id="iaChartData"
-    data-total-proyectos="<%= iaDashboard ? iaDashboard.totalProyectos : 0 %>"
-    data-demos-url="<%= iaDashboard ? iaDashboard.demosConUrl : 0 %>"
-    data-sails="<%= iaDashboard ? iaDashboard.proyectosSails : 0 %>"
-    data-html="<%= iaDashboard ? iaDashboard.proyectosHtml : 0 %>"
+    data-total-proyectos="<%= totalProyectos %>"
+    data-demos-url="<%= demosConUrl %>"
+    data-sails="<%= proyectosSails %>"
+    data-node="<%= proyectosNode %>"
+    data-html="<%= proyectosHtml %>"
   ></div>
 
   <div class="row">
 
     <div class="col-md-6 mb-4">
-      <div class="ia-insight-box">
-        <h6>🚀 Demos activas</h6>
+
+      <div class="ia-insight-box h-100">
+
+        <h6>
+          🚀 Demos activas
+        </h6>
+
         <canvas id="chartDemos"></canvas>
+
       </div>
+
     </div>
 
     <div class="col-md-6 mb-4">
-      <div class="ia-insight-box">
-        <h6>🧠 Tecnologías detectadas</h6>
+
+      <div class="ia-insight-box h-100">
+
+        <h6>
+          🧠 Tecnologías detectadas
+        </h6>
+
         <canvas id="chartTecnologias"></canvas>
+
       </div>
+
     </div>
 
     <div class="col-md-6 mb-4">
-      <div class="ia-insight-box">
-        <h6>👁️ Vistas estimadas</h6>
+
+      <div class="ia-insight-box h-100">
+
+        <h6>
+          👁️ Vistas estimadas
+        </h6>
+
         <canvas id="chartVistas"></canvas>
+
       </div>
+
     </div>
 
     <div class="col-md-6 mb-4">
-      <div class="ia-insight-box">
-        <h6>🔥 IA Score comercial</h6>
+
+      <div class="ia-insight-box h-100">
+
+        <h6>
+          🔥 Potencial comercial
+        </h6>
+
         <canvas id="chartScore"></canvas>
+
       </div>
+
     </div>
 
   </div>
@@ -354,6 +612,184 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const boton =
+      document.getElementById(
+        'btnAnalizarDashboardIA'
+      );
+
+    if (!boton) {
+      return;
+    }
+
+    const mensaje =
+      document.getElementById(
+        'mensajeIA'
+      );
+
+    const resultado =
+      document.getElementById(
+        'resultadoDashboardIA'
+      );
+
+    const contenido =
+      document.getElementById(
+        'contenidoResultadoIA'
+      );
+
+    const saldoPrincipal =
+      document.getElementById(
+        'saldoDiamantesIA'
+      );
+
+    const saldoResultado =
+      document.getElementById(
+        'saldoResultadoIA'
+      );
+
+    const referencia =
+      document.getElementById(
+        'referenciaAnalisisIA'
+      );
+
+    const ultimoAnalisis =
+      document.getElementById(
+        'ultimoAnalisisIA'
+      );
+
+    const textoOriginal =
+      boton.innerHTML;
+
+    function mostrarMensaje(
+      texto,
+      tipo
+    ) {
+      mensaje.className =
+        `alert alert-${tipo} mb-4`;
+
+      mensaje.textContent =
+        texto;
+
+      mensaje.classList.remove(
+        'd-none'
+      );
+    }
+
+    function ocultarMensaje() {
+      mensaje.classList.add(
+        'd-none'
+      );
+    }
+
+    boton.addEventListener(
+      'click',
+      async function () {
+        ocultarMensaje();
+
+        boton.disabled = true;
+
+        boton.innerHTML =
+          '<span class="spinner-border spinner-border-sm me-2"></span>Analizando portafolio...';
+
+        try {
+          const respuesta =
+            await fetch(
+              '/ia/dashboard/analizar',
+              {
+                method: 'POST',
+
+                headers: {
+                  'Content-Type':
+                    'application/json',
+
+                  Accept:
+                    'application/json'
+                },
+
+                body:
+                  JSON.stringify({})
+              }
+            );
+
+          let datos = {};
+
+          try {
+            datos =
+              await respuesta.json();
+          } catch (errorJson) {
+            throw new Error(
+              'DemoFlow IA devolvió una respuesta inválida.'
+            );
+          }
+
+          if (
+            !respuesta.ok ||
+            datos.ok !== true
+          ) {
+            throw new Error(
+              datos.mensaje ||
+              'No fue posible completar el análisis.'
+            );
+          }
+
+          contenido.textContent =
+            datos.analisis ||
+            datos.respuesta ||
+            'Análisis completado.';
+
+          const nuevoSaldo =
+            Number(
+              typeof datos.saldo !==
+                'undefined'
+                ? datos.saldo
+                : saldoPrincipal.textContent
+            );
+
+          saldoPrincipal.textContent =
+            nuevoSaldo;
+
+          saldoResultado.textContent =
+            nuevoSaldo;
+
+          referencia.textContent =
+            datos.referencia
+              ? `Referencia: ${datos.referencia}`
+              : '';
+
+          resultado.classList.remove(
+            'd-none'
+          );
+
+          ultimoAnalisis.textContent =
+            '🤖 Último análisis avanzado: ahora.';
+
+          mostrarMensaje(
+            `Análisis completado. Se utilizaron 💎 ${datos.costo || 0} diamantes.`,
+            'success'
+          );
+
+          resultado.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        } catch (error) {
+          mostrarMensaje(
+            error.message ||
+            'DemoFlow IA no pudo completar el análisis.',
+            'danger'
+          );
+        } finally {
+          boton.disabled = false;
+          boton.innerHTML =
+            textoOriginal;
+        }
+      }
+    );
+  });
+</script>
+
 <script src="/js/ver.js"></script>
 <script src="/js/nuevo.js"></script>
 <script src="/js/sails-folder-builder.js"></script>
