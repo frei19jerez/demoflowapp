@@ -480,6 +480,30 @@ module.exports.routes = {
   action: 'centro'
 },
 
+// ======================================================
+// PERFILES PÚBLICOS DEMOFLOW
+// ======================================================
+
+'GET /mi-perfil': {
+  controller: 'PerfilController',
+  action: 'miPerfil'
+},
+
+'GET /perfil/editar': {
+  controller: 'PerfilController',
+  action: 'editar'
+},
+
+'POST /perfil/actualizar': {
+  controller: 'PerfilController',
+  action: 'actualizar'
+},
+
+'GET /u/:slug': {
+  controller: 'PerfilController',
+  action: 'publico'
+},
+
   // ======================================================
   // ANALYTICS
   // ======================================================

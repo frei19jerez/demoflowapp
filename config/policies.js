@@ -10,6 +10,13 @@
 
 module.exports.security = {
 
+  PerfilController: {
+  miPerfil: 'isAuthenticated',
+  editar: 'isAuthenticated',
+  actualizar: 'isAuthenticated',
+  publico: true
+},
+
   // =========================================
   // CORS
   // =========================================

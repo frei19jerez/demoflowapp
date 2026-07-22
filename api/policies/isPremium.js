@@ -1,51 +1,71 @@
 /**
  * isPremium.js
- * Política IA DemoFlow
+ * Permite continuar a usuarios Premium o administradores.
  */
 
-module.exports = async function(req, res, proceed) {
+'use strict';
 
-  // =========================
-  // VALIDAR LOGIN
-  // =========================
+module.exports = async function isPremium(req, res, proceed) {
+  try {
+    const usuarioId = Number(
+      req.session &&
+      (
+        req.session.userId ||
+        req.session.usuarioId
+      )
+    );
 
-  if (!req.session.usuario) {
+    if (!Number.isSafeInteger(usuarioId) || usuarioId <= 0) {
+      if (req.wantsJSON) {
+        return res.status(401).json({
+          ok: false,
+          mensaje: 'Debes iniciar sesión.'
+        });
+      }
 
-    return res.redirect('/login');
-  }
+      return res.redirect('/login');
+    }
 
-  // =========================
-  // VALIDAR PLAN
-  // =========================
+    const usuario = await Usuario.findOne({
+      id: usuarioId
+    });
 
-  const usuario = await Usuario.findOne({
-    id: req.session.usuario.id
-  });
+    if (!usuario) {
+      return res.redirect('/login');
+    }
 
-  if (!usuario) {
+    const esAdministrador =
+      usuario.esAdmin === true ||
+      usuario.admin === true ||
+      String(usuario.rol || '').toLowerCase() === 'admin';
 
-    return res.redirect('/login');
-  }
+    const esPremium =
+      usuario.premium === true ||
+      usuario.esPremium === true ||
+      String(usuario.plan || '').toLowerCase() === 'premium' ||
+      String(usuario.plan || '').toLowerCase() === 'pro' ||
+      String(usuario.plan || '').toLowerCase() === 'empresa';
 
-  // =========================
-  // PLAN PREMIUM
-  // =========================
+    if (esAdministrador || esPremium) {
+      return proceed();
+    }
 
-  if (
-    usuario.plan !== 'pro' &&
-    usuario.plan !== 'empresa' &&
-    usuario.rol !== 'admin'
-  ) {
+    if (req.wantsJSON) {
+      return res.status(403).json({
+        ok: false,
+        mensaje: 'Esta función requiere un plan Premium.'
+      });
+    }
 
-    return res.forbidden(
-      '🚫 Esta función es Premium.'
+    return res.redirect('/planes?premium_requerido=1');
+  } catch (error) {
+    sails.log.error('❌ DemoFlow: Error en policy isPremium.', {
+      mensaje: error.message,
+      stack: error.stack
+    });
+
+    return res.serverError(
+      'No fue posible comprobar el plan del usuario.'
     );
   }
-
-  // =========================
-  // CONTINUAR
-  // =========================
-
-  return proceed();
-
 };

@@ -1,27 +1,38 @@
 /**
  * isAuthenticated.js
- * Política IA DemoFlow
+ * Permite continuar únicamente a usuarios autenticados.
  */
 
-module.exports = async function (req, res, proceed) {
-  try {
-    if (req.session && req.session.userId) {
-      return proceed();
-    }
+'use strict';
 
-    if (req.session && req.session.user && req.session.user.id) {
-      req.session.userId = req.session.user.id;
-      return proceed();
-    }
+module.exports = async function (
+  req,
+  res,
+  proceed
+) {
+  const usuarioId =
+    req &&
+    req.session &&
+    req.session.userId
+      ? Number(req.session.userId)
+      : null;
 
-    req.session.returnTo = req.originalUrl || req.url || '/dashboard';
-
-    return req.session.save(function () {
-      return res.redirect('/login');
-    });
-
-  } catch (error) {
-    sails.log.error('❌ Error en policy isAuthenticated:', error);
-    return res.serverError('Error verificando sesión');
+  if (
+    Number.isSafeInteger(usuarioId) &&
+    usuarioId > 0
+  ) {
+    return proceed();
   }
+
+  if (req.wantsJSON) {
+    return res
+      .status(401)
+      .json({
+        ok: false,
+        mensaje:
+          'Debes iniciar sesión.'
+      });
+  }
+
+  return res.redirect('/login');
 };

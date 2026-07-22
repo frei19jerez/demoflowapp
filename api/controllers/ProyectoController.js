@@ -514,7 +514,11 @@ module.exports = {
 
   crear: async function (req, res) {
   try {
-    if (!req.session.userId) {
+    // =====================================
+    // 🔐 VALIDAR SESIÓN
+    // =====================================
+
+    if (!req.session || !req.session.userId) {
       return res.redirect('/login');
     }
 
@@ -523,35 +527,119 @@ module.exports = {
     });
 
     if (!usuarioActual) {
-      sails.log.warn('🤖 IA DemoFlow: Usuario no encontrado en sesión.');
+      sails.log.warn(
+        '🤖 IA DemoFlow: Usuario no encontrado en sesión.'
+      );
+
       return res.redirect('/login');
     }
 
+    // =====================================
+    // 💎 VALIDAR CRÉDITOS
+    // =====================================
+
     if ((usuarioActual.creditos || 0) <= 0) {
-      sails.log.warn('🚫 IA DemoFlow: Usuario sin créditos para publicar demo.');
+      sails.log.warn(
+        '🚫 IA DemoFlow: Usuario sin créditos para publicar demo.'
+      );
+
       return res.redirect('/premium');
     }
 
-    sails.log.info('💎 IA DemoFlow: Créditos disponibles:', usuarioActual.creditos);
+    sails.log.info(
+      '💎 IA DemoFlow: Créditos disponibles:',
+      usuarioActual.creditos
+    );
 
-    const metodoEntrada = req.body.metodoEntrada ? req.body.metodoEntrada.trim() : 'zip';
+    // =====================================
+    // 📥 DATOS GENERALES DEL FORMULARIO
+    // =====================================
 
-    const nombre = req.body.nombre ? req.body.nombre.trim() : '';
-    const descripcionIngresada = req.body.descripcion ? req.body.descripcion.trim() : '';
-    const tecnologiaIngresada = req.body.tecnologia ? req.body.tecnologia.trim() : '';
-    const tipoProyecto = req.body.tipoProyecto ? req.body.tipoProyecto.trim() : 'html';
-    const urlRepositorio = req.body.urlRepositorio ? req.body.urlRepositorio.trim() : '';
-    const ramaGit = req.body.ramaGit ? req.body.ramaGit.trim() : 'main';
-    const urlDemoIngresada = req.body.urlDemo ? req.body.urlDemo.trim() : '';
-    const carpetaDemoIngresada = req.body.carpetaDemo ? req.body.carpetaDemo.trim() : '';
-    const comandoInicio = req.body.comandoInicio ? req.body.comandoInicio.trim() : '';
-    const archivoEntrada = req.body.archivoEntrada ? req.body.archivoEntrada.trim() : '';
+    const metodoEntrada = req.body.metodoEntrada
+      ? req.body.metodoEntrada.trim()
+      : 'zip';
+
+    const nombre = req.body.nombre
+      ? req.body.nombre.trim()
+      : '';
+
+    const descripcionIngresada = req.body.descripcion
+      ? req.body.descripcion.trim()
+      : '';
+
+    const tecnologiaIngresada = req.body.tecnologia
+      ? req.body.tecnologia.trim()
+      : '';
+
+    const tipoProyecto = req.body.tipoProyecto
+      ? req.body.tipoProyecto.trim()
+      : 'html';
+
+    const urlRepositorio = req.body.urlRepositorio
+      ? req.body.urlRepositorio.trim()
+      : '';
+
+    const ramaGit = req.body.ramaGit
+      ? req.body.ramaGit.trim()
+      : 'main';
+
+    const urlDemoIngresada = req.body.urlDemo
+      ? req.body.urlDemo.trim()
+      : '';
+
+    const carpetaDemoIngresada = req.body.carpetaDemo
+      ? req.body.carpetaDemo.trim()
+      : '';
+
+    const comandoInicio = req.body.comandoInicio
+      ? req.body.comandoInicio.trim()
+      : '';
+
+    const archivoEntrada = req.body.archivoEntrada
+      ? req.body.archivoEntrada.trim()
+      : '';
+
+    // =====================================
+    // ⚙️ CONFIGURACIÓN PRIVADA DEL RUNTIME
+    // =====================================
+
+    const databaseUrl = req.body.database_url
+      ? req.body.database_url.trim()
+      : '';
+
+    const sessionSecret = req.body.session_secret
+      ? req.body.session_secret.trim()
+      : '';
+
+    const runtimeEnv = req.body.runtime_env
+      ? req.body.runtime_env.trim()
+      : '';
+
+    // =====================================
+    // 🛡️ VALIDACIONES
+    // =====================================
 
     if (!nombre) {
-      return res.badRequest('El nombre del proyecto es obligatorio.');
+      return res.badRequest(
+        'El nombre del proyecto es obligatorio.'
+      );
     }
 
-    let slugBase = limpiarTextoRuta(req.body.slug ? req.body.slug.trim() : nombre);
+    if (
+      databaseUrl &&
+      !databaseUrl.startsWith('postgresql://') &&
+      !databaseUrl.startsWith('postgres://')
+    ) {
+      return res.badRequest(
+        'DATABASE_URL debe comenzar con postgresql:// o postgres://'
+      );
+    }
+
+    let slugBase = limpiarTextoRuta(
+      req.body.slug
+        ? req.body.slug.trim()
+        : nombre
+    );
 
     if (!slugBase) {
       return res.badRequest('Slug inválido.');
@@ -565,6 +653,10 @@ module.exports = {
       contador++;
     }
 
+    // =====================================
+    // 📦 VARIABLES DEL PROYECTO
+    // =====================================
+
     let urlDemoFinal = null;
     let archivoZipOriginal = null;
     let carpetaDemoFinal = null;
@@ -576,7 +668,7 @@ module.exports = {
     let estadoDeploy = 'pendiente';
     let logDeploy = '';
     let tipoFinal = tipoProyecto;
-    let descripcionFinal= descripcionIngresada || null;
+    let descripcionFinal = descripcionIngresada || null;
     let tecnologiaFinal = tecnologiaIngresada || null;
 
     // =====================================
@@ -585,16 +677,26 @@ module.exports = {
 
     if (metodoEntrada === 'externo') {
       if (!urlDemoIngresada) {
-        return res.badRequest('La URL externa es obligatoria.');
+        return res.badRequest(
+          'La URL externa es obligatoria.'
+        );
       }
 
       tipoFinal = 'externo';
       urlDemoFinal = urlDemoIngresada;
       deployType = 'external';
       estadoDeploy = 'activo';
-      descripcionFinal = descripcionFinal || generarDescripcionIA('externo', nombre);
-      tecnologiaFinal = tecnologiaFinal || 'Demo externa';
-      logDeploy = '🤖 IA DemoFlow registró una URL externa correctamente.';
+
+      descripcionFinal =
+        descripcionFinal ||
+        generarDescripcionIA('externo', nombre);
+
+      tecnologiaFinal =
+        tecnologiaFinal ||
+        'Demo externa';
+
+      logDeploy =
+        '🤖 IA DemoFlow registró una URL externa correctamente.';
     }
 
     // =====================================
@@ -603,33 +705,59 @@ module.exports = {
 
     else if (metodoEntrada === 'git') {
       if (!urlRepositorio) {
-        return res.badRequest('La URL del repositorio es obligatoria para importar desde Git.');
+        return res.badRequest(
+          'La URL del repositorio es obligatoria para importar desde Git.'
+        );
       }
 
-      tipoFinal = tipoProyecto === 'externo' ? 'node' : tipoProyecto;
-      deployType = tipoFinal === 'html' ? 'static' : 'dynamic';
+      tipoFinal =
+        tipoProyecto === 'externo'
+          ? 'node'
+          : tipoProyecto;
+
+      deployType =
+        tipoFinal === 'html'
+          ? 'static'
+          : 'dynamic';
+
       estadoDeploy = 'subido';
 
-      descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
+      descripcionFinal =
+        descripcionFinal ||
+        generarDescripcionIA(tipoFinal, nombre);
 
-      tecnologiaFinal = tecnologiaFinal || (
+      tecnologiaFinal =
+        tecnologiaFinal ||
+        (
+          tipoFinal === 'sails'
+            ? 'Sails.js + Node.js + PostgreSQL'
+            : tipoFinal === 'node'
+              ? 'Node.js'
+              : 'HTML + CSS + JavaScript'
+        );
+
+      // =====================================
+      // ⚡ GIT NODE / SAILS
+      // =====================================
+
+      if (
+        tipoFinal === 'node' ||
         tipoFinal === 'sails'
-          ? 'Sails.js + Node.js + PostgreSQL'
-          : tipoFinal === 'node'
-            ? 'Node.js'
-            : 'HTML + CSS + JavaScript'
-      );
-
-      if (tipoFinal === 'node' || tipoFinal === 'sails') {
+      ) {
         carpetaRuntimeFinal = slugFinal;
         puertoFinal = generarPuerto();
 
         comandoInicioFinal =
           comandoInicio ||
-          (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
+          (
+            tipoFinal === 'sails'
+              ? 'node app.js'
+              : 'npm start'
+          );
 
         archivoEntradaFinal =
-          archivoEntrada || 'app.js';
+          archivoEntrada ||
+          'app.js';
 
         urlDemoFinal =
           `/runtime/${carpetaRuntimeFinal}`;
@@ -642,12 +770,32 @@ module.exports = {
           `✅ Puerto asignado: ${puertoFinal}\n` +
           `✅ URL runtime: ${urlDemoFinal}\n` +
           `✅ Comando sugerido: ${comandoInicioFinal}\n` +
+          (
+            databaseUrl
+              ? '✅ DATABASE_URL privada configurada.\n'
+              : '⚠️ DATABASE_URL no configurada.\n'
+          ) +
+          (
+            sessionSecret
+              ? '✅ SESSION_SECRET configurada.\n'
+              : '⚠️ SESSION_SECRET no configurada.\n'
+          ) +
           'Clonación iniciará en segundo plano.';
       }
 
+      // =====================================
+      // 🌐 GIT HTML
+      // =====================================
+
       else if (tipoFinal === 'html') {
-        carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
-        urlDemoFinal = urlDemoIngresada || `/demos/${carpetaDemoFinal}/index.html`;
+        carpetaDemoFinal = limpiarTextoRuta(
+          carpetaDemoIngresada ||
+          slugFinal
+        );
+
+        urlDemoFinal =
+          urlDemoIngresada ||
+          `/demos/${carpetaDemoFinal}/index.html`;
 
         logDeploy =
           '🤖 IA DemoFlow registró repositorio Git HTML.\n' +
@@ -660,7 +808,9 @@ module.exports = {
       if (urlDemoIngresada) {
         urlDemoFinal = urlDemoIngresada;
         estadoDeploy = 'activo';
-        logDeploy = '🤖 IA DemoFlow registró repositorio Git con URL en vivo.';
+
+        logDeploy =
+          '🤖 IA DemoFlow registró repositorio Git con URL en vivo.';
       }
     }
 
@@ -669,87 +819,174 @@ module.exports = {
     // =====================================
 
     else if (metodoEntrada === 'zip') {
-      const limiteSubida = obtenerLimiteSubida(tipoProyecto);
+      const limiteSubida =
+        obtenerLimiteSubida(tipoProyecto);
 
-      const archivos = await new Promise((resolve, reject) => {
-        req.file('archivoDemo').upload(
-          {
-            maxBytes: limiteSubida
-          },
-          function (err, uploadedFiles) {
-            if (err) return reject(err);
-            return resolve(uploadedFiles || []);
-          }
+      const archivos = await new Promise(
+        (resolve, reject) => {
+          req.file('archivoDemo').upload(
+            {
+              maxBytes: limiteSubida
+            },
+            function (err, uploadedFiles) {
+              if (err) {
+                return reject(err);
+              }
+
+              return resolve(
+                uploadedFiles || []
+              );
+            }
+          );
+        }
+      );
+
+      if (
+        archivos.length === 0 &&
+        !urlDemoIngresada
+      ) {
+        return res.badRequest(
+          'Debes subir un archivo o indicar una URL.'
         );
-      });
-
-      if (archivos.length === 0 && !urlDemoIngresada) {
-        return res.badRequest('Debes subir un archivo o indicar una URL.');
       }
 
       if (archivos.length > 0) {
         const archivoSubido = archivos[0];
-        const nombreArchivoOriginal = archivoSubido.filename || 'archivo-demo';
-        const extension = path.extname(nombreArchivoOriginal).toLowerCase();
 
-        archivoZipOriginal = nombreArchivoOriginal;
+        const nombreArchivoOriginal =
+          archivoSubido.filename ||
+          'archivo-demo';
 
-        const carpetaTemporalIA = path.resolve(
-          sails.config.appPath,
-          '.tmp',
-          'demoflow-ia',
-          `${slugFinal}-${Date.now()}`
-        );
+        const extension = path
+          .extname(nombreArchivoOriginal)
+          .toLowerCase();
+
+        archivoZipOriginal =
+          nombreArchivoOriginal;
+
+        const carpetaTemporalIA =
+          path.resolve(
+            sails.config.appPath,
+            '.tmp',
+            'demoflow-ia',
+            `${slugFinal}-${Date.now()}`
+          );
 
         eliminarCarpeta(carpetaTemporalIA);
         crearCarpeta(carpetaTemporalIA);
 
+        // =====================================
+        // 📦 DESCOMPRIMIR ZIP
+        // =====================================
+
         if (extension === '.zip') {
           await fs
             .createReadStream(archivoSubido.fd)
-            .pipe(unzipper.Extract({ path: carpetaTemporalIA }))
+            .pipe(
+              unzipper.Extract({
+                path: carpetaTemporalIA
+              })
+            )
             .promise();
 
-          limpiarCarpetaExtra(carpetaTemporalIA);
-        }
-
-        else if (extension === '.html' || extension === '.htm') {
-          fs.copyFileSync(
-            archivoSubido.fd,
-            path.join(carpetaTemporalIA, 'index.html')
+          limpiarCarpetaExtra(
+            carpetaTemporalIA
           );
         }
 
-        else {
-          eliminarCarpeta(carpetaTemporalIA);
-          return res.badRequest('Archivo no permitido. Usa .zip, .html o .htm.');
+        // =====================================
+        // 🌐 ARCHIVO HTML DIRECTO
+        // =====================================
+
+        else if (
+          extension === '.html' ||
+          extension === '.htm'
+        ) {
+          fs.copyFileSync(
+            archivoSubido.fd,
+            path.join(
+              carpetaTemporalIA,
+              'index.html'
+            )
+          );
         }
 
-        tipoFinal = detectarTipoIA(carpetaTemporalIA, tipoProyecto);
+        // =====================================
+        // 🚫 ARCHIVO NO PERMITIDO
+        // =====================================
 
-        descripcionFinal = descripcionFinal || generarDescripcionIA(tipoFinal, nombre);
+        else {
+          eliminarCarpeta(
+            carpetaTemporalIA
+          );
 
-        tecnologiaFinal = tecnologiaFinal || (
-          tipoFinal === 'sails'
-            ? 'Sails.js + Node.js + PostgreSQL'
-            : tipoFinal === 'node'
-              ? 'Node.js'
-              : 'HTML + CSS + JavaScript'
-        );
+          return res.badRequest(
+            'Archivo no permitido. Usa .zip, .html o .htm.'
+          );
+        }
+
+        // =====================================
+        // 🤖 DETECTAR TIPO
+        // =====================================
+
+        tipoFinal =
+          detectarTipoIA(
+            carpetaTemporalIA,
+            tipoProyecto
+          );
+
+        descripcionFinal =
+          descripcionFinal ||
+          generarDescripcionIA(
+            tipoFinal,
+            nombre
+          );
+
+        tecnologiaFinal =
+          tecnologiaFinal ||
+          (
+            tipoFinal === 'sails'
+              ? 'Sails.js + Node.js + PostgreSQL'
+              : tipoFinal === 'node'
+                ? 'Node.js'
+                : 'HTML + CSS + JavaScript'
+          );
+
+        // =====================================
+        // 🌐 PUBLICAR HTML
+        // =====================================
 
         if (tipoFinal === 'html') {
-          const indexDetectado = buscarArchivoRecursivo(carpetaTemporalIA, 'index.html');
+          const indexDetectado =
+            buscarArchivoRecursivo(
+              carpetaTemporalIA,
+              'index.html'
+            );
 
           if (!indexDetectado) {
-            eliminarCarpeta(carpetaTemporalIA);
-            return res.badRequest('El ZIP no contiene index.html.');
+            eliminarCarpeta(
+              carpetaTemporalIA
+            );
+
+            return res.badRequest(
+              'El ZIP no contiene index.html.'
+            );
           }
 
-          carpetaDemoFinal = limpiarTextoRuta(carpetaDemoIngresada || slugFinal);
+          carpetaDemoFinal =
+            limpiarTextoRuta(
+              carpetaDemoIngresada ||
+              slugFinal
+            );
 
-          publicarHtmlEnRender(carpetaTemporalIA, carpetaDemoFinal);
+          publicarHtmlEnRender(
+            carpetaTemporalIA,
+            carpetaDemoFinal
+          );
 
-          urlDemoFinal = `/demos/${carpetaDemoFinal}/index.html`;
+          urlDemoFinal =
+            `/demos/${carpetaDemoFinal}/index.html`;
+
           deployType = 'static';
           estadoDeploy = 'activo';
 
@@ -760,33 +997,58 @@ module.exports = {
             `✅ URL generada: ${urlDemoFinal}\n`;
         }
 
-        else if (tipoFinal === 'node' || tipoFinal === 'sails') {
-          carpetaRuntimeFinal = slugFinal;
+        // =====================================
+        // ⚡ PREPARAR NODE / SAILS
+        // =====================================
+
+        else if (
+          tipoFinal === 'node' ||
+          tipoFinal === 'sails'
+        ) {
+          carpetaRuntimeFinal =
+            slugFinal;
 
           const carpetaDestinoRuntime =
-            typeof DeployService !== 'undefined' &&
+            typeof DeployService !==
+              'undefined' &&
             DeployService.rutaRuntime
-              ? DeployService.rutaRuntime(carpetaRuntimeFinal)
+              ? DeployService.rutaRuntime(
+                  carpetaRuntimeFinal
+                )
               : path.join(
-                  process.env.DEMOFLOW_STORAGE || sails.config.appPath,
+                  process.env.DEMOFLOW_STORAGE ||
+                    sails.config.appPath,
                   'deploy_runtime',
                   'apps',
                   carpetaRuntimeFinal
                 );
 
-          eliminarCarpeta(carpetaDestinoRuntime);
-          crearCarpeta(carpetaDestinoRuntime);
+          eliminarCarpeta(
+            carpetaDestinoRuntime
+          );
 
-          await ZipBuilderService.crearZipInteligente({
-            carpetaOrigen: carpetaTemporalIA,
-            nombreProyecto: slugFinal
-          });
+          crearCarpeta(
+            carpetaDestinoRuntime
+          );
 
-          limpiarCarpetaExtra(carpetaTemporalIA);
+          await ZipBuilderService
+            .crearZipInteligente({
+              carpetaOrigen:
+                carpetaTemporalIA,
+
+              nombreProyecto:
+                slugFinal
+            });
+
+          limpiarCarpetaExtra(
+            carpetaTemporalIA
+          );
 
           sails.log.info(
             '📁 IA TEMP después de limpiar:',
-            fs.readdirSync(carpetaTemporalIA)
+            fs.readdirSync(
+              carpetaTemporalIA
+            )
           );
 
           copiarCarpeta(
@@ -801,28 +1063,44 @@ module.exports = {
 
           sails.log.info(
             '📁 IA DemoFlow: Existe carpeta runtime:',
-            fs.existsSync(carpetaDestinoRuntime)
+            fs.existsSync(
+              carpetaDestinoRuntime
+            )
           );
 
-          if (fs.existsSync(carpetaDestinoRuntime)) {
+          if (
+            fs.existsSync(
+              carpetaDestinoRuntime
+            )
+          ) {
             sails.log.info(
               '📦 IA DemoFlow: Archivos raíz en runtime:',
-              fs.readdirSync(carpetaDestinoRuntime)
+              fs.readdirSync(
+                carpetaDestinoRuntime
+              )
             );
           }
 
-          puertoFinal = generarPuerto();
+          puertoFinal =
+            generarPuerto();
 
           comandoInicioFinal =
             comandoInicio ||
-            (tipoFinal === 'sails' ? 'node app.js' : 'npm start');
+            (
+              tipoFinal === 'sails'
+                ? 'node app.js'
+                : 'npm start'
+            );
 
           archivoEntradaFinal =
-            archivoEntrada || 'app.js';
+            archivoEntrada ||
+            'app.js';
 
           deployType = 'dynamic';
           estadoDeploy = 'subido';
-          urlDemoFinal = `/runtime/${carpetaRuntimeFinal}`;
+
+          urlDemoFinal =
+            `/runtime/${carpetaRuntimeFinal}`;
 
           logDeploy =
             `🤖 DemoFlow IA detectó proyecto ${tipoFinal} desde carpeta/ZIP.\n` +
@@ -832,74 +1110,188 @@ module.exports = {
             `✅ URL runtime: ${urlDemoFinal}\n` +
             `✅ Comando sugerido: ${comandoInicioFinal}\n` +
             `✅ Archivo de entrada: ${archivoEntradaFinal}\n` +
+            (
+              databaseUrl
+                ? '✅ DATABASE_URL privada configurada.\n'
+                : '⚠️ DATABASE_URL no configurada.\n'
+            ) +
+            (
+              sessionSecret
+                ? '✅ SESSION_SECRET configurada.\n'
+                : '⚠️ SESSION_SECRET no configurada.\n'
+            ) +
+            (
+              runtimeEnv
+                ? '✅ Variables adicionales configuradas.\n'
+                : ''
+            ) +
             'Pendiente desplegar desde el panel.';
         }
 
-        eliminarCarpeta(carpetaTemporalIA);
+        eliminarCarpeta(
+          carpetaTemporalIA
+        );
       }
     }
 
+    // =====================================
+    // 🚫 MÉTODO NO VÁLIDO
+    // =====================================
+
     else {
-      return res.badRequest(`Método de entrada no válido: ${metodoEntrada}`);
+      return res.badRequest(
+        `Método de entrada no válido: ${metodoEntrada}`
+      );
     }
 
     // =====================================
     // ✅ CREAR PROYECTO
     // =====================================
 
-    const proyectoCreado = await Proyecto.create({
-  nombre,
-  slug: slugFinal,
-  descripcion: descripcionFinal || null,
-  tecnologia: tecnologiaFinal || null,
-  urlDemo: urlDemoFinal || null,
-  urlRepositorio: urlRepositorio || null,
-  ramaGit: ramaGit || 'main',
-  archivoZipOriginal: archivoZipOriginal || null,
-  carpetaDemo: carpetaDemoFinal || null,
-  carpetaRuntime: carpetaRuntimeFinal || null,
-  comandoInicio: comandoInicioFinal || null,
-  archivoEntrada: archivoEntradaFinal || null,
-  puerto: puertoFinal || null,
-  deployType,
-  estadoDeploy,
-  logDeploy,
-  tipoProyecto: tipoFinal,
-  estado: 'borrador',
-  destacado: false,
-  activo: true,
-  usuario: req.session.userId
-}).fetch();
+    const proyectoCreado =
+      await Proyecto.create({
+        nombre,
+
+        slug:
+          slugFinal,
+
+        descripcion:
+          descripcionFinal ||
+          null,
+
+        tecnologia:
+          tecnologiaFinal ||
+          null,
+
+        urlDemo:
+          urlDemoFinal ||
+          null,
+
+        urlRepositorio:
+          urlRepositorio ||
+          null,
+
+        ramaGit:
+          ramaGit ||
+          'main',
+
+        archivoZipOriginal:
+          archivoZipOriginal ||
+          null,
+
+        carpetaDemo:
+          carpetaDemoFinal ||
+          null,
+
+        carpetaRuntime:
+          carpetaRuntimeFinal ||
+          null,
+
+        comandoInicio:
+          comandoInicioFinal ||
+          null,
+
+        archivoEntrada:
+          archivoEntradaFinal ||
+          null,
+
+        puerto:
+          puertoFinal ||
+          null,
+
+        deployType,
+
+        estadoDeploy,
+
+        logDeploy,
+
+        tipoProyecto:
+          tipoFinal,
+
+        // =====================================
+// ⚙️ CONFIGURACIÓN PRIVADA DEL RUNTIME
+// =====================================
+
+databaseUrl:
+  databaseUrl || null,
+
+sessionSecret:
+  sessionSecret || null,
+
+runtimeEnv:
+  runtimeEnv || null,
+
+estado:
+  'borrador',
+
+destacado:
+  false,
+
+activo:
+  true,
+
+usuario:
+  req.session.userId
+})
+.fetch();
+    // =====================================
+    // 💎 DESCONTAR CRÉDITO
+    // =====================================
 
     await Usuario.updateOne({
       id: usuarioActual.id
     }).set({
-      creditos: usuarioActual.creditos - 1
+      creditos:
+        usuarioActual.creditos - 1
     });
 
     sails.log.info(
-      `💎 IA DemoFlow: Crédito descontado. Restantes: ${usuarioActual.creditos - 1}`
+      `💎 IA DemoFlow: Crédito descontado. Restantes: ${
+        usuarioActual.creditos - 1
+      }`
     );
 
-    if (metodoEntrada === 'git' && urlRepositorio && !urlDemoIngresada) {
+    // =====================================
+    // 🧬 CLONAR GIT EN SEGUNDO PLANO
+    // =====================================
+
+    if (
+      metodoEntrada === 'git' &&
+      urlRepositorio &&
+      !urlDemoIngresada
+    ) {
       clonarGitEnSegundoPlano(
         proyectoCreado.id,
         urlRepositorio,
         ramaGit,
-        carpetaRuntimeFinal || carpetaDemoFinal || slugFinal
+        carpetaRuntimeFinal ||
+          carpetaDemoFinal ||
+          slugFinal
       );
     }
 
     return res.redirect('/dashboard');
-
   } catch (err) {
-    console.log('================ ERROR CREAR PROYECTO ================');
-    console.error(err.stack || err);
-    console.log('======================================================');
+    console.log(
+      '================ ERROR CREAR PROYECTO ================'
+    );
+
+    console.error(
+      err.stack ||
+      err
+    );
+
+    console.log(
+      '======================================================'
+    );
 
     return res.status(500).send(
       '<pre style="white-space:pre-wrap;font-size:16px;">' +
-      (err.stack || err.message || err) +
+      (
+        err.stack ||
+        err.message ||
+        err
+      ) +
       '</pre>'
     );
   }

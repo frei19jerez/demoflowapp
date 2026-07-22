@@ -124,37 +124,67 @@ module.exports = {
   },
 
   construirEnvRuntime: function (proyecto = {}, puerto) {
-    const databaseUrl =
-      proyecto.databaseUrl ||
-      proyecto.database_url ||
-      process.env.DATABASE_URL;
 
-    const sessionSecret =
-      proyecto.sessionSecret ||
-      proyecto.session_secret ||
-      process.env.SESSION_SECRET ||
-      ('demoflow-runtime-secret-' + (proyecto.slug || proyecto.id || 'app'));
+  const databaseUrl =
+    proyecto.databaseUrl ||
+    proyecto.database_url ||
+    process.env.DATABASE_URL;
 
-    const runtimeEnv =
-      proyecto.runtimeEnv ||
-      proyecto.runtime_env ||
-      '';
+  const sessionSecret =
+    proyecto.sessionSecret ||
+    proyecto.session_secret ||
+    process.env.SESSION_SECRET ||
+    ('demoflow-runtime-secret-' + (proyecto.slug || proyecto.id || 'app'));
 
-    const extras = this.parseRuntimeEnv(runtimeEnv);
+  const runtimeEnv =
+    proyecto.runtimeEnv ||
+    proyecto.runtime_env ||
+    '';
 
-    return {
-      PORT: String(puerto),
-      NODE_ENV: 'production',
+  const extras = this.parseRuntimeEnv(runtimeEnv);
 
-      DATABASE_URL: databaseUrl,
-      SESSION_SECRET: sessionSecret,
+  const database = String(databaseUrl || '').toLowerCase();
 
-      DEMOFLOW_PROJECT_ID: proyecto.id ? String(proyecto.id) : '',
-      DEMOFLOW_PROJECT_SLUG: proyecto.slug || '',
+  const esBaseLocal =
+    database.includes('localhost') ||
+    database.includes('127.0.0.1') ||
+    database.includes('::1');
 
-      ...extras
-    };
-  },
+  const nodeEnv = esBaseLocal
+    ? 'development'
+    : 'production';
+
+  this.iaLog('Construyendo variables de entorno del runtime...', {
+    puerto,
+    nodeEnv,
+    databaseLocal: esBaseLocal,
+    tieneDatabaseUrl: !!databaseUrl,
+    tieneSessionSecret: !!sessionSecret,
+    tieneRuntimeEnv: !!runtimeEnv
+  });
+
+  return {
+
+    PORT: String(puerto),
+
+    NODE_ENV: nodeEnv,
+
+    DATABASE_URL: databaseUrl,
+
+    SESSION_SECRET: sessionSecret,
+
+    DEMOFLOW_PROJECT_ID: proyecto.id
+      ? String(proyecto.id)
+      : '',
+
+    DEMOFLOW_PROJECT_SLUG:
+      proyecto.slug || '',
+
+    ...extras
+
+  };
+
+},
 
   detectarTipo: async function (carpeta) {
     this.iaLog('Analizando estructura del proyecto...', carpeta);
