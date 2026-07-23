@@ -2,3 +2,8 @@ node_modules
 deploy_runtime/apps/
 node_modules/
 .tmp/
+
+# Variables privadas
+.env
+.env.local
+.env.production
