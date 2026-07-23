@@ -123,68 +123,148 @@ module.exports = {
     return env;
   },
 
+    /**
+   * Construye las variables de entorno de cada runtime.
+   *
+   * IA DemoFlow protege las variables críticas para evitar que
+   * el proyecto herede el puerto principal de Render o reemplace
+   * accidentalmente el puerto dinámico asignado.
+   */
   construirEnvRuntime: function (proyecto = {}, puerto) {
+    const puertoRuntime = Number(puerto);
 
-  const databaseUrl =
-    proyecto.databaseUrl ||
-    proyecto.database_url ||
-    process.env.DATABASE_URL;
+    if (
+      !Number.isInteger(puertoRuntime) ||
+      puertoRuntime < 1 ||
+      puertoRuntime > 65535
+    ) {
+      throw new Error(
+        `IA DemoFlow detectó un puerto de runtime inválido: ${puerto}`
+      );
+    }
 
-  const sessionSecret =
-    proyecto.sessionSecret ||
-    proyecto.session_secret ||
-    process.env.SESSION_SECRET ||
-    ('demoflow-runtime-secret-' + (proyecto.slug || proyecto.id || 'app'));
+    const runtimeEnv =
+      proyecto.runtimeEnv ||
+      proyecto.runtime_env ||
+      '';
 
-  const runtimeEnv =
-    proyecto.runtimeEnv ||
-    proyecto.runtime_env ||
-    '';
+    const extras = this.parseRuntimeEnv(runtimeEnv);
 
-  const extras = this.parseRuntimeEnv(runtimeEnv);
+    /*
+     * La base de datos debe pertenecer al proyecto.
+     *
+     * Se mantiene el respaldo de DATABASE_URL para compatibilidad
+     * con proyectos antiguos, pero DemoFlow IA registra si fue
+     * necesario utilizarlo.
+     */
+    const databaseUrl =
+      proyecto.databaseUrl ||
+      proyecto.database_url ||
+      extras.DATABASE_URL ||
+      process.env.DATABASE_URL ||
+      '';
 
-  const database = String(databaseUrl || '').toLowerCase();
+    const sessionSecret =
+      proyecto.sessionSecret ||
+      proyecto.session_secret ||
+      extras.SESSION_SECRET ||
+      process.env.SESSION_SECRET ||
+      (
+        'demoflow-runtime-secret-' +
+        (
+          proyecto.slug ||
+          proyecto.id ||
+          'app'
+        )
+      );
 
-  const esBaseLocal =
-    database.includes('localhost') ||
-    database.includes('127.0.0.1') ||
-    database.includes('::1');
+    const database = String(
+      databaseUrl || ''
+    ).toLowerCase();
 
-  const nodeEnv = esBaseLocal
-    ? 'development'
-    : 'production';
+    const esBaseLocal =
+      database.includes('localhost') ||
+      database.includes('127.0.0.1') ||
+      database.includes('::1');
 
-  this.iaLog('Construyendo variables de entorno del runtime...', {
-    puerto,
-    nodeEnv,
-    databaseLocal: esBaseLocal,
-    tieneDatabaseUrl: !!databaseUrl,
-    tieneSessionSecret: !!sessionSecret,
-    tieneRuntimeEnv: !!runtimeEnv
-  });
+    const nodeEnv = esBaseLocal
+      ? 'development'
+      : 'production';
 
-  return {
+    /*
+     * Primero se agregan las variables personalizadas.
+     * Después se escriben las variables protegidas para impedir
+     * que runtimeEnv cambie PORT, NODE_ENV o la identidad del proyecto.
+     */
+    const envRuntime = {
+      ...extras,
 
-    PORT: String(puerto),
+      PORT: String(puertoRuntime),
 
-    NODE_ENV: nodeEnv,
+      NODE_ENV: nodeEnv,
 
-    DATABASE_URL: databaseUrl,
+      DATABASE_URL: databaseUrl,
 
-    SESSION_SECRET: sessionSecret,
+      SESSION_SECRET: sessionSecret,
 
-    DEMOFLOW_PROJECT_ID: proyecto.id
-      ? String(proyecto.id)
-      : '',
+      DEMOFLOW_PROJECT_ID: proyecto.id
+        ? String(proyecto.id)
+        : '',
 
-    DEMOFLOW_PROJECT_SLUG:
-      proyecto.slug || '',
+      DEMOFLOW_PROJECT_SLUG:
+        proyecto.slug ||
+        proyecto.carpetaRuntime ||
+        proyecto.carpeta_runtime ||
+        ''
+    };
 
-    ...extras
+    /*
+     * Eliminamos posibles variantes conflictivas.
+     */
+    delete envRuntime.port;
+    delete envRuntime.Port;
 
-  };
+    this.iaLog(
+      'IA verificó y protegió las variables del runtime.',
+      {
+        proyectoId: proyecto.id || null,
+        slug:
+          proyecto.slug ||
+          proyecto.carpetaRuntime ||
+          proyecto.carpeta_runtime ||
+          '',
+        puertoAsignado: envRuntime.PORT,
+        nodeEnv,
+        databaseLocal: esBaseLocal,
+        tieneDatabaseUrl: Boolean(databaseUrl),
+        tieneSessionSecret: Boolean(sessionSecret),
+        tieneRuntimeEnv: Boolean(runtimeEnv),
+        variablesPersonalizadas: Object.keys(extras).filter(
+          (clave) =>
+            ![
+              'PORT',
+              'port',
+              'Port',
+              'NODE_ENV',
+              'DATABASE_URL',
+              'SESSION_SECRET',
+              'DEMOFLOW_PROJECT_ID',
+              'DEMOFLOW_PROJECT_SLUG'
+            ].includes(clave)
+        ),
+        variablesProtegidas: [
+          'PORT',
+          'NODE_ENV',
+          'DATABASE_URL',
+          'SESSION_SECRET',
+          'DEMOFLOW_PROJECT_ID',
+          'DEMOFLOW_PROJECT_SLUG'
+        ]
+      }
+    );
 
-},
+    return envRuntime;
+  },
 
   detectarTipo: async function (carpeta) {
     this.iaLog('Analizando estructura del proyecto...', carpeta);
