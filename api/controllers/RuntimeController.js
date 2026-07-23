@@ -1,11 +1,10 @@
 const httpProxy = require('http-proxy');
-const querystring = require('querystring');
 
 const proxy = httpProxy.createProxyServer({
   ws: true,
   changeOrigin: true,
-  proxyTimeout: 30000,
-  timeout: 30000
+  proxyTimeout: 300000,
+  timeout: 300000
 });
 
 /**
@@ -27,7 +26,7 @@ function aplicarPrefijoRuntime(location, prefix) {
     return location;
   }
 
-  // Ya tiene el prefijo correcto.
+  // Ya contiene el prefijo correcto.
   if (
     location === prefijoLimpio ||
     location.startsWith(`${prefijoLimpio}/`)
@@ -46,70 +45,94 @@ function aplicarPrefijoRuntime(location, prefix) {
 }
 
 /**
+ * Indica si todavía es posible responder al navegador.
+ */
+function respuestaDisponible(res) {
+  return Boolean(
+    res &&
+    !res.headersSent &&
+    !res.writableEnded &&
+    !res.destroyed
+  );
+}
+
+/**
  * Error general del proxy.
  */
 proxy.on('error', function (err, req, res) {
-  sails.log.error('🤖 IA DemoFlow: Error en el proxy runtime.');
-  sails.log.error('❌ Detalle:', err.message);
+  sails.log.error(
+    '🤖 IA DemoFlow: Error en el proxy runtime.'
+  );
 
-  if (res && !res.headersSent) {
-    res.writeHead(502, {
-      'Content-Type': 'text/html; charset=utf-8'
-    });
+  sails.log.error(
+    '❌ Detalle:',
+    err && err.message
+      ? err.message
+      : err
+  );
+
+  if (!respuestaDisponible(res)) {
+    return;
   }
 
-  if (res && res.end) {
-    res.end(`
-      <div style="font-family:Arial;padding:40px;max-width:700px;margin:auto;">
-        <h1>🤖 IA DemoFlow: Demo no disponible</h1>
+  res.writeHead(502, {
+    'Content-Type': 'text/html; charset=utf-8'
+  });
 
-        <p>
-          La aplicación todavía no está iniciada o el puerto interno
-          no responde.
-        </p>
+  res.end(`
+    <div style="
+      font-family:Arial,sans-serif;
+      padding:40px;
+      max-width:700px;
+      margin:auto;
+    ">
+      <h1>🤖 IA DemoFlow: Demo no disponible</h1>
 
-        <p>
-          DemoFlow intentó conectarse al runtime, pero no recibió
-          respuesta.
-        </p>
+      <p>
+        DemoFlowApp perdió temporalmente la comunicación
+        con la aplicación desplegada.
+      </p>
 
-        <p>
-          Vuelve al panel y presiona
-          <strong>Reiniciar</strong> o
-          <strong>Iniciar deploy</strong>.
-        </p>
+      <p>
+        Vuelve a intentarlo. Si el problema continúa,
+        reinicia el runtime desde el panel.
+      </p>
 
-        <a
-          href="/dashboard"
-          style="
-            display:inline-block;
-            margin-top:20px;
-            background:#2563eb;
-            color:white;
-            padding:12px 18px;
-            border-radius:8px;
-            text-decoration:none;
-          "
-        >
-          Volver al dashboard
-        </a>
-      </div>
-    `);
-  }
+      <a
+        href="/dashboard"
+        style="
+          display:inline-block;
+          margin-top:20px;
+          background:#2563eb;
+          color:white;
+          padding:12px 18px;
+          border-radius:8px;
+          text-decoration:none;
+        "
+      >
+        Volver al dashboard
+      </a>
+    </div>
+  `);
 });
 
 /**
- * Cabeceras que DemoFlow envía al proyecto desplegado.
+ * Cabeceras que DemoFlowApp envía al proyecto desplegado.
+ *
+ * IMPORTANTE:
+ * Aquí no se reconstruye req.body.
+ *
+ * El stream original de la petición se transmite directamente
+ * mediante http-proxy. Esto permite formularios multipart,
+ * imágenes, videos, archivos y cuerpos JSON sin alterarlos.
  */
 proxy.on('proxyReq', function (proxyReq, req) {
   if (req.demoflowRuntimePrefix) {
-    // Cabecera propia de DemoFlow.
     proxyReq.setHeader(
       'x-runtime-prefix',
       req.demoflowRuntimePrefix
     );
 
-    // Cabecera estándar para aplicaciones detrás de un proxy.
     proxyReq.setHeader(
       'x-forwarded-prefix',
       req.demoflowRuntimePrefix
@@ -130,46 +153,27 @@ proxy.on('proxyReq', function (proxyReq, req) {
     );
   }
 
-  /**
-   * Reenviar correctamente cuerpos POST, PUT y PATCH.
-   */
-  if (
-    req.body &&
-    Object.keys(req.body).length > 0 &&
-    ['POST', 'PUT', 'PATCH'].includes(req.method)
-  ) {
-    const contentType = String(
-      req.headers['content-type'] || ''
-    ).toLowerCase();
+  const forwardedProto =
+    req.headers['x-forwarded-proto'] ||
+    req.protocol ||
+    'https';
 
-    let bodyData;
+  const forwardedHost =
+    req.headers['x-forwarded-host'] ||
+    req.headers.host;
 
-    if (
-      contentType.includes(
-        'application/x-www-form-urlencoded'
-      )
-    ) {
-      bodyData = querystring.stringify(req.body);
-
-      proxyReq.setHeader(
-        'Content-Type',
-        'application/x-www-form-urlencoded'
-      );
-    } else {
-      bodyData = JSON.stringify(req.body);
-
-      proxyReq.setHeader(
-        'Content-Type',
-        'application/json'
-      );
-    }
-
+  if (forwardedProto) {
     proxyReq.setHeader(
-      'Content-Length',
-      Buffer.byteLength(bodyData)
+      'x-forwarded-proto',
+      forwardedProto
     );
+  }
 
-    proxyReq.write(bodyData);
+  if (forwardedHost) {
+    proxyReq.setHeader(
+      'x-forwarded-host',
+      forwardedHost
+    );
   }
 });
 
@@ -288,7 +292,8 @@ module.exports = {
           try {
             if (
               typeof DeployService !== 'undefined' &&
-              DeployService.reiniciarRuntime
+              typeof DeployService.reiniciarRuntime ===
+                'function'
             ) {
               sails.log.info(
                 '🚀 Reiniciando con reiniciarRuntime()'
@@ -298,11 +303,13 @@ module.exports = {
                 proyecto.slug ||
                   proyecto.carpetaRuntime ||
                   slug,
-                proyecto.puerto
+                proyecto.puerto,
+                proyecto
               );
             } else if (
               typeof DeployService !== 'undefined' &&
-              DeployService.reiniciarProyecto
+              typeof DeployService.reiniciarProyecto ===
+                'function'
             ) {
               sails.log.info(
                 '🚀 Reiniciando con reiniciarProyecto()'
@@ -313,7 +320,8 @@ module.exports = {
               );
             } else if (
               typeof DeployService !== 'undefined' &&
-              DeployService.iniciarRuntime
+              typeof DeployService.iniciarRuntime ===
+                'function'
             ) {
               sails.log.info(
                 '🚀 Reiniciando con iniciarRuntime()'
@@ -324,7 +332,8 @@ module.exports = {
               );
             } else if (
               typeof DeployService !== 'undefined' &&
-              DeployService.desplegar
+              typeof DeployService.desplegar ===
+                'function'
             ) {
               sails.log.info(
                 '🚀 Reiniciando con desplegar()'
@@ -335,7 +344,7 @@ module.exports = {
               );
             } else {
               sails.log.warn(
-                '⚠️ No encontré función de reinicio en DeployService.'
+                '⚠️ No encontré una función de reinicio en DeployService.'
               );
             }
           } catch (restartError) {
@@ -424,13 +433,33 @@ module.exports = {
         req.demoflowRuntimePrefix
       );
 
-      return proxy.web(req, res, {
-        target,
-        changeOrigin: true,
-        ws: true,
-        proxyTimeout: 30000,
-        timeout: 30000
-      });
+      return proxy.web(
+        req,
+        res,
+        {
+          target,
+          changeOrigin: true,
+          ws: true,
+          proxyTimeout: 300000,
+          timeout: 300000
+        },
+        function (proxyError) {
+          sails.log.error(
+            '❌ IA DemoFlow: Falló la petición al runtime:',
+            proxyError && proxyError.message
+              ? proxyError.message
+              : proxyError
+          );
+
+          if (!respuestaDisponible(res)) {
+            return;
+          }
+
+          res.status(502).send(
+            'DemoFlowApp no pudo comunicarse con el runtime.'
+          );
+        }
+      );
 
     } catch (error) {
       sails.log.error(
@@ -438,6 +467,10 @@ module.exports = {
       );
 
       sails.log.error(error);
+
+      if (!respuestaDisponible(res)) {
+        return;
+      }
 
       return res.view('runtime/esperando', {
         proyecto,
