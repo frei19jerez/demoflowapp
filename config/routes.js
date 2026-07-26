@@ -193,20 +193,24 @@ module.exports.routes = {
   },
 
   // ======================================================
-  // RUNTIME
-  // ======================================================
+// RUNTIME
+// ======================================================
 
-  'ALL /runtime/:slug': {
-    controller: 'RuntimeController',
-    action: 'proxy',
-    skipAssets: true
-  },
+/**
+ * Proxy general para aplicaciones desplegadas.
+ *
+ * Permite páginas, formularios, imágenes, videos,
+ * hojas de estilo, JavaScript y demás archivos.
+ */
+'ALL /runtime/:slug': {
+  controller: 'RuntimeController',
+  action: 'proxy'
+},
 
-  'ALL /runtime/:slug/*': {
-    controller: 'RuntimeController',
-    action: 'proxy',
-    skipAssets: true
-  },
+'ALL /runtime/:slug/*': {
+  controller: 'RuntimeController',
+  action: 'proxy'
+},
 
   // ======================================================
   // DASHBOARD
