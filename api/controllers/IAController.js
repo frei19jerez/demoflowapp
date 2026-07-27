@@ -785,160 +785,269 @@ module.exports = {
   },
 
   // =========================================
-  // ANÁLISIS AVANZADO DE PROYECTO
-  // OPENAI + 2 DIAMANTES
-  // =========================================
+// ANÁLISIS AVANZADO DE PROYECTO
+// OPENAI + 2 DIAMANTES
+// =========================================
 
-  analizarProyectoIA:
-  async function (req, res) {
-    try {
-      const usuarioId =
-        this.obtenerUsuarioSesion(
-          req
+analizarProyectoIA:
+async function (req, res) {
+  try {
+    const usuarioId =
+      module.exports.obtenerUsuarioSesion(
+        req
+      );
+
+    if (!usuarioId) {
+      return res
+        .status(401)
+        .json({
+          ok: false,
+          mensaje:
+            'Debes iniciar sesión.'
+        });
+    }
+
+    const proyectoId =
+      module.exports.obtenerProyectoId(
+        req
+      );
+
+    if (!proyectoId) {
+      return res
+        .status(400)
+        .json({
+          ok: false,
+          mensaje:
+            'Proyecto requerido.'
+        });
+    }
+
+    const proyecto =
+      await module.exports
+        .buscarProyectoUsuario(
+          proyectoId,
+          usuarioId
         );
 
-      if (!usuarioId) {
-        return res
-          .status(401)
-          .json({
-            ok: false,
-            mensaje:
-              'Debes iniciar sesión.'
-          });
-      }
+    if (!proyecto) {
+      return res
+        .status(404)
+        .json({
+          ok: false,
+          mensaje:
+            'Proyecto no encontrado.'
+        });
+    }
 
-      const proyectoId =
-        this.obtenerProyectoId(
-          req
+    const rutaProyecto =
+      module.exports.obtenerRutaProyecto(
+        proyecto
+      );
+
+    if (!rutaProyecto) {
+      return res
+        .status(400)
+        .json({
+          ok: false,
+          mensaje:
+            'DemoFlow no encontró los archivos locales del proyecto. Las demos externas todavía no pueden analizarse desde archivos.'
+        });
+    }
+
+    sails.log.info(
+      '🤖 IA DemoFlow: Iniciando análisis avanzado del proyecto.',
+      {
+        usuario:
+          usuarioId,
+        proyecto:
+          proyecto.id,
+        nombre:
+          proyecto.nombre ||
+          proyecto.slug ||
+          null,
+        ruta:
+          rutaProyecto
+      }
+    );
+
+    const resultado =
+      await IAAnalyzerService
+        .analizarProyecto(
+          rutaProyecto,
+          {
+            usarIA: true,
+            usuarioId,
+            proyectoId:
+              proyecto.id
+          }
         );
 
-      if (!proyectoId) {
-        return res
-          .status(400)
-          .json({
-            ok: false,
-            mensaje:
-              'Proyecto requerido.'
-          });
+    if (
+      !resultado ||
+      !resultado.ia ||
+      resultado.ia.disponible !==
+        true
+    ) {
+      const error = new Error(
+        resultado &&
+        resultado.ia &&
+        resultado.ia.error
+          ? resultado.ia.error
+          : 'No fue posible realizar el análisis avanzado.'
+      );
+
+      error.code =
+        resultado &&
+        resultado.ia &&
+        resultado.ia.codigo
+          ? resultado.ia.codigo
+          : 'IA_ANALISIS_NO_DISPONIBLE';
+
+      throw error;
+    }
+
+    const respuestaIA =
+      resultado.ia.respuesta ||
+      resultado.ia.texto ||
+      resultado.ia.analisis ||
+      resultado.ia.contenido ||
+      null;
+
+    sails.log.info(
+      '✅ IA DemoFlow: Proyecto analizado correctamente.',
+      {
+        usuario:
+          usuarioId,
+        proyecto:
+          proyecto.id,
+        referencia:
+          resultado.ia.referencia ||
+          null,
+        costo:
+          resultado.ia.costo ||
+          null,
+        saldo:
+          typeof resultado.ia.saldo !==
+          'undefined'
+            ? resultado.ia.saldo
+            : null
       }
+    );
 
-      const proyecto =
-        await this
-          .buscarProyectoUsuario(
-            proyectoId,
-            usuarioId
-          );
+    return res.json({
+      ok: true,
 
-      if (!proyecto) {
-        return res
-          .status(404)
-          .json({
-            ok: false,
-            mensaje:
-              'Proyecto no encontrado.'
-          });
-      }
+      proyecto: {
+        id:
+          proyecto.id,
 
-      const rutaProyecto =
-        this.obtenerRutaProyecto(
-          proyecto
-        );
+        nombre:
+          proyecto.nombre ||
+          proyecto.slug ||
+          `Proyecto ${proyecto.id}`
+      },
 
-      if (!rutaProyecto) {
-        return res
-          .status(400)
-          .json({
-            ok: false,
-            mensaje:
-              'DemoFlow no encontró los archivos locales del proyecto. Las demos externas todavía no pueden analizarse desde archivos.'
-          });
-      }
+      analisis:
+        resultado,
 
-      const resultado =
-        await IAAnalyzerService
-          .analizarProyecto(
-            rutaProyecto,
-            {
-              usarIA: true,
-              usuarioId,
-              proyectoId:
-                proyecto.id
-            }
-          );
+      ia:
+        resultado.ia,
 
-      if (
-        !resultado.ia ||
-        resultado.ia.disponible !==
-          true
-      ) {
-        const error = new Error(
-          resultado.ia &&
-          resultado.ia.error
-            ? resultado.ia.error
-            : 'No fue posible realizar el análisis avanzado.'
-        );
+      respuesta:
+        respuestaIA,
 
-        error.code =
-          resultado.ia &&
-          resultado.ia.codigo
-            ? resultado.ia.codigo
-            : 'IA_ANALISIS_NO_DISPONIBLE';
+      costo:
+        resultado.ia.costo ||
+        null,
 
-        throw error;
-      }
+      saldo:
+        typeof resultado.ia.saldo !==
+        'undefined'
+          ? resultado.ia.saldo
+          : null,
 
-      return res.json({
-        ok: true,
-        proyecto: {
-          id:
-            proyecto.id,
-          nombre:
-            proyecto.nombre ||
-            proyecto.slug ||
-            `Proyecto ${proyecto.id}`
-        },
+      referencia:
+        resultado.ia.referencia ||
+        null,
 
-        analisis: resultado,
+      mensaje:
+        'Proyecto analizado correctamente con DemoFlow IA.'
+    });
+  } catch (error) {
+    const usuarioId =
+      module.exports.obtenerUsuarioSesion(
+        req
+      );
 
-        ia:
-          resultado.ia,
+    const proyectoId =
+      module.exports.obtenerProyectoId(
+        req
+      );
+
+    sails.log.error(
+      '❌ IA DemoFlow: Error analizando proyecto con IA.',
+      {
+        usuario:
+          usuarioId,
+
+        proyecto:
+          proyectoId,
+
+        codigo:
+          error &&
+          error.code
+            ? error.code
+            : null,
 
         mensaje:
-          'Proyecto analizado correctamente con DemoFlow IA.'
-      });
-    } catch (error) {
-      sails.log.error(
-        '❌ IA DemoFlow: Error analizando proyecto con IA.',
-        {
-          usuario:
-            this.obtenerUsuarioSesion(
-              req
-            ),
-          proyecto:
-            this.obtenerProyectoId(
-              req
-            ),
-          codigo:
-            error.code ||
-            null,
-          mensaje:
-            error.message
-        }
-      );
+          error &&
+          error.message
+            ? error.message
+            : 'Error desconocido',
 
-      const status =
-        error.code ===
-        'IA_CREDITOS_INSUFICIENTES'
-          ? 402
-          : 500;
+        stack:
+          error &&
+          error.stack
+            ? error.stack
+            : null
+      }
+    );
 
-      return this.responderErrorJson(
-        res,
-        error,
-        status
-      );
+    let status = 500;
+
+    if (
+      error &&
+      error.code ===
+      'IA_CREDITOS_INSUFICIENTES'
+    ) {
+      status = 402;
+    } else if (
+      error &&
+      error.code ===
+      'IA_SIN_ACCESO'
+    ) {
+      status = 403;
+    } else if (
+      error &&
+      error.code ===
+      'OPENAI_TIMEOUT'
+    ) {
+      status = 504;
+    } else if (
+      error &&
+      error.code ===
+      'IA_ANALISIS_NO_DISPONIBLE'
+    ) {
+      status = 500;
     }
-  },
+
+    return module.exports.responderErrorJson(
+      res,
+      error,
+      status
+    );
+  }
+},
 
   // =========================================
   // DESCRIPCIÓN AVANZADA
