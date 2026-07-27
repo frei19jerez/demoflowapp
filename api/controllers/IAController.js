@@ -202,103 +202,178 @@ module.exports = {
   },
 
   obtenerRutaProyecto:
-  function (proyecto) {
-    if (!proyecto) {
-      return null;
-    }
-
-    const posiblesRutas = [
-      proyecto.rutaProyecto,
-      proyecto.rutaLocal,
-      proyecto.ruta,
-      proyecto.carpetaProyecto,
-      proyecto.directorio,
-      proyecto.path,
-      proyecto.deployPath,
-      proyecto.runtimePath
-    ];
-
-    for (
-      const ruta of posiblesRutas
-    ) {
-      const rutaFinal =
-        this.normalizarTexto(ruta);
-
-      if (
-        rutaFinal &&
-        fs.existsSync(rutaFinal)
-      ) {
-        return path.resolve(
-          rutaFinal
-        );
-      }
-    }
-
-    /*
-     * Rutas de respaldo comunes.
-     * Si DemoFlow guarda los proyectos en otra
-     * carpeta, puede agregarse aquí.
-     */
-    const slug =
-      this.normalizarTexto(
-        proyecto.slug ||
-        proyecto.nombreSlug ||
-        proyecto.nombre
-      );
-
-    const candidatos = [
-      slug
-        ? path.join(
-            process.cwd(),
-            'storage',
-            'proyectos',
-            slug
-          )
-        : null,
-
-      slug
-        ? path.join(
-            process.cwd(),
-            'uploads',
-            'proyectos',
-            slug
-          )
-        : null,
-
-      slug
-        ? path.join(
-            process.cwd(),
-            '.tmp',
-            'proyectos',
-            slug
-          )
-        : null,
-
-      proyecto.id
-        ? path.join(
-            process.cwd(),
-            'storage',
-            'proyectos',
-            String(proyecto.id)
-          )
-        : null
-    ];
-
-    for (
-      const candidato of candidatos
-    ) {
-      if (
-        candidato &&
-        fs.existsSync(candidato)
-      ) {
-        return path.resolve(
-          candidato
-        );
-      }
-    }
-
+function (proyecto) {
+  if (!proyecto) {
     return null;
-  },
+  }
+
+  const normalizar =
+    module.exports.normalizarTexto;
+
+  const slug =
+    normalizar(
+      proyecto.slug ||
+      proyecto.nombreSlug ||
+      proyecto.nombre
+    );
+
+  const carpetaRuntime =
+    normalizar(
+      proyecto.carpetaRuntime ||
+      proyecto.carpeta_runtime ||
+      slug
+    );
+
+  const posiblesRutas = [
+    proyecto.rutaProyecto,
+    proyecto.rutaLocal,
+    proyecto.ruta,
+    proyecto.carpetaProyecto,
+    proyecto.directorio,
+    proyecto.path,
+    proyecto.deployPath,
+    proyecto.runtimePath,
+
+    carpetaRuntime
+      ? path.join(
+          '/var/data',
+          'deploy_runtime',
+          'apps',
+          carpetaRuntime
+        )
+      : null,
+
+    carpetaRuntime
+      ? path.join(
+          '/opt/render/project/src',
+          'deploy_runtime',
+          'apps',
+          carpetaRuntime
+        )
+      : null,
+
+    carpetaRuntime
+      ? path.join(
+          process.cwd(),
+          'deploy_runtime',
+          'apps',
+          carpetaRuntime
+        )
+      : null,
+
+    slug
+      ? path.join(
+          '/var/data',
+          'deploy_runtime',
+          'apps',
+          slug
+        )
+      : null,
+
+    slug
+      ? path.join(
+          '/opt/render/project/src',
+          'deploy_runtime',
+          'apps',
+          slug
+        )
+      : null,
+
+    slug
+      ? path.join(
+          process.cwd(),
+          'deploy_runtime',
+          'apps',
+          slug
+        )
+      : null,
+
+    slug
+      ? path.join(
+          process.cwd(),
+          'storage',
+          'proyectos',
+          slug
+        )
+      : null,
+
+    slug
+      ? path.join(
+          process.cwd(),
+          'uploads',
+          'proyectos',
+          slug
+        )
+      : null,
+
+    slug
+      ? path.join(
+          process.cwd(),
+          '.tmp',
+          'proyectos',
+          slug
+        )
+      : null,
+
+    proyecto.id
+      ? path.join(
+          process.cwd(),
+          'storage',
+          'proyectos',
+          String(proyecto.id)
+        )
+      : null
+  ];
+
+  for (const ruta of posiblesRutas) {
+    const rutaFinal =
+      normalizar(ruta);
+
+    if (!rutaFinal) {
+      continue;
+    }
+
+    try {
+      const rutaResuelta =
+        path.resolve(rutaFinal);
+
+      if (
+        fs.existsSync(rutaResuelta) &&
+        fs.statSync(rutaResuelta).isDirectory()
+      ) {
+        sails.log.info(
+          '🤖 IA DemoFlow: Ruta del proyecto encontrada.',
+          {
+            proyecto: proyecto.id,
+            ruta: rutaResuelta
+          }
+        );
+
+        return rutaResuelta;
+      }
+    } catch (error) {
+      sails.log.warn(
+        '⚠️ IA DemoFlow: Error verificando ruta.',
+        {
+          ruta: rutaFinal,
+          mensaje: error.message
+        }
+      );
+    }
+  }
+
+  sails.log.warn(
+    '⚠️ IA DemoFlow: No se encontró la carpeta del proyecto.',
+    {
+      proyecto: proyecto.id,
+      slug,
+      carpetaRuntime
+    }
+  );
+
+  return null;
+},
+
 
   construirContextoProyecto:
   function (proyecto) {
