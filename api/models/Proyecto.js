@@ -146,8 +146,34 @@ module.exports = {
     },
 
     // ===============================
-    // CONFIG RUNTIME APP HIJA
+    // BASE DE DATOS DEL PROYECTO
     // ===============================
+
+    databaseTipo: {
+      type: 'string',
+      columnName: 'database_tipo',
+      isIn: ['postgresql'],
+      defaultsTo: 'postgresql'
+    },
+
+    databaseNombre: {
+      type: 'string',
+      columnName: 'database_nombre',
+      allowNull: true,
+      maxLength: 150
+    },
+
+    databaseEstado: {
+      type: 'string',
+      columnName: 'database_estado',
+      isIn: [
+        'pendiente',
+        'creando',
+        'lista',
+        'error'
+      ],
+      defaultsTo: 'pendiente'
+    },
 
     databaseUrl: {
       type: 'string',
