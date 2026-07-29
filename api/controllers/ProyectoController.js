@@ -603,9 +603,14 @@ module.exports = {
     // ⚙️ CONFIGURACIÓN PRIVADA DEL RUNTIME
     // =====================================
 
-    const databaseUrl = req.body.database_url
+    const databaseUrlManual = req.body.database_url
       ? req.body.database_url.trim()
       : '';
+
+    let databaseTipoFinal = null;
+    let databaseNombreFinal = null;
+    let databaseUrlFinal = null;
+    let databaseEstadoFinal = 'no_aplica';
 
     const sessionSecret = req.body.session_secret
       ? req.body.session_secret.trim()
@@ -626,9 +631,9 @@ module.exports = {
     }
 
     if (
-      databaseUrl &&
-      !databaseUrl.startsWith('postgresql://') &&
-      !databaseUrl.startsWith('postgres://')
+      databaseUrlManual &&
+      !databaseUrlManual.startsWith('postgresql://') &&
+      !databaseUrlManual.startsWith('postgres://')
     ) {
       return res.badRequest(
         'DATABASE_URL debe comenzar con postgresql:// o postgres://'
@@ -771,9 +776,9 @@ module.exports = {
           `✅ URL runtime: ${urlDemoFinal}\n` +
           `✅ Comando sugerido: ${comandoInicioFinal}\n` +
           (
-            databaseUrl
-              ? '✅ DATABASE_URL privada configurada.\n'
-              : '⚠️ DATABASE_URL no configurada.\n'
+            databaseUrlManual
+              ? '✅ DATABASE_URL manual recibida y será respetada.\n'
+              : '🤖 DATABASE_URL automática pendiente de creación.\n'
           ) +
           (
             sessionSecret
@@ -814,7 +819,7 @@ module.exports = {
       }
     }
 
-    // =====================================
+        // =====================================
     // 📦 ZIP / HTML / CARPETA SAILS
     // =====================================
 
@@ -1111,9 +1116,9 @@ module.exports = {
             `✅ Comando sugerido: ${comandoInicioFinal}\n` +
             `✅ Archivo de entrada: ${archivoEntradaFinal}\n` +
             (
-              databaseUrl
-                ? '✅ DATABASE_URL privada configurada.\n'
-                : '⚠️ DATABASE_URL no configurada.\n'
+              databaseUrlManual
+                ? '✅ DATABASE_URL manual recibida y será respetada.\n'
+                : '🤖 DATABASE_URL automática pendiente de creación.\n'
             ) +
             (
               sessionSecret
@@ -1143,6 +1148,98 @@ module.exports = {
         `Método de entrada no válido: ${metodoEntrada}`
       );
     }
+// =====================================
+// 🗄️ DATABASE MANAGER
+// =====================================
+
+const requiereBaseDatos =
+  tipoFinal === 'node' ||
+  tipoFinal === 'sails';
+
+if (requiereBaseDatos) {
+  databaseTipoFinal = 'postgresql';
+
+  // =====================================
+  // 🗄️ DATABASE_URL MANUAL
+  // =====================================
+
+  if (databaseUrlManual) {
+    try {
+      if (
+        typeof DatabaseManager === 'undefined' ||
+        !DatabaseManager ||
+        typeof DatabaseManager.prepararBaseManual !== 'function'
+      ) {
+        throw new Error(
+          'DatabaseManager.prepararBaseManual no está disponible.'
+        );
+      }
+
+      const resultadoManual =
+        await DatabaseManager.prepararBaseManual(
+          databaseUrlManual
+        );
+
+      databaseTipoFinal =
+        resultadoManual.databaseTipo ||
+        'postgresql';
+
+      databaseNombreFinal =
+        resultadoManual.databaseNombre ||
+        resultadoManual.nombreDB ||
+        resultadoManual.nombre ||
+        null;
+
+      databaseUrlFinal =
+        resultadoManual.databaseUrl ||
+        databaseUrlManual;
+
+      databaseEstadoFinal =
+        resultadoManual.databaseEstado ||
+        'configurada_manual';
+
+      logDeploy +=
+        '\n🗄️ Base de datos PostgreSQL configurada manualmente.\n' +
+        `✅ Base: ${databaseNombreFinal || 'detectada'}\n` +
+        '✅ Conexión comprobada correctamente.\n' +
+        '✅ DemoFlow respetó la DATABASE_URL ingresada.\n';
+
+      sails.log.info(
+        '🗄️ IA DemoFlow: DATABASE_URL manual comprobada para:',
+        slugFinal
+      );
+    } catch (databaseError) {
+      sails.log.error(
+        '❌ IA DemoFlow: DATABASE_URL manual inválida:',
+        databaseError.stack ||
+        databaseError
+      );
+
+      return res.badRequest(
+        `No fue posible usar la DATABASE_URL manual: ${databaseError.message}`
+      );
+    }
+  }
+
+  // =====================================
+  // 🤖 DATABASE_URL AUTOMÁTICA PENDIENTE
+  // =====================================
+
+  else {
+    databaseNombreFinal = null;
+    databaseUrlFinal = null;
+    databaseEstadoFinal = 'pendiente';
+
+    logDeploy +=
+      '\n🤖 Base PostgreSQL automática pendiente.\n' +
+      'DemoFlow la creará después de guardar el proyecto.\n';
+  }
+} else {
+  databaseTipoFinal = null;
+  databaseNombreFinal = null;
+  databaseUrlFinal = null;
+  databaseEstadoFinal = 'no_aplica';
+}
 
     // =====================================
     // ✅ CREAR PROYECTO
@@ -1209,31 +1306,168 @@ module.exports = {
           tipoFinal,
 
         // =====================================
-// ⚙️ CONFIGURACIÓN PRIVADA DEL RUNTIME
+        // ⚙️ CONFIGURACIÓN PRIVADA DEL RUNTIME
+        // =====================================
+
+        databaseTipo:
+          databaseTipoFinal,
+
+        databaseNombre:
+          databaseNombreFinal,
+
+        databaseUrl:
+          databaseUrlFinal,
+
+        databaseEstado:
+          databaseEstadoFinal,
+
+        sessionSecret:
+          sessionSecret || null,
+
+        runtimeEnv:
+          runtimeEnv || null,
+
+        estado:
+          'borrador',
+
+        destacado:
+          false,
+
+        activo:
+          true,
+
+        usuario:
+          req.session.userId
+      })
+      .fetch();
+
+      // =====================================
+// 🗄️ CREAR BASE POSTGRESQL AUTOMÁTICA
 // =====================================
 
-databaseUrl:
-  databaseUrl || null,
+if (
+  requiereBaseDatos &&
+  !databaseUrlManual
+) {
+  try {
+    if (
+      typeof DatabaseManager === 'undefined' ||
+      !DatabaseManager ||
+      typeof DatabaseManager.prepararBaseProyecto !== 'function'
+    ) {
+      throw new Error(
+        'DatabaseManager.prepararBaseProyecto no está disponible.'
+      );
+    }
 
-sessionSecret:
-  sessionSecret || null,
+    await Proyecto.updateOne({
+      id: proyectoCreado.id
+    }).set({
+      databaseEstado:
+        'creando'
+    });
 
-runtimeEnv:
-  runtimeEnv || null,
+    const resultadoDatabase =
+      await DatabaseManager.prepararBaseProyecto(
+        proyectoCreado
+      );
 
-estado:
-  'borrador',
+    databaseTipoFinal =
+      resultadoDatabase.databaseTipo ||
+      'postgresql';
 
-destacado:
-  false,
+    databaseNombreFinal =
+      resultadoDatabase.databaseNombre ||
+      resultadoDatabase.nombreDB ||
+      resultadoDatabase.nombre ||
+      null;
 
-activo:
-  true,
+    databaseUrlFinal =
+      resultadoDatabase.databaseUrl ||
+      null;
 
-usuario:
-  req.session.userId
-})
-.fetch();
+    databaseEstadoFinal =
+      resultadoDatabase.databaseEstado ||
+      'activa';
+
+    if (!databaseUrlFinal) {
+      throw new Error(
+        'DatabaseManager preparó la base, pero no devolvió databaseUrl.'
+      );
+    }
+
+    logDeploy +=
+      '\n🗄️ Base PostgreSQL creada automáticamente.\n' +
+      `✅ Tipo: ${databaseTipoFinal}\n` +
+      `✅ Nombre: ${databaseNombreFinal}\n` +
+      `✅ Estado: ${databaseEstadoFinal}\n`;
+
+    await Proyecto.updateOne({
+      id: proyectoCreado.id
+    }).set({
+      databaseTipo:
+        databaseTipoFinal,
+
+      databaseNombre:
+        databaseNombreFinal,
+
+      databaseUrl:
+        databaseUrlFinal,
+
+      databaseEstado:
+        databaseEstadoFinal,
+
+      logDeploy
+    });
+
+    sails.log.info(
+      '✅ IA DemoFlow: Base PostgreSQL preparada para proyecto:',
+      {
+        proyectoId:
+          proyectoCreado.id,
+
+        databaseNombre:
+          databaseNombreFinal,
+
+        databaseEstado:
+          databaseEstadoFinal
+      }
+    );
+  } catch (databaseError) {
+    databaseTipoFinal = 'postgresql';
+    databaseUrlFinal = null;
+    databaseEstadoFinal = 'error';
+
+    logDeploy +=
+      '\n❌ No fue posible crear automáticamente la base PostgreSQL.\n' +
+      `Detalle: ${databaseError.message}\n`;
+
+    await Proyecto.updateOne({
+      id: proyectoCreado.id
+    }).set({
+      databaseTipo:
+        databaseTipoFinal,
+
+      databaseNombre:
+        databaseNombreFinal,
+
+      databaseUrl:
+        null,
+
+      databaseEstado:
+        databaseEstadoFinal,
+
+      logDeploy
+    });
+
+    sails.log.error(
+      '❌ IA DemoFlow: Error creando base PostgreSQL:',
+      databaseError.stack ||
+      databaseError
+    );
+  }
+}
+
     // =====================================
     // 💎 DESCONTAR CRÉDITO
     // =====================================
