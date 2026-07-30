@@ -340,10 +340,63 @@ module.exports = {
     };
   },
 
-  instalarDependencias: async function (carpeta) {
-    this.iaLog('Instalando dependencias...', carpeta);
-    return await ejecutar('npm install', carpeta);
-  },
+ instalarDependencias: async function (carpeta) {
+  this.iaLog(
+    'Instalando dependencias de producción...',
+    carpeta
+  );
+
+  const install = await ejecutar(
+    'npm install --omit=dev --no-bin-links',
+    carpeta
+  );
+
+  if (!install.ok) {
+    this.iaError(
+      'Falló la instalación de dependencias.',
+      {
+        carpeta,
+        error: install.error
+          ? install.error.message
+          : '',
+        stdout: install.stdout,
+        stderr: install.stderr
+      }
+    );
+
+    return install;
+  }
+
+  const prune = await ejecutar(
+    'npm prune --omit=dev --no-bin-links',
+    carpeta
+  );
+
+  if (!prune.ok) {
+    this.iaError(
+      'Las dependencias se instalaron, pero npm prune falló.',
+      {
+        carpeta,
+        error: prune.error
+          ? prune.error.message
+          : '',
+        stdout: prune.stdout,
+        stderr: prune.stderr
+      }
+    );
+
+    return prune;
+  }
+
+  return {
+    ok: true,
+    error: null,
+    stdout:
+      `${install.stdout || ''}\n${prune.stdout || ''}`.trim(),
+    stderr:
+      `${install.stderr || ''}\n${prune.stderr || ''}`.trim()
+  };
+},
 
   iniciarConPM2: async function ({ carpeta, nombrePM2, comando, puerto, proyecto }) {
     let finalCommand = '';

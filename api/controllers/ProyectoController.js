@@ -2128,11 +2128,8 @@ analizarIA: async function(req, res) {
   }
 
 },
-
-  actualizarGit: async function (req, res) {
-
+actualizarGit: async function (req, res) {
   try {
-
     const proyecto = await Proyecto.findOne({
       id: req.params.id,
       usuario: req.session.userId
@@ -2146,19 +2143,43 @@ analizarIA: async function(req, res) {
       await DeployService.actualizarDesdeGit(proyecto);
 
     if (!resultado.ok) {
+      const errorPrincipal =
+        resultado.error ||
+        'No se pudo actualizar el proyecto.';
+
+      const detalle =
+        resultado.detalle ||
+        '';
+
+      const mensajeCompleto =
+        detalle
+          ? `${errorPrincipal}\n\n${detalle}`
+          : errorPrincipal;
 
       await Proyecto.updateOne({
         id: proyecto.id
       }).set({
         logDeploy:
           (proyecto.logDeploy || '') +
-          '\n❌ Error actualizando desde Git:\n' +
-          (resultado.error || '')
+          '\n\n❌ Error actualizando desde Git:\n' +
+          mensajeCompleto
       });
 
-      return res.badRequest(
-        resultado.error || 'No se pudo actualizar.'
+      sails.log.error(
+        '❌ IA DemoFlow: Error actualizando desde Git.',
+        {
+          proyectoId: proyecto.id,
+          slug: proyecto.slug,
+          error: errorPrincipal,
+          detalle
+        }
       );
+
+      return res.status(400).json({
+        ok: false,
+        error: errorPrincipal,
+        detalle
+      });
     }
 
     await Proyecto.updateOne({
@@ -2166,20 +2187,24 @@ analizarIA: async function(req, res) {
     }).set({
       logDeploy:
         (proyecto.logDeploy || '') +
-        '\n✅ Proyecto actualizado desde Git correctamente.'
+        '\n\n✅ Proyecto actualizado desde Git correctamente.'
     });
 
     return res.redirect('/proyecto/' + proyecto.id);
 
   } catch (err) {
-
-    sails.log.error(err);
-
-    return res.serverError(
-      err.message || err
+    sails.log.error(
+      '❌ IA DemoFlow: Error inesperado en actualizarGit.',
+      err
     );
-  }
 
+    return res.status(500).json({
+      ok: false,
+      error:
+        err.message ||
+        'Ocurrió un error inesperado al actualizar desde Git.'
+    });
+  }
 },
 
 
