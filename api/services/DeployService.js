@@ -549,109 +549,369 @@ module.exports = {
   },
 
   actualizarDesdeGit: async function (proyecto) {
-    try {
-      const slug = proyecto.slug;
-      const puerto = this.obtenerPuertoProyecto(proyecto);
-      const carpeta = this.rutaRuntime(slug);
-      const nombrePM2 = 'demoflow-' + slug;
+  const slug = proyecto?.slug;
+  const puerto = this.obtenerPuertoProyecto(proyecto);
+  const carpeta = this.rutaRuntime(slug);
+  const nombrePM2 = `demoflow-${slug}`;
+  const rama = proyecto?.rama || proyecto?.branch || 'main';
 
-      this.iaLog('Actualizando proyecto desde Git...', {
-        slug,
-        puerto,
-        carpeta
-      });
+  try {
+    this.iaLog('Actualizando proyecto desde Git...', {
+      proyectoId: proyecto?.id,
+      slug,
+      puerto,
+      carpeta,
+      rama
+    });
 
-      if (!slug || !puerto) {
-        return {
-          ok: false,
-          error: 'El proyecto no tiene slug o puerto configurado.'
-        };
-      }
-
-      if (!(await this.existe(carpeta))) {
-        return {
-          ok: false,
-          error: 'No existe la carpeta runtime del proyecto.',
-          detalle: carpeta
-        };
-      }
-
-      const gitFolder = path.join(carpeta, '.git');
-
-      if (!(await this.existe(gitFolder))) {
-        return {
-          ok: false,
-          error: 'Este proyecto no tiene carpeta .git. No se puede actualizar desde Git.'
-        };
-      }
-
-      await this.detenerPM2(nombrePM2);
-
-      const rama = proyecto.rama || proyecto.branch || 'main';
-
-      await ejecutar('git reset --hard HEAD', carpeta);
-      await ejecutar('git clean -fd', carpeta);
-
-      const fetch = await ejecutar('git fetch origin', carpeta);
-
-      if (!fetch.ok) {
-        return {
-          ok: false,
-          error: 'Error ejecutando git fetch.',
-          detalle: fetch.stderr || fetch.stdout
-        };
-      }
-
-      const reset = await ejecutar(`git reset --hard origin/${rama}`, carpeta);
-
-      if (!reset.ok) {
-        return {
-          ok: false,
-          error: `Error actualizando desde la rama ${rama}.`,
-          detalle: reset.stderr || reset.stdout
-        };
-      }
-
-      const packageJson = path.join(carpeta, 'package.json');
-
-      if (await this.existe(packageJson)) {
-        const install = await this.instalarDependencias(carpeta);
-
-        if (!install.ok) {
-          return {
-            ok: false,
-            error: 'Error ejecutando npm install.',
-            detalle: install.stderr || install.stdout
-          };
-        }
-      }
-
-      const reinicio = await this.reiniciarRuntime(slug, puerto, proyecto);
-
-      if (!reinicio.ok) {
-        return {
-          ok: false,
-          error: 'El proyecto se actualizó, pero no pudo reiniciar el runtime.',
-          detalle: reinicio.detalle || reinicio.error
-        };
-      }
-
-      return {
-        ok: true,
-        mensaje: 'Proyecto actualizado desde Git correctamente.',
-        rama,
-        reinicio
-      };
-
-    } catch (error) {
-      this.iaError('Error actualizarDesdeGit', error);
-
+    /*
+     * 1. Validar información básica del proyecto
+     */
+    if (!slug) {
       return {
         ok: false,
-        error: error.message
+        error: 'El proyecto no tiene un slug configurado.'
       };
     }
-  },
+
+    if (!puerto) {
+      return {
+        ok: false,
+        error: 'El proyecto no tiene un puerto configurado.'
+      };
+    }
+
+    /*
+     * 2. Confirmar que existe la carpeta runtime
+     */
+    if (!(await this.existe(carpeta))) {
+      return {
+        ok: false,
+        error: 'No existe la carpeta runtime del proyecto.',
+        detalle: carpeta
+      };
+    }
+
+    /*
+     * 3. Confirmar que el proyecto fue clonado desde Git
+     */
+    const gitFolder = path.join(carpeta, '.git');
+
+    if (!(await this.existe(gitFolder))) {
+      return {
+        ok: false,
+        error:
+          'Este proyecto no tiene una carpeta .git y no puede actualizarse desde Git.',
+        detalle:
+          'El proyecto posiblemente fue subido mediante ZIP o archivos manuales.'
+      };
+    }
+
+    /*
+     * 4. Detener el runtime antes de modificar archivos
+     */
+    this.iaLog('Deteniendo runtime antes de actualizar...', {
+      nombrePM2,
+      slug
+    });
+
+    await this.detenerPM2(nombrePM2);
+
+    /*
+     * 5. Descartar cambios locales
+     */
+    const resetLocal = await ejecutar(
+      'git reset --hard HEAD',
+      carpeta
+    );
+
+    if (!resetLocal.ok) {
+      return {
+        ok: false,
+        error:
+          'No se pudieron descartar los cambios locales del proyecto.',
+        detalle:
+          resetLocal.stderr ||
+          resetLocal.stdout ||
+          'Git reset local falló.'
+      };
+    }
+
+    /*
+     * 6. Limpiar archivos no registrados.
+     *
+     * Se excluyen:
+     * - node_modules
+     * - .env
+     * - archivos persistentes de usuario
+     */
+    const limpiezaGit = await ejecutar(
+      [
+        'git clean -fd',
+        '-e node_modules/',
+        '-e .env',
+        '-e assets/uploads/',
+        '-e assets/videos/',
+        '-e assets/audio/',
+        '-e assets/music/'
+      ].join(' '),
+      carpeta
+    );
+
+    if (!limpiezaGit.ok) {
+      this.iaLog(
+        'Git clean presentó una advertencia, pero continuará la actualización.',
+        {
+          slug,
+          detalle:
+            limpiezaGit.stderr ||
+            limpiezaGit.stdout
+        }
+      );
+    }
+
+    /*
+     * 7. Descargar información nueva del repositorio
+     */
+    const fetch = await ejecutar(
+      `git fetch origin ${rama}`,
+      carpeta
+    );
+
+    if (!fetch.ok) {
+      return {
+        ok: false,
+        error: 'Error ejecutando git fetch.',
+        detalle:
+          fetch.stderr ||
+          fetch.stdout ||
+          `No se pudo consultar la rama ${rama}.`
+      };
+    }
+
+    /*
+     * 8. Verificar que la rama remota exista
+     */
+    const comprobarRama = await ejecutar(
+      `git rev-parse --verify origin/${rama}`,
+      carpeta
+    );
+
+    if (!comprobarRama.ok) {
+      return {
+        ok: false,
+        error:
+          `No existe la rama remota origin/${rama}.`,
+        detalle:
+          comprobarRama.stderr ||
+          comprobarRama.stdout ||
+          'Verifica la rama configurada en DemoFlow.'
+      };
+    }
+
+    /*
+     * 9. Actualizar exactamente al contenido de GitHub
+     */
+    const resetRemoto = await ejecutar(
+      `git reset --hard origin/${rama}`,
+      carpeta
+    );
+
+    if (!resetRemoto.ok) {
+      return {
+        ok: false,
+        error:
+          `Error actualizando desde la rama ${rama}.`,
+        detalle:
+          resetRemoto.stderr ||
+          resetRemoto.stdout
+      };
+    }
+
+    /*
+     * 10. Obtener el commit instalado
+     */
+    const commitActual = await ejecutar(
+      'git log -1 --oneline',
+      carpeta
+    );
+
+    this.iaLog('Código actualizado desde Git.', {
+      slug,
+      rama,
+      commit:
+        commitActual.stdout?.trim() ||
+        'Commit no disponible'
+    });
+
+    /*
+     * 11. Instalar dependencias cuando exista package.json
+     */
+    const packageJson = path.join(
+      carpeta,
+      'package.json'
+    );
+
+    if (await this.existe(packageJson)) {
+      this.iaLog(
+        'Preparando instalación limpia de dependencias...',
+        {
+          slug,
+          carpeta
+        }
+      );
+
+      /*
+       * Eliminar node_modules incompleto o corrupto.
+       *
+       * No eliminamos package-lock.json porque permite instalar
+       * versiones controladas y reproducibles.
+       */
+      const limpiarNodeModules = await ejecutar(
+        'rm -rf node_modules',
+        carpeta
+      );
+
+      if (!limpiarNodeModules.ok) {
+        return {
+          ok: false,
+          error:
+            'No se pudo limpiar la instalación anterior de dependencias.',
+          detalle:
+            limpiarNodeModules.stderr ||
+            limpiarNodeModules.stdout
+        };
+      }
+
+      /*
+       * Limpiar caché temporal de npm sin borrar todo el caché
+       * global del servidor.
+       */
+      const verificarCache = await ejecutar(
+        'npm cache verify',
+        carpeta
+      );
+
+      if (!verificarCache.ok) {
+        this.iaLog(
+          'npm cache verify presentó una advertencia.',
+          {
+            slug,
+            detalle:
+              verificarCache.stderr ||
+              verificarCache.stdout
+          }
+        );
+      }
+
+      /*
+       * Usar el método centralizado de DemoFlow.
+       */
+      const install =
+        await this.instalarDependencias(carpeta);
+
+      if (!install.ok) {
+        this.iaError(
+          'Error instalando dependencias después de actualizar Git.',
+          {
+            slug,
+            carpeta,
+            detalle:
+              install.stderr ||
+              install.stdout
+          }
+        );
+
+        return {
+          ok: false,
+          error: 'Error ejecutando npm install.',
+          detalle:
+            install.stderr ||
+            install.stdout ||
+            'npm no pudo instalar las dependencias.'
+        };
+      }
+
+      this.iaLog(
+        'Dependencias instaladas correctamente.',
+        {
+          slug
+        }
+      );
+    } else {
+      this.iaLog(
+        'El proyecto no tiene package.json. Se omite npm install.',
+        {
+          slug
+        }
+      );
+    }
+
+    /*
+     * 12. Reiniciar el runtime con el código nuevo
+     */
+    const reinicio =
+      await this.reiniciarRuntime(
+        slug,
+        puerto,
+        proyecto
+      );
+
+    if (!reinicio.ok) {
+      return {
+        ok: false,
+        error:
+          'El proyecto se actualizó, pero no pudo reiniciar el runtime.',
+        detalle:
+          reinicio.detalle ||
+          reinicio.error ||
+          'No se recibió información del reinicio.'
+      };
+    }
+
+    /*
+     * 13. Resultado final
+     */
+    const commit =
+      commitActual.stdout?.trim() || null;
+
+    this.iaLog(
+      'Proyecto actualizado desde Git correctamente.',
+      {
+        proyectoId: proyecto.id,
+        slug,
+        rama,
+        puerto,
+        commit
+      }
+    );
+
+    return {
+      ok: true,
+      mensaje:
+        'Proyecto actualizado desde Git correctamente.',
+      rama,
+      commit,
+      reinicio
+    };
+
+  } catch (error) {
+    this.iaError(
+      'Error inesperado en actualizarDesdeGit.',
+      error
+    );
+
+    return {
+      ok: false,
+      error:
+        error.message ||
+        'Ocurrió un error inesperado actualizando el proyecto.',
+      detalle:
+        error.stack ||
+        String(error)
+    };
+  }
+},
 
   reemplazarArchivos: async function (proyecto, carpetaNueva) {
     let carpetaActual;
