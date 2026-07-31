@@ -341,62 +341,258 @@ module.exports = {
   },
 
  instalarDependencias: async function (carpeta) {
-  this.iaLog(
-    'Instalando dependencias de producción...',
-    carpeta
+  const packageJson = path.join(
+    carpeta,
+    'package.json'
   );
 
-  const install = await ejecutar(
-    'npm install --omit=dev --no-bin-links',
-    carpeta
+  const packageLock = path.join(
+    carpeta,
+    'package-lock.json'
   );
 
-  if (!install.ok) {
-    this.iaError(
-      'Falló la instalación de dependencias.',
-      {
-        carpeta,
-        error: install.error
-          ? install.error.message
-          : '',
-        stdout: install.stdout,
-        stderr: install.stderr
-      }
-    );
-
-    return install;
+  if (!(await this.existe(packageJson))) {
+    return {
+      ok: true,
+      omitido: true,
+      mensaje:
+        'El proyecto no tiene package.json.'
+    };
   }
 
-  const prune = await ejecutar(
-    'npm prune --omit=dev --no-bin-links',
+  const tienePackageLock =
+    await this.existe(packageLock);
+
+  const comandoPrincipal =
+    [
+      'npm install',
+      '--omit=dev',
+      '--no-audit',
+      '--no-fund',
+      '--no-bin-links'
+    ].join(' ');
+
+  this.iaLog(
+    'Instalando dependencias de producción...',
+    {
+      carpeta,
+      tienePackageLock,
+      comando: comandoPrincipal
+    }
+  );
+
+  /*
+   * Primer intento:
+   * npm actualiza solamente lo necesario y evita
+   * descargar nuevamente todas las dependencias.
+   */
+  let instalacion = await ejecutar(
+    comandoPrincipal,
     carpeta
   );
 
-  if (!prune.ok) {
-    this.iaError(
-      'Las dependencias se instalaron, pero npm prune falló.',
+  if (instalacion.ok) {
+    const verificacion = await ejecutar(
+      'npm ls --omit=dev --depth=0',
+      carpeta
+    );
+
+    if (verificacion.ok) {
+      return {
+        ok: true,
+        recuperada: false,
+        comando: comandoPrincipal,
+        stdout:
+          [
+            instalacion.stdout,
+            verificacion.stdout
+          ]
+            .filter(Boolean)
+            .join('\n')
+            .trim(),
+        stderr:
+          [
+            instalacion.stderr,
+            verificacion.stderr
+          ]
+            .filter(Boolean)
+            .join('\n')
+            .trim()
+      };
+    }
+
+    this.iaLog(
+      'La instalación terminó, pero npm detectó dependencias incompletas.',
       {
         carpeta,
-        error: prune.error
-          ? prune.error.message
-          : '',
-        stdout: prune.stdout,
-        stderr: prune.stderr
+        detalle:
+          verificacion.stderr ||
+          verificacion.stdout
+      }
+    );
+  } else {
+    this.iaLog(
+      'La primera instalación falló. IA DemoFlow intentará una recuperación limpia.',
+      {
+        carpeta,
+        detalle:
+          instalacion.stderr ||
+          instalacion.stdout
+      }
+    );
+  }
+
+  /*
+   * Segundo intento:
+   * se ejecuta únicamente si npm falló o detectó
+   * dependencias incompletas.
+   */
+  const limpieza = await ejecutar(
+    'rm -rf node_modules',
+    carpeta
+  );
+
+  if (!limpieza.ok) {
+    return {
+      ok: false,
+      error:
+        'No se pudo limpiar node_modules.',
+      stdout: limpieza.stdout || '',
+      stderr:
+        limpieza.stderr ||
+        limpieza.stdout ||
+        'La limpieza de dependencias falló.'
+    };
+  }
+
+  const cache = await ejecutar(
+    'npm cache verify',
+    carpeta
+  );
+
+  if (!cache.ok) {
+    this.iaLog(
+      'npm cache verify presentó una advertencia.',
+      {
+        carpeta,
+        detalle:
+          cache.stderr ||
+          cache.stdout
+      }
+    );
+  }
+
+  /*
+   * Si existe package-lock.json, npm ci realiza
+   * una instalación limpia y reproducible.
+   */
+  const comandoRecuperacion =
+    tienePackageLock
+      ? [
+          'npm ci',
+          '--omit=dev',
+          '--no-audit',
+          '--no-fund',
+          '--no-bin-links'
+        ].join(' ')
+      : [
+          'npm install',
+          '--omit=dev',
+          '--no-audit',
+          '--no-fund',
+          '--no-bin-links'
+        ].join(' ');
+
+  instalacion = await ejecutar(
+    comandoRecuperacion,
+    carpeta
+  );
+
+  if (!instalacion.ok) {
+    this.iaError(
+      'La recuperación limpia de dependencias falló.',
+      {
+        carpeta,
+        comando: comandoRecuperacion,
+        error:
+          instalacion.error
+            ? instalacion.error.message
+            : '',
+        stdout: instalacion.stdout,
+        stderr: instalacion.stderr
       }
     );
 
-    return prune;
+    return {
+      ok: false,
+      error:
+        'No fue posible instalar las dependencias.',
+      comando: comandoRecuperacion,
+      stdout: instalacion.stdout || '',
+      stderr:
+        instalacion.stderr ||
+        instalacion.stdout ||
+        (
+          instalacion.error
+            ? instalacion.error.message
+            : ''
+        )
+    };
+  }
+
+  const verificacionFinal = await ejecutar(
+    'npm ls --omit=dev --depth=0',
+    carpeta
+  );
+
+  if (!verificacionFinal.ok) {
+    return {
+      ok: false,
+      error:
+        'npm terminó, pero las dependencias continúan incompletas.',
+      comando: comandoRecuperacion,
+      stdout:
+        [
+          instalacion.stdout,
+          verificacionFinal.stdout
+        ]
+          .filter(Boolean)
+          .join('\n')
+          .trim(),
+      stderr:
+        [
+          instalacion.stderr,
+          verificacionFinal.stderr
+        ]
+          .filter(Boolean)
+          .join('\n')
+          .trim()
+    };
   }
 
   return {
     ok: true,
-    error: null,
+    recuperada: true,
+    comando: comandoRecuperacion,
     stdout:
-      `${install.stdout || ''}\n${prune.stdout || ''}`.trim(),
+      [
+        instalacion.stdout,
+        verificacionFinal.stdout
+      ]
+        .filter(Boolean)
+        .join('\n')
+        .trim(),
     stderr:
-      `${install.stderr || ''}\n${prune.stderr || ''}`.trim()
+      [
+        instalacion.stderr,
+        verificacionFinal.stderr
+      ]
+        .filter(Boolean)
+        .join('\n')
+        .trim()
   };
 },
+
 
   iniciarConPM2: async function ({ carpeta, nombrePM2, comando, puerto, proyecto }) {
     let finalCommand = '';
@@ -548,54 +744,68 @@ module.exports = {
     };
   },
 
-  actualizarDesdeGit: async function (proyecto) {
+ actualizarDesdeGit: async function (proyecto) {
   const slug = proyecto?.slug;
-  const puerto = this.obtenerPuertoProyecto(proyecto);
-  const carpeta = this.rutaRuntime(slug);
-  const nombrePM2 = `demoflow-${slug}`;
-  const rama = proyecto?.rama || proyecto?.branch || 'main';
+
+  const puerto =
+    this.obtenerPuertoProyecto(proyecto);
+
+  const carpeta =
+    this.rutaRuntime(slug);
+
+  const nombrePM2 =
+    `demoflow-${slug}`;
+
+  const rama =
+    proyecto?.rama ||
+    proyecto?.branch ||
+    'main';
+
+  let commitAnterior = null;
+  let commitNuevo = null;
 
   try {
-    this.iaLog('Actualizando proyecto desde Git...', {
-      proyectoId: proyecto?.id,
-      slug,
-      puerto,
-      carpeta,
-      rama
-    });
+    this.iaLog(
+      'Actualizando proyecto desde Git...',
+      {
+        proyectoId: proyecto?.id || null,
+        slug,
+        puerto,
+        carpeta,
+        rama
+      }
+    );
 
     /*
-     * 1. Validar información básica del proyecto
+     * 1. Validaciones iniciales
      */
     if (!slug) {
       return {
         ok: false,
-        error: 'El proyecto no tiene un slug configurado.'
+        error:
+          'El proyecto no tiene un slug configurado.'
       };
     }
 
     if (!puerto) {
       return {
         ok: false,
-        error: 'El proyecto no tiene un puerto configurado.'
+        error:
+          'El proyecto no tiene un puerto configurado.'
       };
     }
 
-    /*
-     * 2. Confirmar que existe la carpeta runtime
-     */
     if (!(await this.existe(carpeta))) {
       return {
         ok: false,
-        error: 'No existe la carpeta runtime del proyecto.',
+        error:
+          'No existe la carpeta runtime del proyecto.',
         detalle: carpeta
       };
     }
 
-    /*
-     * 3. Confirmar que el proyecto fue clonado desde Git
-     */
-    const gitFolder = path.join(carpeta, '.git');
+    const gitFolder =
+      path.join(carpeta, '.git');
 
     if (!(await this.existe(gitFolder))) {
       return {
@@ -603,22 +813,30 @@ module.exports = {
         error:
           'Este proyecto no tiene una carpeta .git y no puede actualizarse desde Git.',
         detalle:
-          'El proyecto posiblemente fue subido mediante ZIP o archivos manuales.'
+          'El proyecto posiblemente fue publicado mediante ZIP, HTML o reemplazo manual.'
       };
     }
 
     /*
-     * 4. Detener el runtime antes de modificar archivos
+     * 2. Guardar el commit que actualmente funciona.
+     *
+     * No detenemos todavía PM2. De esta manera, si Git
+     * o npm fallan, el runtime anterior puede continuar
+     * atendiendo solicitudes.
      */
-    this.iaLog('Deteniendo runtime antes de actualizar...', {
-      nombrePM2,
-      slug
-    });
+    const commitActualAnterior =
+      await ejecutar(
+        'git rev-parse HEAD',
+        carpeta
+      );
 
-    await this.detenerPM2(nombrePM2);
+    if (commitActualAnterior.ok) {
+      commitAnterior =
+        commitActualAnterior.stdout.trim();
+    }
 
     /*
-     * 5. Descartar cambios locales
+     * 3. Limpiar cambios locales controlados por Git
      */
     const resetLocal = await ejecutar(
       'git reset --hard HEAD',
@@ -633,17 +851,12 @@ module.exports = {
         detalle:
           resetLocal.stderr ||
           resetLocal.stdout ||
-          'Git reset local falló.'
+          'git reset local falló.'
       };
     }
 
     /*
-     * 6. Limpiar archivos no registrados.
-     *
-     * Se excluyen:
-     * - node_modules
-     * - .env
-     * - archivos persistentes de usuario
+     * Conservamos archivos privados y persistentes.
      */
     const limpiezaGit = await ejecutar(
       [
@@ -660,7 +873,7 @@ module.exports = {
 
     if (!limpiezaGit.ok) {
       this.iaLog(
-        'Git clean presentó una advertencia, pero continuará la actualización.',
+        'git clean presentó una advertencia.',
         {
           slug,
           detalle:
@@ -671,7 +884,7 @@ module.exports = {
     }
 
     /*
-     * 7. Descargar información nueva del repositorio
+     * 4. Descargar la rama remota
      */
     const fetch = await ejecutar(
       `git fetch origin ${rama}`,
@@ -681,7 +894,8 @@ module.exports = {
     if (!fetch.ok) {
       return {
         ok: false,
-        error: 'Error ejecutando git fetch.',
+        error:
+          'Error ejecutando git fetch.',
         detalle:
           fetch.stderr ||
           fetch.stdout ||
@@ -689,13 +903,11 @@ module.exports = {
       };
     }
 
-    /*
-     * 8. Verificar que la rama remota exista
-     */
-    const comprobarRama = await ejecutar(
-      `git rev-parse --verify origin/${rama}`,
-      carpeta
-    );
+    const comprobarRama =
+      await ejecutar(
+        `git rev-parse --verify origin/${rama}`,
+        carpeta
+      );
 
     if (!comprobarRama.ok) {
       return {
@@ -710,7 +922,7 @@ module.exports = {
     }
 
     /*
-     * 9. Actualizar exactamente al contenido de GitHub
+     * 5. Aplicar exactamente la versión de GitHub
      */
     const resetRemoto = await ejecutar(
       `git reset --hard origin/${rama}`,
@@ -728,119 +940,113 @@ module.exports = {
       };
     }
 
-    /*
-     * 10. Obtener el commit instalado
-     */
     const commitActual = await ejecutar(
       'git log -1 --oneline',
       carpeta
     );
 
-    this.iaLog('Código actualizado desde Git.', {
-      slug,
-      rama,
-      commit:
-        commitActual.stdout?.trim() ||
-        'Commit no disponible'
-    });
-
-    /*
-     * 11. Instalar dependencias cuando exista package.json
-     */
-    const packageJson = path.join(
-      carpeta,
-      'package.json'
+    const commitHashNuevo = await ejecutar(
+      'git rev-parse HEAD',
+      carpeta
     );
 
+    if (commitHashNuevo.ok) {
+      commitNuevo =
+        commitHashNuevo.stdout.trim();
+    }
+
+    this.iaLog(
+      'Código actualizado desde Git.',
+      {
+        slug,
+        rama,
+        commit:
+          commitActual.stdout?.trim() ||
+          commitNuevo ||
+          'Commit no disponible'
+      }
+    );
+
+    /*
+     * 6. Instalar y verificar dependencias
+     */
+    const packageJson =
+      path.join(
+        carpeta,
+        'package.json'
+      );
+
     if (await this.existe(packageJson)) {
-      this.iaLog(
-        'Preparando instalación limpia de dependencias...',
-        {
-          slug,
+      const instalacion =
+        await this.instalarDependencias(
           carpeta
-        }
-      );
-
-      /*
-       * Eliminar node_modules incompleto o corrupto.
-       *
-       * No eliminamos package-lock.json porque permite instalar
-       * versiones controladas y reproducibles.
-       */
-      const limpiarNodeModules = await ejecutar(
-        'rm -rf node_modules',
-        carpeta
-      );
-
-      if (!limpiarNodeModules.ok) {
-        return {
-          ok: false,
-          error:
-            'No se pudo limpiar la instalación anterior de dependencias.',
-          detalle:
-            limpiarNodeModules.stderr ||
-            limpiarNodeModules.stdout
-        };
-      }
-
-      /*
-       * Limpiar caché temporal de npm sin borrar todo el caché
-       * global del servidor.
-       */
-      const verificarCache = await ejecutar(
-        'npm cache verify',
-        carpeta
-      );
-
-      if (!verificarCache.ok) {
-        this.iaLog(
-          'npm cache verify presentó una advertencia.',
-          {
-            slug,
-            detalle:
-              verificarCache.stderr ||
-              verificarCache.stdout
-          }
         );
-      }
 
-      /*
-       * Usar el método centralizado de DemoFlow.
-       */
-      const install =
-        await this.instalarDependencias(carpeta);
-
-      if (!install.ok) {
+      if (!instalacion.ok) {
         this.iaError(
           'Error instalando dependencias después de actualizar Git.',
           {
             slug,
             carpeta,
-            detalle:
-              install.stderr ||
-              install.stdout
+            comando:
+              instalacion.comando || '',
+            error:
+              instalacion.error || '',
+            stdout:
+              instalacion.stdout || '',
+            stderr:
+              instalacion.stderr || ''
           }
         );
 
+        /*
+         * Restauramos el código anterior cuando sea posible.
+         * El proceso PM2 anterior no se detuvo todavía.
+         */
+        if (commitAnterior) {
+          await ejecutar(
+            `git reset --hard ${commitAnterior}`,
+            carpeta
+          );
+
+          this.iaLog(
+            'Código anterior restaurado después del fallo de npm.',
+            {
+              slug,
+              commitAnterior
+            }
+          );
+        }
+
         return {
           ok: false,
-          error: 'Error ejecutando npm install.',
+          error:
+            'Error ejecutando la instalación de dependencias.',
           detalle:
-            install.stderr ||
-            install.stdout ||
-            'npm no pudo instalar las dependencias.'
+            instalacion.stderr ||
+            instalacion.stdout ||
+            instalacion.error ||
+            'npm no pudo instalar las dependencias.',
+          comando:
+            instalacion.comando || null,
+          commitAnterior,
+          commitIntentado: commitNuevo
         };
       }
 
       this.iaLog(
-        'Dependencias instaladas correctamente.',
+        'Dependencias instaladas y verificadas correctamente.',
         {
-          slug
+          slug,
+          recuperada:
+            Boolean(instalacion.recuperada),
+          comando:
+            instalacion.comando || ''
         }
       );
     } else {
       this.iaLog(
-        'El proyecto no tiene package.json. Se omite npm install.',
+        'El proyecto no tiene package.json. Se omite la instalación de dependencias.',
         {
           slug
         }
@@ -848,7 +1054,7 @@ module.exports = {
     }
 
     /*
-     * 12. Reiniciar el runtime con el código nuevo
+     * 7. Reiniciar solamente cuando Git y npm terminaron bien
      */
     const reinicio =
       await this.reiniciarRuntime(
@@ -865,20 +1071,60 @@ module.exports = {
         detalle:
           reinicio.detalle ||
           reinicio.error ||
-          'No se recibió información del reinicio.'
+          'No se recibió información del reinicio.',
+        commit:
+          commitActual.stdout?.trim() ||
+          commitNuevo
       };
     }
 
     /*
-     * 13. Resultado final
+     * 8. Esperar unos segundos y comprobar el puerto
      */
+    await ejecutar(
+      'sleep 5',
+      carpeta
+    );
+
+    const salud =
+      await this.verificarPuerto(puerto);
+
+    if (!salud.ok) {
+      this.iaError(
+        'El runtime fue iniciado, pero no respondió en su puerto.',
+        {
+          slug,
+          puerto,
+          stderr: salud.stderr,
+          stdout: salud.stdout
+        }
+      );
+
+      return {
+        ok: false,
+        error:
+          'El proyecto se actualizó, pero el runtime no respondió.',
+        detalle:
+          salud.stderr ||
+          salud.stdout ||
+          `El puerto ${puerto} no respondió.`,
+        commit:
+          commitActual.stdout?.trim() ||
+          commitNuevo,
+        reinicio
+      };
+    }
+
     const commit =
-      commitActual.stdout?.trim() || null;
+      commitActual.stdout?.trim() ||
+      commitNuevo ||
+      null;
 
     this.iaLog(
-      'Proyecto actualizado desde Git correctamente.',
+      'Proyecto actualizado desde Git y verificado correctamente.',
       {
-        proyectoId: proyecto.id,
+        proyectoId:
+          proyecto?.id || null,
         slug,
         rama,
         puerto,
@@ -892,6 +1138,12 @@ module.exports = {
         'Proyecto actualizado desde Git correctamente.',
       rama,
       commit,
+      puerto,
+      salud: {
+        ok: true,
+        respuesta:
+          salud.stdout?.trim() || ''
+      },
       reinicio
     };
 
@@ -901,6 +1153,21 @@ module.exports = {
       error
     );
 
+    /*
+     * Intentamos restaurar el commit anterior si el proceso
+     * fue interrumpido después de modificar el repositorio.
+     */
+    if (
+      commitAnterior &&
+      carpeta &&
+      await this.existe(carpeta)
+    ) {
+      await ejecutar(
+        `git reset --hard ${commitAnterior}`,
+        carpeta
+      ).catch(() => {});
+    }
+
     return {
       ok: false,
       error:
@@ -908,7 +1175,9 @@ module.exports = {
         'Ocurrió un error inesperado actualizando el proyecto.',
       detalle:
         error.stack ||
-        String(error)
+        String(error),
+      commitAnterior,
+      commitIntentado: commitNuevo
     };
   }
 },
