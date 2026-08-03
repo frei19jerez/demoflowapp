@@ -8,40 +8,155 @@ const proxy = httpProxy.createProxyServer({
 });
 
 /**
+ * Limpia y normaliza el prefijo público de un runtime.
+ *
+ * Ejemplo:
+ * /runtime/fj-ia/ -> /runtime/fj-ia
+ */
+function normalizarPrefijoRuntime(prefix) {
+  if (!prefix) {
+    return '';
+  }
+
+  let prefijo = String(prefix).trim();
+
+  if (!prefijo) {
+    return '';
+  }
+
+  if (!prefijo.startsWith('/')) {
+    prefijo = `/${prefijo}`;
+  }
+
+  prefijo = prefijo.replace(/\/+/g, '/');
+  prefijo = prefijo.replace(/\/+$/, '');
+
+  return prefijo;
+}
+
+/**
  * Evita colocar dos veces el prefijo del runtime.
+ *
+ * Ejemplos:
+ *
+ * /login
+ * -> /runtime/fj-ia/login
+ *
+ * /runtime/fj-ia/login
+ * -> /runtime/fj-ia/login
  */
 function aplicarPrefijoRuntime(location, prefix) {
   if (!location || !prefix) {
     return location;
   }
 
-  const prefijoLimpio = String(prefix).replace(/\/+$/, '');
+  const prefijoLimpio =
+    normalizarPrefijoRuntime(prefix);
 
-  // No modificar enlaces externos.
-  if (
-    location.startsWith('http://') ||
-    location.startsWith('https://') ||
-    location.startsWith('//')
-  ) {
+  if (!prefijoLimpio) {
     return location;
   }
 
-  // Ya contiene el prefijo correcto.
-  if (
-    location === prefijoLimpio ||
-    location.startsWith(`${prefijoLimpio}/`)
-  ) {
+  const locationTexto = String(location).trim();
+
+  if (!locationTexto) {
     return location;
   }
 
-  // Redirecciones absolutas del runtime:
-  // /login -> /runtime/araujo-news/login
-  // /admin -> /runtime/araujo-news/admin
-  if (location.startsWith('/')) {
-    return `${prefijoLimpio}${location}`;
+  /*
+   * No modificar enlaces externos completos.
+   */
+  if (
+    locationTexto.startsWith('http://') ||
+    locationTexto.startsWith('https://') ||
+    locationTexto.startsWith('//')
+  ) {
+    return locationTexto;
   }
 
-  return location;
+  /*
+   * Ya contiene el prefijo correcto.
+   */
+  if (
+    locationTexto === prefijoLimpio ||
+    locationTexto.startsWith(`${prefijoLimpio}/`) ||
+    locationTexto.startsWith(`${prefijoLimpio}?`) ||
+    locationTexto.startsWith(`${prefijoLimpio}#`)
+  ) {
+    return locationTexto;
+  }
+
+  /*
+   * Redirecciones absolutas del runtime:
+   *
+   * /login
+   * -> /runtime/fj-ia/login
+   */
+  if (locationTexto.startsWith('/')) {
+    return `${prefijoLimpio}${locationTexto}`;
+  }
+
+  /*
+   * Redirecciones relativas:
+   *
+   * login
+   * -> /runtime/fj-ia/login
+   */
+  return `${prefijoLimpio}/${locationTexto}`;
+}
+
+/**
+ * Construye la URL interna que se enviará al runtime.
+ *
+ * El navegador solicita:
+ *
+ * /runtime/fj-ia/login?next=/dashboard
+ *
+ * El runtime recibe:
+ *
+ * /login?next=/dashboard
+ */
+function obtenerUrlInternaRuntime(req, prefix) {
+  const prefijoLimpio =
+    normalizarPrefijoRuntime(prefix);
+
+  let urlActual =
+    req.url ||
+    req.originalUrl ||
+    '/';
+
+  urlActual = String(urlActual);
+
+  /*
+   * En algunas configuraciones de Sails/Express req.url todavía
+   * contiene /runtime/:slug.
+   */
+  if (
+    prefijoLimpio &&
+    (
+      urlActual === prefijoLimpio ||
+      urlActual.startsWith(`${prefijoLimpio}/`) ||
+      urlActual.startsWith(`${prefijoLimpio}?`)
+    )
+  ) {
+    urlActual = urlActual.slice(
+      prefijoLimpio.length
+    );
+  }
+
+  if (!urlActual) {
+    return '/';
+  }
+
+  if (urlActual.startsWith('?')) {
+    return `/${urlActual}`;
+  }
+
+  if (!urlActual.startsWith('/')) {
+    return `/${urlActual}`;
+  }
+
+  return urlActual;
 }
 
 /**
@@ -54,6 +169,105 @@ function respuestaDisponible(res) {
     !res.writableEnded &&
     !res.destroyed
   );
+}
+
+/**
+ * Ajusta el Path de una cookie para que pertenezca
+ * únicamente al runtime correspondiente.
+ *
+ * Ejemplo:
+ *
+ * Path=/
+ * -> Path=/runtime/fj-ia
+ */
+function aplicarRutaCookie(cookie, prefix) {
+  if (!cookie || !prefix) {
+    return cookie;
+  }
+
+  const prefijoLimpio =
+    normalizarPrefijoRuntime(prefix);
+
+  if (!prefijoLimpio) {
+    return cookie;
+  }
+
+  let cookieCorregida = String(cookie);
+
+  /*
+   * Si ya tiene el prefijo correcto no se modifica.
+   */
+  const pathRuntimeRegex = new RegExp(
+    `Path=${escaparRegex(prefijoLimpio)}(?:;|$)`,
+    'i'
+  );
+
+  if (pathRuntimeRegex.test(cookieCorregida)) {
+    return cookieCorregida;
+  }
+
+  /*
+   * Cambiar cualquier Path existente.
+   */
+  if (/Path=[^;]*/i.test(cookieCorregida)) {
+    cookieCorregida = cookieCorregida.replace(
+      /Path=[^;]*/i,
+      `Path=${prefijoLimpio}`
+    );
+
+    return cookieCorregida;
+  }
+
+  /*
+   * Si la cookie no declara Path, agregarlo.
+   */
+  return `${cookieCorregida}; Path=${prefijoLimpio}`;
+}
+
+/**
+ * Escapa texto para utilizarlo dentro de una expresión regular.
+ */
+function escaparRegex(valor) {
+  return String(valor).replace(
+    /[.*+?^${}()|[\]\\]/g,
+    '\\$&'
+  );
+}
+
+/**
+ * Obtiene el protocolo público original.
+ */
+function obtenerProtocoloPublico(req) {
+  const headerProto =
+    req.headers['x-forwarded-proto'];
+
+  if (headerProto) {
+    return String(headerProto)
+      .split(',')[0]
+      .trim();
+  }
+
+  if (req.protocol) {
+    return req.protocol;
+  }
+
+  return 'https';
+}
+
+/**
+ * Obtiene el host público original.
+ */
+function obtenerHostPublico(req) {
+  const forwardedHost =
+    req.headers['x-forwarded-host'];
+
+  if (forwardedHost) {
+    return String(forwardedHost)
+      .split(',')[0]
+      .trim();
+  }
+
+  return req.headers.host || '';
 }
 
 /**
@@ -120,6 +334,7 @@ proxy.on('error', function (err, req, res) {
  * Cabeceras que DemoFlowApp envía al proyecto desplegado.
  *
  * IMPORTANTE:
+ *
  * Aquí no se reconstruye req.body.
  *
  * El stream original de la petición se transmite directamente
@@ -127,40 +342,85 @@ proxy.on('error', function (err, req, res) {
  * imágenes, videos, archivos y cuerpos JSON sin alterarlos.
  */
 proxy.on('proxyReq', function (proxyReq, req) {
-  if (req.demoflowRuntimePrefix) {
+  const prefix =
+    normalizarPrefijoRuntime(
+      req.demoflowRuntimePrefix
+    );
+
+  const slug =
+    req.demoflowRuntimeSlug || '';
+
+  const originalUrl =
+    req.demoflowOriginalUrl ||
+    req.originalUrl ||
+    req.url ||
+    '/';
+
+  const forwardedProto =
+    obtenerProtocoloPublico(req);
+
+  const forwardedHost =
+    obtenerHostPublico(req);
+
+  /*
+   * Headers principales para que FJ-IA pueda detectar:
+   *
+   * /runtime/fj-ia
+   */
+  if (prefix) {
     proxyReq.setHeader(
       'x-runtime-prefix',
-      req.demoflowRuntimePrefix
+      prefix
     );
 
     proxyReq.setHeader(
       'x-forwarded-prefix',
-      req.demoflowRuntimePrefix
+      prefix
+    );
+
+    /*
+     * Nombres alternativos reconocidos por diferentes
+     * frameworks y middlewares.
+     */
+    proxyReq.setHeader(
+      'x-forwarded-pathbase',
+      prefix
+    );
+
+    proxyReq.setHeader(
+      'x-script-name',
+      prefix
+    );
+
+    proxyReq.setHeader(
+      'x-demoflow-runtime-prefix',
+      prefix
     );
   }
 
-  if (req.demoflowRuntimeSlug) {
+  if (slug) {
     proxyReq.setHeader(
       'x-demoflow-runtime-slug',
-      req.demoflowRuntimeSlug
+      slug
     );
   }
 
-  if (req.originalUrl) {
+  if (originalUrl) {
     proxyReq.setHeader(
       'x-original-url',
-      req.originalUrl
+      originalUrl
+    );
+
+    proxyReq.setHeader(
+      'x-forwarded-uri',
+      originalUrl
+    );
+
+    proxyReq.setHeader(
+      'x-original-uri',
+      originalUrl
     );
   }
-
-  const forwardedProto =
-    req.headers['x-forwarded-proto'] ||
-    req.protocol ||
-    'https';
-
-  const forwardedHost =
-    req.headers['x-forwarded-host'] ||
-    req.headers.host;
 
   if (forwardedProto) {
     proxyReq.setHeader(
@@ -174,45 +434,125 @@ proxy.on('proxyReq', function (proxyReq, req) {
       'x-forwarded-host',
       forwardedHost
     );
+
+    proxyReq.setHeader(
+      'x-forwarded-server',
+      forwardedHost
+    );
   }
+
+  /*
+   * Conservar la IP original cuando esté disponible.
+   */
+  const forwardedFor =
+    req.headers['x-forwarded-for'] ||
+    req.socket?.remoteAddress ||
+    req.connection?.remoteAddress;
+
+  if (forwardedFor) {
+    proxyReq.setHeader(
+      'x-forwarded-for',
+      forwardedFor
+    );
+  }
+
+  sails.log.info(
+    '📨 IA DemoFlow: Headers enviados al runtime:',
+    {
+      slug,
+      prefix,
+      originalUrl,
+      forwardedProto,
+      forwardedHost,
+      urlInterna: req.url
+    }
+  );
 });
 
 /**
- * Corrige las redirecciones devueltas por cada runtime.
+ * Corrige respuestas generadas por cada runtime.
+ *
+ * 1. Corrige redirecciones Location.
+ * 2. Corrige Path de cookies de sesión.
  *
  * Ejemplo:
- * Location: /admin
+ *
+ * Location: /login
  *
  * Se convierte en:
- * Location: /runtime/araujo-news/admin
+ *
+ * Location: /runtime/fj-ia/login
  */
 proxy.on('proxyRes', function (proxyRes, req) {
-  const prefix = req.demoflowRuntimePrefix;
+  const prefix =
+    normalizarPrefijoRuntime(
+      req.demoflowRuntimePrefix
+    );
 
   if (!prefix || !proxyRes.headers) {
     return;
   }
 
-  const location = proxyRes.headers.location;
+  /*
+   * Corregir redirecciones HTTP.
+   */
+  const location =
+    proxyRes.headers.location;
 
-  if (!location) {
-    return;
+  if (location) {
+    const locationCorregido =
+      aplicarPrefijoRuntime(
+        location,
+        prefix
+      );
+
+    if (locationCorregido !== location) {
+      proxyRes.headers.location =
+        locationCorregido;
+
+      sails.log.info(
+        '🧭 IA DemoFlow: Redirección runtime corregida:',
+        {
+          original: location,
+          corregida: locationCorregido
+        }
+      );
+    }
   }
 
-  const locationCorregido = aplicarPrefijoRuntime(
-    location,
-    prefix
-  );
+  /*
+   * Corregir cookies de sesión.
+   *
+   * Esto evita que una cookie del runtime use Path=/
+   * y choque con DemoFlowApp u otro runtime.
+   */
+  const setCookie =
+    proxyRes.headers['set-cookie'];
 
-  if (locationCorregido !== location) {
-    proxyRes.headers.location = locationCorregido;
+  if (Array.isArray(setCookie)) {
+    proxyRes.headers['set-cookie'] =
+      setCookie.map(function (cookie) {
+        return aplicarRutaCookie(
+          cookie,
+          prefix
+        );
+      });
 
     sails.log.info(
-      '🧭 IA DemoFlow: Redirección runtime corregida:',
-      {
-        original: location,
-        corregida: locationCorregido
-      }
+      '🍪 IA DemoFlow: Ruta de cookies ajustada:',
+      prefix
+    );
+  } else if (typeof setCookie === 'string') {
+    proxyRes.headers['set-cookie'] = [
+      aplicarRutaCookie(
+        setCookie,
+        prefix
+      )
+    ];
+
+    sails.log.info(
+      '🍪 IA DemoFlow: Ruta de cookie ajustada:',
+      prefix
     );
   }
 });
@@ -221,23 +561,44 @@ module.exports = {
 
   proxy: async function (req, res) {
     let proyecto = null;
+    let slug = null;
 
     try {
-      const slug = req.params.slug;
+      slug = req.params.slug;
 
       sails.log.info(
         '🤖 IA DemoFlow: Analizando petición runtime...'
       );
 
-      sails.log.info('🔎 Slug recibido:', slug);
-      sails.log.info('📨 Método:', req.method);
-      sails.log.info('🌐 URL original:', req.url);
+      sails.log.info(
+        '🔎 Slug recibido:',
+        slug
+      );
+
+      sails.log.info(
+        '📨 Método:',
+        req.method
+      );
+
+      sails.log.info(
+        '🌐 req.url recibida:',
+        req.url
+      );
+
+      sails.log.info(
+        '🌐 req.originalUrl recibida:',
+        req.originalUrl
+      );
 
       if (!slug) {
-        return res.badRequest('Slug requerido');
+        return res.badRequest(
+          'Slug requerido'
+        );
       }
 
-      proyecto = await Proyecto.findOne({ slug });
+      proyecto = await Proyecto.findOne({
+        slug
+      });
 
       if (!proyecto) {
         proyecto = await Proyecto.findOne({
@@ -265,6 +626,9 @@ module.exports = {
         );
       }
 
+      /*
+       * Verificación de salud del runtime.
+       */
       try {
         sails.log.info(
           '🤖 IA DemoFlow: Verificando salud del runtime...'
@@ -352,7 +716,9 @@ module.exports = {
               '❌ Error reiniciando runtime automáticamente.'
             );
 
-            sails.log.error(restartError);
+            sails.log.error(
+              restartError
+            );
           }
 
           await new Promise(function (resolve) {
@@ -377,10 +743,13 @@ module.exports = {
               '🤖 IA DemoFlow: Mostrando pantalla de espera...'
             );
 
-            return res.view('runtime/esperando', {
-              proyecto,
-              slug
-            });
+            return res.view(
+              'runtime/esperando',
+              {
+                proyecto,
+                slug
+              }
+            );
           }
         }
       } catch (healthError) {
@@ -388,26 +757,56 @@ module.exports = {
           '⚠️ IA DemoFlow: Health check falló.'
         );
 
-        sails.log.warn(healthError.message);
+        sails.log.warn(
+          healthError &&
+          healthError.message
+            ? healthError.message
+            : healthError
+        );
 
-        return res.view('runtime/esperando', {
-          proyecto,
-          slug
-        });
+        return res.view(
+          'runtime/esperando',
+          {
+            proyecto,
+            slug
+          }
+        );
       }
 
       const target =
         `http://127.0.0.1:${proyecto.puerto}`;
 
+      const prefix =
+        normalizarPrefijoRuntime(
+          `/runtime/${slug}`
+        );
+
+      /*
+       * Guardamos los valores antes de modificar req.url.
+       *
+       * Estos datos serán utilizados en proxyReq y proxyRes.
+       */
       req.demoflowRuntimePrefix =
-        `/runtime/${slug}`;
+        prefix;
 
-      req.demoflowRuntimeSlug = slug;
+      req.demoflowRuntimeSlug =
+        slug;
 
-      req.url = req.url.replace(
-        `/runtime/${slug}`,
-        ''
-      );
+      req.demoflowOriginalUrl =
+        req.originalUrl ||
+        req.url ||
+        prefix;
+
+      /*
+       * El runtime debe recibir su ruta interna sin:
+       *
+       * /runtime/fj-ia
+       */
+      req.url =
+        obtenerUrlInternaRuntime(
+          req,
+          prefix
+        );
 
       if (!req.url || req.url.trim() === '') {
         req.url = '/';
@@ -433,6 +832,16 @@ module.exports = {
         req.demoflowRuntimePrefix
       );
 
+      sails.log.info(
+        '🌍 URL pública original:',
+        req.demoflowOriginalUrl
+      );
+
+      sails.log.info(
+        '🏠 URL interna entregada al runtime:',
+        req.url
+      );
+
       return proxy.web(
         req,
         res,
@@ -441,7 +850,13 @@ module.exports = {
           changeOrigin: true,
           ws: true,
           proxyTimeout: 300000,
-          timeout: 300000
+          timeout: 300000,
+
+          /*
+           * Conserva correctamente los headers originales
+           * y permite que proxyReq agregue los de DemoFlowApp.
+           */
+          preserveHeaderKeyCase: false
         },
         function (proxyError) {
           sails.log.error(
@@ -455,27 +870,33 @@ module.exports = {
             return;
           }
 
-          res.status(502).send(
+          return res.status(502).send(
             'DemoFlowApp no pudo comunicarse con el runtime.'
           );
         }
       );
-
     } catch (error) {
       sails.log.error(
         '❌ IA DemoFlow: Error cargando runtime.'
       );
 
-      sails.log.error(error);
+      sails.log.error(
+        error
+      );
 
       if (!respuestaDisponible(res)) {
         return;
       }
 
-      return res.view('runtime/esperando', {
-        proyecto,
-        slug: req.params.slug
-      });
+      return res.view(
+        'runtime/esperando',
+        {
+          proyecto,
+          slug:
+            slug ||
+            req.params.slug
+        }
+      );
     }
   }
 
